@@ -11,7 +11,7 @@
   <details><summary>Hint 1</summary>A workspace root `Cargo.toml` has a `[workspace]` section and no `[package]`. Look up the `members` key and the `resolver` key.</details>
   <details><summary>Hint 2</summary><code>cargo new --lib crates/mancala-core</code> creates the crate. Check that the edition in its Cargo.toml is the newest one your toolchain supports.</details>
 
-- [ ] 1.2 Set up the module skeleton: `lib.rs` declares `mod board;` and `mod rng;`, both files exist (empty is fine), and add an empty `tests/rules.rs`. Verify: `cargo build` succeeds with no errors.
+- [x] 1.2 Set up the module skeleton: `lib.rs` declares `mod board;` and `mod rng;`, both files exist (empty is fine), and add an empty `tests/rules.rs`. Verify: `cargo build` succeeds with no errors.
   - **Read:** Book ch. 7 (Packages, Crates and Modules), especially 7.2 and 7.5.
   <details><summary>Hint 1</summary>A <code>mod foo;</code> line tells the compiler to look for <code>src/foo.rs</code>. Without that line the file is ignored completely.</details>
   <details><summary>Hint 2</summary>Files in <code>tests/</code> are compiled as separate crates. They import your library by its crate name, with hyphens turned into underscores.</details>
