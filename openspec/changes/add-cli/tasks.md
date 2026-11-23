@@ -59,8 +59,8 @@
 
 ## 7. Final checks
 
-- [ ] 7.1 Run `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` across the whole workspace, and fix anything reported. Confirm `cargo tree -p mancala-core` still shows no dependencies. Verify: all four are clean.
-- [ ] 7.2 Check that every scenario in `specs/terminal-play/spec.md` has a test, with a `// Scenario:` comment above each one. Verify: no scenario is missing a test.
+- [x] 7.1 Run `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` across the whole workspace, and fix anything reported. Confirm `cargo tree -p mancala-core` still shows no dependencies. Verify: all four are clean.
+- [x] 7.2 Check that every scenario in `specs/terminal-play/spec.md` has a test, with a `// Scenario:` comment above each one. Verify: no scenario is missing a test.
 
 ## Workflow follow-up
 
