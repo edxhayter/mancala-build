@@ -1,0 +1,29 @@
+/* Design tokens from design.md decision 10 (the approved brief).
+   Colours were sampled from the reference board photo. Components use these
+   variables, never raw hex values, so the palette lives in one place. */
+:root {
+  /* The board */
+  --wood: #ba6f35;
+  --wood-edge: #834d2d;
+  --cup-lip: #c17b51;
+  --cup: #965d31;
+  --cup-deep: #532004;
+
+  /* Seeds */
+  --seed: #958f85;
+  --seed-alt: #8a877c;
+  --seed-light: #b3ada2;
+  --seed-dark: #615c53;
+
+  /* The page */
+  --linen: #efe4d3;
+  --linen-panel: #f4eadb;
+  --ink: #2b1810;
+  --ink-soft: #6b4a35;
+  --rust: #8e2a2e;
+  --tab: #c8844c;
+
+  /* Type */
+  --font-display: 'Marcellus SC', serif;
+  --font-body: 'Atkinson Hyperlegible', sans-serif;
+}

@@ -30,9 +30,9 @@
 
 ## 4. The web app skeleton
 
-- [ ] 4.1 Scaffold `web/` with Vite (React + TypeScript template), add Vitest, React Testing Library and jsdom, and add the npm scripts and `.gitignore` entries from design.md decision 8. Set `base` for production. Set up the design tokens from the brief as CSS variables in `web/src/styles/tokens.css`, and add the self-hosted fonts. Verify: `npm run dev` serves a page using the tokens and fonts, and `npm run typecheck`, `npm test` (one placeholder test) and `npm run build` succeed.
+- [x] 4.1 Scaffold `web/` with Vite (React + TypeScript template), add Vitest, React Testing Library and jsdom, and add the npm scripts and `.gitignore` entries from design.md decision 8. Set `base` for production. Set up the design tokens from the brief as CSS variables in `web/src/styles/tokens.css`, and add the self-hosted fonts. Verify: `npm run dev` serves a page using the tokens and fonts, and `npm run typecheck`, `npm test` (one placeholder test) and `npm run build` succeed.
   - **Concepts:** `package.json` and scripts, `node_modules` vs the lockfile, what Vite does in dev vs build, `tsconfig`, CSS custom properties, `@font-face`.
-- [ ] 4.2 Write `engine.ts`: load the WASM once, and wrap it in typed functions returning plain snapshots (`newBoard`, `play`, `legalMoves`, …) that free WASM objects immediately. Add the Vitest setup that loads the real `.wasm` from disk with `initSync`. **(test first)** Tests: a new board's snapshot, playing pit 0 matches *Simple sow from the start*, an illegal move throws. Verify: the tests pass against the real WASM.
+- [x] 4.2 Write `engine.ts`: load the WASM once, and wrap it in typed functions returning plain snapshots (`newBoard`, `play`, `legalMoves`, …) that free WASM objects immediately. Add the Vitest setup that loads the real `.wasm` from disk with `initSync`. **(test first)** Tests: a new board's snapshot, playing pit 0 matches *Simple sow from the start*, an illegal move throws. Verify: the tests pass against the real WASM.
   - **Concepts:** TypeScript types and union types (`'south' | 'north'`), `async`/`await` for loading, why snapshots instead of live WASM objects (design.md decision 4).
 
 ## 5. Game state (pure TypeScript)
