@@ -1,27 +1,82 @@
-import { useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Board } from './board/Board';
-import { legalMoves, newBoard, play } from './engine';
+import { EndOfGame } from './components/EndOfGame';
+import { Header } from './components/Header';
+import { NewGameSheet } from './components/NewGameSheet';
+import { StatusLine } from './components/StatusLine';
+import { legalMoves, type Player } from './engine';
+import { describeResult, playerName } from './game/presentation';
+import { freshSeed, gameReducer, initialState, shownViewer, type GameState } from './game/reducer';
+import type { Settings } from './game/settings';
+import { statusText } from './game/status';
+import './App.css';
 
-// A placeholder page for reviewing the board (task 6.1): click pits to play
-// both sides. Task 6.2 replaces it with the real page and the reducer.
-export function App() {
-  const [board, setBoard] = useState(newBoard);
+interface AppProps {
+  /** Start from a particular game instead of the default (used by tests). */
+  start?: GameState;
+}
+
+export function App({ start }: AppProps) {
+  // The whole game lives in one reducer (design.md decision 4). The third
+  // argument builds the first state once, so freshSeed() isn't called on every render.
+  const [state, dispatch] = useReducer(gameReducer, start, (s) => s ?? initialState(freshSeed()));
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const newGameButton = useRef<HTMLButtonElement>(null);
+
+  // Until the sowing animation exists (task 8.2), every move finishes at once.
+  useEffect(() => {
+    if (state.phase === 'animating') dispatch({ type: 'animationDone' });
+  }, [state.phase, state.lastMove]);
+
+  const { settings, board, phase } = state;
+  const names: Record<Player, string> = {
+    south: playerName(settings, 'south'),
+    north: playerName(settings, 'north'),
+  };
+  // Only on a person's turn, and then the mover is always the viewer.
+  const playable = phase === 'human' ? legalMoves(board) : [];
+
+  const startGame = (next: Settings) => dispatch({ type: 'newGame', settings: next, seed: freshSeed() });
+  const closeSheet = () => {
+    setSheetOpen(false);
+    newGameButton.current?.focus(); // put keyboard focus back where it was
+  };
+
   return (
-    <main style={{ padding: '40px 56px', display: 'grid', gap: 22 }}>
-      <h1 style={{ fontSize: 48, lineHeight: 1 }}>Mancala</h1>
+    <div className="page">
+      <Header settings={settings} onNewGame={() => setSheetOpen(true)} newGameRef={newGameButton} />
       <div className="woven-band" aria-hidden="true" />
-      <div style={{ display: 'grid', justifyItems: 'center', gap: 30, paddingTop: 40 }}>
+
+      <main className="play">
         <Board
           board={board}
-          viewer={board.toMove}
-          names={{ south: 'South', north: 'North' }}
-          playable={legalMoves(board)}
-          onPlay={(pit) => setBoard(play(board, pit).board)}
+          viewer={shownViewer(state)}
+          names={names}
+          playable={playable}
+          onPlay={(pit) => dispatch({ type: 'movePlayed', pit })}
         />
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: 30, margin: 0 }}>
-          {board.toMove === 'south' ? 'South' : 'North'} to move
-        </p>
-      </div>
-    </main>
+        {phase === 'over' ? (
+          <EndOfGame
+            result={describeResult(settings, board)}
+            board={board}
+            names={names}
+            onPlayAgain={() => startGame(settings)}
+          />
+        ) : (
+          <StatusLine text={statusText(state)} caption={state.caption} />
+        )}
+      </main>
+
+      {sheetOpen && (
+        <NewGameSheet
+          initial={settings}
+          onCancel={closeSheet}
+          onStart={(next) => {
+            startGame(next);
+            closeSheet();
+          }}
+        />
+      )}
+    </div>
   );
 }
