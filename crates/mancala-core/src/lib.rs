@@ -3,4 +3,4 @@
 mod board;
 mod rng;
 
-pub use board::{Board, Player};
+pub use board::{Board, MoveError, MoveOutcome, Player};

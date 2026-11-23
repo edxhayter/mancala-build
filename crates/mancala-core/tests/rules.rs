@@ -1,7 +1,7 @@
 //! Rule tests, one per scenario in openspec/.../specs/kalah-rules/spec.md.
 //! These can only use the crate's public API, like any outside user.
 
-use mancala_core::{Board, Player};
+use mancala_core::{Board, MoveError, Player};
 
 /// Checks every pit and store on the board in one call.
 fn assert_position(
@@ -58,4 +58,27 @@ fn from_parts_reads_back() {
 #[test]
 fn empty_pits_are_not_legal() {
     assert_eq!(empty_pits_position().legal_moves(), vec![1, 3]);
+}
+
+// Scenario: Pit number out of range
+#[test]
+fn pit_number_out_of_range() {
+    let board = Board::new();
+    assert_eq!(board.play(6), Err(MoveError::PitOutOfRange));
+    assert_eq!(board.play(99), Err(MoveError::PitOutOfRange));
+    assert_eq!(
+        board,
+        Board::new(),
+        "a rejected move must not change the board"
+    );
+}
+
+// Task 4.1: an empty pit is rejected (built with from_parts).
+// The spec's own *Empty pit* scenario needs sowing, so it's added in section 5.
+#[test]
+fn empty_pit_is_rejected() {
+    let board = empty_pits_position(); // South pit 0 is empty
+    let before = board;
+    assert_eq!(board.play(0), Err(MoveError::EmptyPit));
+    assert_eq!(board, before, "a rejected move must not change the board");
 }

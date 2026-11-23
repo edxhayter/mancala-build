@@ -51,10 +51,10 @@
 
 ## 4. Move API and validation
 
-- [ ] 4.1 **(test first)** Write tests for *Pit number out of range*, and for *Empty pit* using `from_parts` (a position where the chosen pit is 0). Each test also asserts the position is unchanged. Verify: the tests exist and fail to compile.
+- [x] 4.1 **(test first)** Write tests for *Pit number out of range*, and for *Empty pit* using `from_parts` (a position where the chosen pit is 0). Each test also asserts the position is unchanged. Verify: the tests exist and fail to compile.
   <details><summary>Hint 1</summary><code>assert_eq!(result, Err(MoveError::EmptyPit))</code> needs <code>MoveError</code> to derive <code>PartialEq</code> and <code>Debug</code>. Also look up <code>matches!</code> as an alternative.</details>
 
-- [ ] 4.2 Define `MoveError` (`PitOutOfRange`, `EmptyPit`, `GameOver`) and `MoveOutcome { extra_turn, captured }`. Add a private `apply(&mut self, pit)` that only validates for now (returns a default outcome when the move is valid), and a public `play(&self, pit) -> Result<(Board, MoveOutcome), MoveError>` built on it as in design.md decision 4. Add derives (`Board` needs `Clone, Copy, PartialEq, Eq, Debug`) and doc comments. Verify: the 4.1 tests pass.
+- [x] 4.2 Define `MoveError` (`PitOutOfRange`, `EmptyPit`, `GameOver`) and `MoveOutcome { extra_turn, captured }`. Add a private `apply(&mut self, pit)` that only validates for now (returns a default outcome when the move is valid), and a public `play(&self, pit) -> Result<(Board, MoveOutcome), MoveError>` built on it as in design.md decision 4. Add derives (`Board` needs `Clone, Copy, PartialEq, Eq, Debug`) and doc comments. Verify: the 4.1 tests pass.
   - **Read:** Book ch. 9.2 (`Result`, the `?` operator), ch. 4.1–4.2 (ownership, references and borrowing).
   <details><summary>Hint 1</summary>Inside <code>play</code>: make a copy of <code>*self</code> into a mutable local, call <code>apply</code> on it, and use <code>?</code> to pass any error straight back.</details>
   <details><summary>Hint 2</summary>Why can you write <code>let mut b = *self;</code> at all? Try removing <code>Copy</code> from the derive and read the compiler error carefully. It's one of the most important errors in Rust.</details>

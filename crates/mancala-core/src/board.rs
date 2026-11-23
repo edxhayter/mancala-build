@@ -36,6 +36,27 @@ fn opposite(index: usize) -> usize {
     12 - index
 }
 
+/// Why a move was rejected. A rejected move never changes the board.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MoveError {
+    /// The pit number was not in 0..=5.
+    PitOutOfRange,
+    /// The chosen pit has no seeds in it.
+    EmptyPit,
+    /// The game has already finished, so no moves are allowed.
+    GameOver,
+}
+
+/// A summary of what a legal move did.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct MoveOutcome {
+    /// True if the last seed landed in the mover's own store, so they move again.
+    pub extra_turn: bool,
+    /// Seeds moved into the mover's store by a capture (including the capturing
+    /// seed itself). Zero if there was no capture.
+    pub captured: u8,
+}
+
 /// A Kalah position: the seeds in every pit and store, and whose turn it is.
 ///
 /// The fields are private. Read the position through the methods below, and
@@ -106,6 +127,30 @@ impl Board {
     pub fn legal_moves(&self) -> Vec<usize> {
         let my_pits = self.pits(self.to_move);
         (0..6).filter(|&pit| my_pits[pit] > 0).collect()
+    }
+
+    /// Plays `pit` (0..=5, on the mover's side) and returns the new position and
+    /// a summary of what happened. `self` is never changed, so you can try
+    /// several moves from the same position.
+    pub fn play(&self, pit: usize) -> Result<(Board, MoveOutcome), MoveError> {
+        let mut next = *self;
+        let outcome = next.apply(pit)?;
+        Ok((next, outcome))
+    }
+
+    /// Plays `pit` on this board in place. All the rules live here.
+    /// Validates before changing anything, so an error leaves the board untouched.
+    fn apply(&mut self, pit: usize) -> Result<MoveOutcome, MoveError> {
+        // Range check first: indexing with pit 99 would panic.
+        if pit > 5 {
+            return Err(MoveError::PitOutOfRange);
+        }
+        if self.slots[self.to_move.pit_index(pit)] == 0 {
+            return Err(MoveError::EmptyPit);
+        }
+
+        // Sowing, extra turns, captures and game end arrive in sections 5–7.
+        Ok(MoveOutcome::default())
     }
 }
 
