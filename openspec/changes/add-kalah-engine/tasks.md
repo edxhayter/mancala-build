@@ -100,16 +100,16 @@
 
 ## 8. Invariants over random games
 
-- [ ] 8.1 Implement a small xorshift64 RNG in `rng.rs` (`new(seed)`, `next_u64()`, and a helper that picks an index below `n`) with a unit test showing two RNGs with the same seed produce the same sequence. Verify: the RNG unit test passes.
+- [x] 8.1 Implement a small xorshift64 RNG in `rng.rs` (`new(seed)`, `next_u64()`, and a helper that picks an index below `n`) with a unit test showing two RNGs with the same seed produce the same sequence. Verify: the RNG unit test passes.
   - **Read:** Book ch. 3.2 (integer types, overflow behaviour), Rust reference on the `^`, `<<` and `>>` operators. Search "xorshift64" for the three shift constants (13, 7, 17).
   <details><summary>Hint 1</summary>The state must never be 0 (xorshift gets stuck there). Decide what <code>new(0)</code> should do.</details>
   <details><summary>Hint 2</summary>"Index below n" can just be <code>next_u64() % n</code>. It's slightly biased, which doesn't matter for tests. Make the helper <code>pub</code> so the integration tests (and change 6) can use it.</details>
 
-- [ ] 8.2 **(test)** Add a *Conservation over random games* test: from a fixed seed, play at least 2,000 games to the end by picking random legal moves. After every move, assert there are 48 seeds in total. At the end, assert `Status::Finished` and that all pits are empty. Add a move cap per game so a bug causes a test failure instead of an infinite loop. Verify: the test passes and takes under a few seconds with `cargo test --release`.
+- [x] 8.2 **(test)** Add a *Conservation over random games* test: from a fixed seed, play at least 2,000 games to the end by picking random legal moves. After every move, assert there are 48 seeds in total. At the end, assert `Status::Finished` and that all pits are empty. Add a move cap per game so a bug causes a test failure instead of an infinite loop. Verify: the test passes and takes under a few seconds with `cargo test --release`.
   <details><summary>Hint 1</summary>Structure: an outer loop over games, an inner loop while the status is in progress. Pick a random move from <code>legal_moves()</code> and replace the board with the result of <code>play</code>.</details>
   <details><summary>Hint 2</summary>If it fails, print the seed and move number in the assert message (<code>assert_eq!(a, b, "game {} move {}", g, m)</code>) so you can replay exactly that game.</details>
 
-- [ ] 8.3 **(test)** Add the *Exploring two moves from one position* test, and extend 8.2 to assert that the board before each `play` is unchanged afterwards. Verify: both pass.
+- [x] 8.3 **(test)** Add the *Exploring two moves from one position* test, and extend 8.2 to assert that the board before each `play` is unchanged afterwards. Verify: both pass.
   <details><summary>Hint 1</summary>Because <code>Board</code> is <code>Copy + PartialEq</code>, keeping a copy and comparing with <code>assert_eq!</code> is all it takes.</details>
 
 ## 9. Final checks

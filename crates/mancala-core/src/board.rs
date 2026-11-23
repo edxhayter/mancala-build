@@ -203,7 +203,11 @@ impl Board {
         // `index` is now the slot where the last seed landed.
 
         // Extra turn if the last seed landed in the mover's own store.
-        let extra_turn= if index == mover.store_index() { true } else { false };
+        let extra_turn = if index == mover.store_index() {
+            true
+        } else {
+            false
+        };
 
         let captured = self.capture(mover, index);
 

@@ -308,3 +308,19 @@ fn game_already_over() {
     }
     assert!(board.legal_moves().is_empty());
 }
+
+// ---------- Playing doesn't change the original (section 8) ----------
+
+// Scenario: Exploring two moves from one position
+#[test]
+fn exploring_two_moves_from_one_position() {
+    let original = Board::new();
+
+    let (after_0, _) = play_ok(&original, 0);
+    let (after_5, _) = play_ok(&original, 5);
+
+    // Same results as the single-move scenarios above.
+    assert_position(&after_0, [0, 5, 5, 5, 5, 4], 0, [4; 6], 0);
+    assert_position(&after_5, [4, 4, 4, 4, 4, 0], 1, [5, 5, 5, 4, 4, 4], 0);
+    assert_eq!(original, Board::new(), "the original position was changed");
+}

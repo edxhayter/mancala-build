@@ -4,3 +4,4 @@ mod board;
 mod rng;
 
 pub use board::{Board, MoveError, MoveOutcome, Player, Status};
+pub use rng::Rng;
