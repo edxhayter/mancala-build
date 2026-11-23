@@ -20,8 +20,8 @@
 
 ## 3. Board rendering
 
-- [ ] 3.1 **(test first)** In `render.rs`, write unit tests for the scenarios *Starting position* (the exact text from design.md decision 2) and *Position after a move* (South's row reads `0 5 5 5 5 4`, North to move). Add one test with a two-digit store (e.g. 48) to check the alignment. Verify: the tests exist and fail to compile.
-- [ ] 3.2 Implement `BoardView<'a>(pub &'a Board)` and `impl fmt::Display` for it, drawing North's pits 6→1 on top, South's 1→6 underneath, the stores on each end, and the "to move" line. Verify: the 3.1 tests pass.
+- [x] 3.1 **(test first)** In `render.rs`, write unit tests for the scenarios *Starting position* (the exact text from design.md decision 2) and *Position after a move* (South's row reads `0 5 5 5 5 4`, North to move). Add one test with a two-digit store (e.g. 48) to check the alignment. Verify: the tests exist and fail to compile.
+- [x] 3.2 Implement `BoardView<'a>(pub &'a Board)` and `impl fmt::Display` for it, drawing North's pits 6→1 on top, South's 1→6 underneath, the stores on each end, and the "to move" line. Verify: the 3.1 tests pass.
   - **Concepts:** Book ch. 10.2 (traits), ch. 10.3 (lifetimes, skim), the orphan rule, tuple structs (ch. 5.1), `write!` / `writeln!` and width specifiers like `{:>2}` (`std::fmt` docs).
   - **Your piece (optional):** in a scratch branch, try `impl std::fmt::Display for mancala_core::Board` instead and read the compiler error (E0117). It's the orphan rule in action.
 

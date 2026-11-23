@@ -52,7 +52,7 @@ Layout (two-character cells, since a store can hold up to 48):
 ```
        6    5    4    3    2    1        North
      [ 4] [ 4] [ 4] [ 4] [ 4] [ 4]
-[ 0]                                [ 0]
+[ 0]                               [ 0]
      [ 4] [ 4] [ 4] [ 4] [ 4] [ 4]
        1    2    3    4    5    6        South
 South to move
