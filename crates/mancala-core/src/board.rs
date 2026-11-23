@@ -203,11 +203,7 @@ impl Board {
         // `index` is now the slot where the last seed landed.
 
         // Extra turn if the last seed landed in the mover's own store.
-        let extra_turn = if index == mover.store_index() {
-            true
-        } else {
-            false
-        };
+        let extra_turn = index == mover.store_index();
 
         let captured = self.capture(mover, index);
 
@@ -304,7 +300,7 @@ mod tests {
         assert_eq!(Player::North.pit_index(5), 12);
     }
 
-    // Spec scenario: Opposite pits
+    // Scenario: Opposite pits
     #[test]
     fn opposite_pits() {
         assert_eq!(opposite(1), 11); // South pit 1 ↔ North pit 4

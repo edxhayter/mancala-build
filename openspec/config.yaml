@@ -1,8 +1,10 @@
 schema: spec-driven
 
 context: |
-  This is a LEARNING project. The developer is new to Rust and wants to write the
-  code themselves. The goal is learning Rust by building, not shipping a product fast.
+  This is a LEARNING project. The developer is new to Rust and is learning by
+  building. Claude writes the code in small blocks and explains each one; the
+  developer reads, asks questions, sometimes writes a small piece, and runs all
+  git commands themselves.
   - Game: Kalah (6 pits per side, stores, extra turn on landing in own store, captures).
   - Architecture: pure Rust core crate (no browser deps) compiled to WASM, thin
     TypeScript UI, static hosting on GitHub Pages. Online play is P2P over WebRTC.
@@ -16,16 +18,20 @@ rules:
     - Explain trade-offs in terms a Rust beginner can follow
     - Prefer simple, idiomatic std-only solutions before reaching for crates
   tasks:
-    - Each task is something the developer implements; keep tasks small (under ~1 hour)
-    - For each task give hints, the Rust concepts or Book chapters to read, and the
-      tests that prove it works. Do NOT include solution code
-    - Put "write the failing test" tasks before implementation tasks where practical
+    - Each task is a block Claude implements and explains; keep blocks small enough
+      to read in one sitting (under ~1 hour of reading and discussion)
+    - For each task name the Rust concepts or Book chapters it shows, and the tests
+      or checks that prove it works. Do NOT include solution code in tasks.md
+    - Where it fits, mark one small optional piece the developer can write themselves
+    - Put "write the failing test" steps before implementation where practical
 
 operations:
   apply:
     guidance:
-      - Do not write implementation code. Act as a mentor and reviewer
-      - For each task, explain the goal, give hints, then review the developer's code
-      - Explain compiler errors and point to concepts; offer progressively stronger
-        hints instead of full solutions unless the developer explicitly asks
-      - Scaffolding (Cargo.toml, CI, config files) may be written when asked
+      - Write each task's code as a block, then explain it in beginner-friendly terms
+        with links to the relevant Book chapters
+      - Offer a small optional piece for the developer; if they hand it back, write it
+      - Never run git commands that change history or the index (add, commit, push,
+        branch); suggest a commit message at natural stopping points instead
+      - Run cargo fmt, cargo clippy -- -D warnings and cargo test before reporting a
+        task done

@@ -114,10 +114,10 @@
 
 ## 9. Final checks
 
-- [ ] 9.1 Run `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` across the workspace, and fix anything reported. Verify: all three exit cleanly.
+- [x] 9.1 Run `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` across the workspace, and fix anything reported. Verify: all three exit cleanly.
   <details><summary>Hint 1</summary>Clippy suggestions are a great way to learn idiomatic Rust. For each one, read the linked explanation rather than just applying the fix.</details>
 
-- [ ] 9.2 Check that every spec scenario in `specs/kalah-rules/spec.md` has a matching test (a comment with the scenario name above each test makes this easy). Verify: no scenario is missing a test.
+- [x] 9.2 Check that every spec scenario in `specs/kalah-rules/spec.md` has a matching test (a comment with the scenario name above each test makes this easy). Verify: no scenario is missing a test.
 
 ## Stretch goals (optional, not tracked)
 
