@@ -7,7 +7,7 @@ The rules engine is finished and fully tested, but you can't play it yet. A term
 ## What Changes
 
 - Add a second workspace crate, `crates/mancala-cli`, that builds a binary called `mancala`. It depends on `mancala-core` and on `clap` for command-line options.
-- Draw the board in the terminal: North's pits across the top (from North's point of view), South's along the bottom, the stores at each end, pit numbers labelled, and whose turn it is.
+- Draw the board in the terminal from one player's point of view: that player's pits along the bottom, running towards their store on the right, with the opponent's pits across the top, pit numbers labelled, and whose turn it is. Against the bot you always see your own side at the bottom. In hotseat the view turns to face whoever is moving.
 - Add two ways to play:
   - **Hotseat:** two people take turns at one keyboard.
   - **Versus a random bot:** you play one side, and the computer picks a random legal move for the other. Use `--seed` to make the bot's choices repeatable.
