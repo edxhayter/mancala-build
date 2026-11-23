@@ -27,8 +27,8 @@
 
 ## 4. Input parsing
 
-- [ ] 4.1 **(test first)** In `input.rs`, write unit tests for `parse_input`: `"3"` → `Move(2)`, `"  1  "` → `Move(0)`, `"banana"` → `NotANumber`, `"0"` and `"7"` → `OutOfRange`, `"q"` and `"quit"` → `Quit`, and an empty line → `NotANumber`. Verify: the tests exist and fail to compile.
-- [ ] 4.2 Implement the `Command` and `InputError` enums and `parse_input` (design.md decision 3). Verify: the 4.1 tests pass.
+- [x] 4.1 **(test first)** In `input.rs`, write unit tests for `parse_input`: `"3"` → `Move(2)`, `"  1  "` → `Move(0)`, `"banana"` → `NotANumber`, `"0"` and `"7"` → `OutOfRange`, `"q"` and `"quit"` → `Quit`, and an empty line → `NotANumber`. Verify: the tests exist and fail to compile.
+- [x] 4.2 Implement the `Command` and `InputError` enums and `parse_input` (design.md decision 3). Verify: the 4.1 tests pass.
   - **Concepts:** Book ch. 8.2 (strings, `&str` vs `String`), `str::trim`, `str::parse` and `ParseIntError` (ch. 9.2), `match` with guards (ch. 19.2 / 18.3).
   - **Your piece (optional):** make `Q` and `QUIT` work too, and add the test cases.
 
