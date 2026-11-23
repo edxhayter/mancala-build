@@ -28,19 +28,30 @@ The `mancala` program SHALL accept options for the opponent (`human` for hotseat
 - **AND** the program exits with a non-zero status and no game starts
 
 ### Requirement: Board display
-Before each move, the program SHALL show the whole position: North's six pits along the top and South's six along the bottom, each North pit directly above the South pit opposite it, North's store on the left, South's store on the right, the pit numbers 1–6 for each side, and which player is to move.
+Before each move, the program SHALL show the whole position from one player's point of view (the *viewer*): the viewer's pits along the bottom, numbered 1–6 from left to right, with the viewer's store on the right; the opponent's pits along the top, numbered 6–1 from left to right so each is above the pit opposite it, with the opponent's store on the left; and which player is to move. Against the bot the viewer SHALL be the human's side. In hotseat the viewer SHALL be the player to move.
 
 #### Scenario: Starting position
-- **WHEN** a new game starts
+- **WHEN** a new game starts with the human as South
 - **THEN** every pit shows 4 and both stores show 0
-- **AND** North's pits are labelled 6 to 1 from left to right, and South's 1 to 6 from left to right
+- **AND** North's pits are along the top, labelled 6 to 1 from left to right, and South's along the bottom, labelled 1 to 6 from left to right
 - **AND** the display says South is to move
 
 #### Scenario: Position after a move
-- **GIVEN** a new game
+- **GIVEN** a new game against the bot with the human as South
 - **WHEN** South plays pit 1
-- **THEN** South's pits show `0 5 5 5 5 4` from pit 1 to pit 6, North's all show 4, both stores show 0
+- **THEN** the bottom row shows South's pits as `0 5 5 5 5 4` from pit 1 to pit 6, the top row shows North's all as 4, and both stores show 0
 - **AND** the display says North is to move
+
+#### Scenario: Playing North puts North at the bottom
+- **WHEN** a game against the bot starts with `--side north`
+- **THEN** North's pits are along the bottom, labelled 1 to 6 from left to right, with North's store on the right
+- **AND** South's pits are along the top, labelled 6 to 1 from left to right, with South's store on the left
+
+#### Scenario: Hotseat view follows the player to move
+- **GIVEN** a new hotseat game
+- **WHEN** South plays pit 1
+- **THEN** the next board is shown from North's side: North's pits along the bottom, all showing 4
+- **AND** the top row shows South's pits as `4 5 5 5 5 0` from left to right (pit 6 down to pit 1)
 
 ### Requirement: Entering a move
 A human SHALL enter a move as a pit number from 1 to 6 on their own side, where pit 1 is pit 0 in `kalah-rules` and pit 6 is pit 5. The prompt SHALL name the player to move. Spaces around the number SHALL be ignored.
@@ -118,7 +129,7 @@ After every move, by a human or the bot, the program SHALL report an extra turn 
 - **THEN** the program reports that South captured 6 seeds
 
 ### Requirement: End of game
-When the game ends, the program SHALL show the final position, both players' scores (their store totals), and the result: the winner, or a draw. It SHALL then exit with a success status without asking for another move.
+When the game ends, the program SHALL show the final position, both players' scores (their store totals), and the result: the winner, or a draw. The final position SHALL be shown from the human's side against the bot, and from South's side in hotseat. The program SHALL then exit with a success status without asking for another move.
 
 #### Scenario: A finished game
 - **GIVEN** a game in progress

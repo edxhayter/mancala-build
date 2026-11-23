@@ -43,11 +43,11 @@ crates/mancala-cli/
 ### 2. The board renderer lives in the CLI, as `Display` on a wrapper type
 
 ```
-pub struct BoardView<'a>(pub &'a Board);
-impl fmt::Display for BoardView<'_> { ... }        // println!("{}", BoardView(&board))
+pub struct BoardView<'a> { pub board: &'a Board, pub viewer: Player }
+impl fmt::Display for BoardView<'_> { ... }   // println!("{}", BoardView { board: &b, viewer: Player::South })
 ```
 
-Layout (two-character cells, since a store can hold up to 48):
+The board is drawn from the **viewer's** side: the viewer's pits along the bottom running 1 → 6 towards their own store on the right, and the opponent's along the top. Layout from South's view (two-character cells, since a store can hold up to 48):
 
 ```
        6    5    4    3    2    1        North
@@ -58,12 +58,14 @@ Layout (two-character cells, since a store can hold up to 48):
 South to move
 ```
 
-North's row is printed pit 6 → pit 1, so each North pit sits above its opposite South pit (South pit 1 is opposite North pit 6, as in `kalah-rules`).
+The top row is the opponent's pits printed 6 → 1, so each sits above the pit opposite it (pit 1 is opposite the other side's pit 6, as in `kalah-rules`). From North's view the same code swaps the roles: North along the bottom with its store on the right, South along the top with its store on the left. Every row, label and store is picked from `viewer` and `viewer.opponent()`, with nothing hard-coded to South or North.
+
+**The engine needs no change.** `kalah-rules` already numbers pits per player, so any front end can draw from either side. The future web/P2P change should draw each client from its own player's view in the same way.
 
 **Why in the CLI, not core:** the 1–6 labels and the layout are terminal choices. The web UI (change 4) will draw its own board, so a `Display` in core would only serve one user and would grow core's API, which the engine design deliberately kept small.
 **Why a wrapper type:** Rust's *orphan rule* says you can only implement a trait for a type if your crate owns the trait or the type. The CLI owns neither `Display` nor `Board`, so `impl Display for Board` won't compile here. Wrapping `&Board` in a type the CLI *does* own is the standard workaround. Hitting this rule on purpose is a useful lesson.
 **Alternative:** a plain `fn render(board: &Board) -> String`. That's simpler, but it misses implementing a standard trait and the orphan rule. Either satisfies the spec.
-**Teaches:** traits, `impl Trait for Type`, the orphan rule, tuple structs, a first look at lifetimes (`'a`), `write!` / `writeln!`, format width specifiers (`{:>2}`).
+**Teaches:** traits, `impl Trait for Type`, the orphan rule, structs holding references, a first look at lifetimes (`'a`), `write!` / `writeln!`, format width specifiers (`{:>2}`).
 
 ### 3. Input parsing is a pure function
 
@@ -100,6 +102,8 @@ pub fn run<R: BufRead, W: Write>(config: GameConfig, input: R, output: W) -> io:
 ```
 
 `main` calls `run(config, stdin().lock(), stdout().lock())`. Tests call it with a byte string as input (`&b"3\n1\nq\n"[..]` implements `BufRead`) and a `Vec<u8>` as output, then check the returned `GameEnd` and search the output text.
+
+**Choosing the viewer** (see the spec's *Board display* requirement): against the bot it's always the human's side. In hotseat it's `board.to_move()` while the game is running, and South once it's over. A bot-vs-bot game, which only tests use, is shown from South. This rule lives in one small function, so the loop and the tests agree.
 
 `start` is always `Board::new()` from the command line. Tests can pass any position (built with `Board::from_parts`), so end-of-game and capture scenarios don't need 30 scripted moves.
 
