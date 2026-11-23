@@ -18,12 +18,12 @@
 
 ## 2. Player
 
-- [ ] 2.1 **(test first)** Write unit tests (a `#[cfg(test)] mod tests` inside `board.rs`) for: `opponent()` of each player, the store index of each player (6 and 13), relative pit to absolute index (South 0 → 0, North 0 → 7, North 5 → 12), and the opposite of an absolute index (scenario *Opposite pits*: South 1 ↔ North 4, North 0 ↔ South 5). Verify: tests exist and fail to compile because the items don't exist yet.
+- [x] 2.1 **(test first)** Write unit tests (a `#[cfg(test)] mod tests` inside `board.rs`) for: `opponent()` of each player, the store index of each player (6 and 13), relative pit to absolute index (South 0 → 0, North 0 → 7, North 5 → 12), and the opposite of an absolute index (scenario *Opposite pits*: South 1 ↔ North 4, North 0 ↔ South 5). Verify: tests exist and fail to compile because the items don't exist yet.
   - **Read:** Book ch. 11.1 (How to Write Tests), 11.3 (Test Organization: unit tests).
   <details><summary>Hint 1</summary>Inside the test module, <code>use super::*;</code> brings everything from the parent module into scope, private items included.</details>
   <details><summary>Hint 2</summary>For the opposite test, check both directions with absolute indices: opposite(1) should be 11 and opposite(11) should be 1. Then work out what 1 and 11 are in relative terms.</details>
 
-- [ ] 2.2 Implement `enum Player { South, North }` with `opponent()`, a store-index helper, a relative-to-absolute pit helper, and a free or associated `opposite(index)` function. Add derives and a `///` doc comment on the enum. Verify: all 2.1 tests pass.
+- [x] 2.2 Implement `enum Player { South, North }` with `opponent()`, a store-index helper, a relative-to-absolute pit helper, and a free or associated `opposite(index)` function. Add derives and a `///` doc comment on the enum. Verify: all 2.1 tests pass.
   - **Read:** Book ch. 6.1–6.2 (Enums, `match`), ch. 5.3 (Method Syntax), Appendix C (Derivable Traits).
   <details><summary>Hint 1</summary>A <code>match self { Player::South => ..., Player::North => ... }</code> is the core of every helper. The compiler forces you to handle both arms. That's a feature: add a third player someday and it'll tell you every place to update.</details>
   <details><summary>Hint 2</summary>You'll want to compare and copy players freely, and print them in test failures. Which four derives does that need?</details>
