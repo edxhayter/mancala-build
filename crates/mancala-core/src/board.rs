@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 /// One of the two players. South moves first.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Player {
@@ -55,6 +57,15 @@ pub struct MoveOutcome {
     /// Seeds moved into the mover's store by a capture (including the capturing
     /// seed itself). Zero if there was no capture.
     pub captured: u8,
+}
+
+/// Whether the game is still going, and if not, who won.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Status {
+    /// Moves can still be played.
+    InProgress,
+    /// The game is over. `winner` is `None` for a draw.
+    Finished { winner: Option<Player> },
 }
 
 /// A Kalah position: the seeds in every pit and store, and whose turn it is.
@@ -123,7 +134,26 @@ impl Board {
         self.to_move
     }
 
+    /// Whether the game is in progress or finished (and if so, who won).
+    ///
+    /// The game is finished exactly when every pit is empty, which is always
+    /// true after the final sweep. No separate "game over" flag is stored.
+    pub fn status(&self) -> Status {
+        if !(self.side_is_empty(Player::South) && self.side_is_empty(Player::North)) {
+            return Status::InProgress;
+        }
+        let south = self.store(Player::South);
+        let north = self.store(Player::North);
+        let winner = match south.cmp(&north) {
+            Ordering::Greater => Some(Player::South),
+            Ordering::Less => Some(Player::North),
+            Ordering::Equal => None,
+        };
+        Status::Finished { winner }
+    }
+
     /// The pits (0..=5) the player to move may legally play, in ascending order.
+    /// Empty once the game is over, because the final sweep empties every pit.
     pub fn legal_moves(&self) -> Vec<usize> {
         let my_pits = self.pits(self.to_move);
         (0..6).filter(|&pit| my_pits[pit] > 0).collect()
@@ -141,7 +171,11 @@ impl Board {
     /// Plays `pit` on this board in place. All the rules live here.
     /// Validates before changing anything, so an error leaves the board untouched.
     fn apply(&mut self, pit: usize) -> Result<MoveOutcome, MoveError> {
-        // Range check first: indexing with pit 99 would panic.
+        // Game over first: a finished game rejects every move, even pit 99.
+        if self.status() != Status::InProgress {
+            return Err(MoveError::GameOver);
+        }
+        // Range check before reading the pit: indexing with pit 99 would panic.
         if pit > 5 {
             return Err(MoveError::PitOutOfRange);
         }
@@ -173,7 +207,13 @@ impl Board {
 
         let captured = self.capture(mover, index);
 
-        // Game end (section 7) will go here.
+        // Game end: if either side is now empty, sweep the leftovers to their
+        // owners' stores. A game-ending move never earns an extra turn.
+        let game_over = self.side_is_empty(Player::South) || self.side_is_empty(Player::North);
+        if game_over {
+            self.sweep();
+        }
+        let extra_turn = extra_turn && !game_over;
 
         if !extra_turn {
             self.to_move = mover.opponent();
@@ -182,6 +222,21 @@ impl Board {
             extra_turn,
             captured,
         })
+    }
+
+    /// True if all six of `player`'s pits are empty.
+    fn side_is_empty(&self, player: Player) -> bool {
+        self.pits(player).iter().all(|&seeds| seeds == 0)
+    }
+
+    /// Moves every seed left in each player's pits into that player's own store.
+    fn sweep(&mut self) {
+        for player in [Player::South, Player::North] {
+            let start = player.pit_index(0);
+            let leftover: u8 = self.slots[start..start + 6].iter().sum();
+            self.slots[start..start + 6].fill(0);
+            self.slots[player.store_index()] += leftover;
+        }
     }
 
     /// If `last` (where the mover's last seed landed) qualifies for a capture,

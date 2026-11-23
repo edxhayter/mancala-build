@@ -1,7 +1,7 @@
 //! Rule tests, one per scenario in openspec/.../specs/kalah-rules/spec.md.
 //! These can only use the crate's public API, like any outside user.
 
-use mancala_core::{Board, MoveError, MoveOutcome, Player};
+use mancala_core::{Board, MoveError, MoveOutcome, Player, Status};
 
 /// Checks every pit and store on the board in one call.
 fn assert_position(
@@ -23,7 +23,7 @@ fn new_game() {
     let board = Board::new();
     assert_position(&board, [4; 6], 0, [4; 6], 0);
     assert_eq!(board.to_move(), Player::South);
-    // "AND the game status is in progress" is checked once status() exists (task 7.2).
+    assert_eq!(board.status(), Status::InProgress);
 }
 
 // Scenario: Reading a position
@@ -222,4 +222,89 @@ fn a_lap_of_13_seeds_returns_to_the_starting_pit() {
     assert_position(&board, [0, 1, 1, 1, 1, 1], 4, [2, 2, 2, 2, 2, 0], 0);
     assert_eq!(outcome.captured, 3);
     assert_eq!(board.to_move(), Player::North);
+}
+
+// ---------- Game end (section 7) ----------
+
+/// A finished position: every pit empty, with the given stores.
+fn finished(south_store: u8, north_store: u8) -> Board {
+    Board::from_parts([0; 6], south_store, [0; 6], north_store, Player::South)
+}
+
+// Scenario: Mover empties their own side
+#[test]
+fn mover_empties_their_own_side() {
+    let start = Board::from_parts(
+        [0, 0, 0, 0, 0, 2],
+        10,
+        [0, 1, 0, 0, 0, 3],
+        10,
+        Player::South,
+    );
+    let (board, _) = play_ok(&start, 5);
+    assert!(matches!(board.status(), Status::Finished { .. }));
+    assert_position(&board, [0; 6], 11, [0; 6], 15);
+}
+
+// Scenario: Mover empties the opponent's side by capturing
+#[test]
+fn mover_empties_the_opponents_side_by_capturing() {
+    let start = Board::from_parts([1, 0, 0, 3, 0, 0], 0, [0, 0, 0, 0, 4, 0], 0, Player::South);
+    let (board, _) = play_ok(&start, 0);
+    assert!(matches!(board.status(), Status::Finished { .. }));
+    assert_position(&board, [0; 6], 8, [0; 6], 0);
+}
+
+// Scenario: Game-ending move into own store gives no extra turn
+#[test]
+fn game_ending_move_into_own_store_gives_no_extra_turn() {
+    let start = Board::from_parts([0, 0, 0, 0, 0, 1], 5, [0, 0, 2, 0, 0, 0], 4, Player::South);
+    let (board, outcome) = play_ok(&start, 5);
+    assert!(matches!(board.status(), Status::Finished { .. }));
+    assert!(!outcome.extra_turn);
+    assert_position(&board, [0; 6], 6, [0; 6], 6);
+}
+
+// Scenario: In progress
+#[test]
+fn in_progress() {
+    assert_eq!(Board::new().status(), Status::InProgress);
+}
+
+// Scenario: North wins
+#[test]
+fn north_wins() {
+    assert_eq!(
+        finished(11, 15).status(),
+        Status::Finished {
+            winner: Some(Player::North)
+        }
+    );
+}
+
+// Scenario: South wins
+#[test]
+fn south_wins() {
+    assert_eq!(
+        finished(8, 0).status(),
+        Status::Finished {
+            winner: Some(Player::South)
+        }
+    );
+}
+
+// Scenario: Draw
+#[test]
+fn draw() {
+    assert_eq!(finished(6, 6).status(), Status::Finished { winner: None });
+}
+
+// Scenario: Game already over
+#[test]
+fn game_already_over() {
+    let board = finished(24, 24);
+    for pit in [0, 5, 6, 99] {
+        assert_eq!(board.play(pit), Err(MoveError::GameOver), "pit {pit}");
+    }
+    assert!(board.legal_moves().is_empty());
 }

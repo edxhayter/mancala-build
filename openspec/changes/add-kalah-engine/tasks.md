@@ -87,15 +87,15 @@
 
 ## 7. Game end and status
 
-- [ ] 7.1 **(test first)** Write tests for *Mover empties their own side*, *Mover empties the opponent's side by capturing*, *Game-ending move into own store gives no extra turn*, *In progress*, *North wins*, *South wins* and *Draw*. Verify: the tests fail.
+- [x] 7.1 **(test first)** Write tests for *Mover empties their own side*, *Mover empties the opponent's side by capturing*, *Game-ending move into own store gives no extra turn*, *In progress*, *North wins*, *South wins* and *Draw*. Verify: the tests fail.
 
-- [ ] 7.2 Define `pub enum Status { InProgress, Finished { winner: Option<Player> } }` and implement `status()`. After every move in `apply`, check whether either side is empty, sweep the leftover seeds to each owner's store, and make sure a game-ending move reports no extra turn. Add doc comments. Verify: all 7.1 tests pass.
+- [x] 7.2 Define `pub enum Status { InProgress, Finished { winner: Option<Player> } }` and implement `status()`. After every move in `apply`, check whether either side is empty, sweep the leftover seeds to each owner's store, and make sure a game-ending move reports no extra turn. Add doc comments. Verify: all 7.1 tests pass.
   - **Read:** Book ch. 6.1 (enums holding data), ch. 6.1 again for `Option<T>`, ch. 6.3 (`if let`).
   <details><summary>Hint 1</summary>Work out <code>status()</code> from the board itself (design.md decision 5): if every pit is empty the game is finished, so compare the two stores. No stored flag needed.</details>
   <details><summary>Hint 2</summary><code>Ordering</code> from <code>std::cmp</code> plus <code>match a.cmp(&b)</code> is a neat way to get win, lose or draw in one expression.</details>
   <details><summary>Hint 3</summary>Order matters inside <code>apply</code>: sow → capture → game-end check and sweep → decide who moves next. Doing the sweep before the extra-turn decision makes the "no extra turn when the game ends" rule easy.</details>
 
-- [ ] 7.3 Make `play` reject any move on a finished board with `GameOver`, and make `legal_moves()` return an empty list when the game is over. Add the *Game already over* test. Verify: it passes, along with all earlier tests.
+- [x] 7.3 Make `play` reject any move on a finished board with `GameOver`, and make `legal_moves()` return an empty list when the game is over. Add the *Game already over* test. Verify: it passes, along with all earlier tests.
   <details><summary>Hint 1</summary>Which validation check should come first now, and why?</details>
 
 ## 8. Invariants over random games
