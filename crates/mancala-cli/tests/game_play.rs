@@ -1,6 +1,7 @@
 //! Whole games driven by scripted input, with no real terminal.
 //! Each test feeds `run` some lines of "typing" and reads back everything it printed.
 
+use mancala_ai::Level;
 use mancala_cli::game::{Controller, GameConfig, GameEnd, Players, run};
 use mancala_core::{Board, Player, Status};
 
@@ -172,7 +173,7 @@ const NORTH_AT_BOTTOM: &str = "       1    2    3    4    5    6        North";
 #[test]
 fn bot_replies_to_a_move() {
     let (end, out) = play(
-        Players::against_bot(Player::South),
+        Players::against(Player::South, Controller::RandomBot),
         1,
         Board::new(),
         "1\nq\n",
@@ -194,7 +195,12 @@ fn bot_replies_to_a_move() {
 // Scenario: Playing North puts North at the bottom
 #[test]
 fn playing_north_puts_north_at_the_bottom() {
-    let (_, out) = play(Players::against_bot(Player::North), 1, Board::new(), "q\n");
+    let (_, out) = play(
+        Players::against(Player::North, Controller::RandomBot),
+        1,
+        Board::new(),
+        "q\n",
+    );
     assert!(
         out.contains("South (bot) plays pit "),
         "the bot moves first: {out}"
@@ -212,13 +218,13 @@ fn playing_north_puts_north_at_the_bottom() {
 fn repeatable_with_a_seed() {
     let script = "1\n2\n3\n4\n5\n6\n1\n2\n3\nq\n";
     let first = play(
-        Players::against_bot(Player::South),
+        Players::against(Player::South, Controller::RandomBot),
         42,
         Board::new(),
         script,
     );
     let second = play(
-        Players::against_bot(Player::South),
+        Players::against(Player::South, Controller::RandomBot),
         42,
         Board::new(),
         script,
@@ -253,7 +259,7 @@ fn bot_against_bot_always_finishes() {
 #[test]
 fn recap_after_the_bots_turn() {
     let (_, out) = play(
-        Players::against_bot(Player::South),
+        Players::against(Player::South, Controller::RandomBot),
         1,
         Board::new(),
         "1\nq\n",
@@ -291,7 +297,7 @@ fn recap_covers_a_whole_turn_with_extra_turns() {
 #[test]
 fn no_recap_of_your_own_turn_against_the_bot() {
     let (_, out) = play(
-        Players::against_bot(Player::South),
+        Players::against(Player::South, Controller::RandomBot),
         1,
         Board::new(),
         "1\nq\n",
@@ -311,10 +317,73 @@ fn recap_when_the_bot_ends_the_game() {
         23,
         Player::North,
     );
-    let (end, out) = play(Players::against_bot(Player::South), 1, start, "");
+    let (end, out) = play(
+        Players::against(Player::South, Controller::RandomBot),
+        1,
+        start,
+        "",
+    );
     assert!(matches!(end, GameEnd::Finished(_)));
     let recap = out
         .find("North played pit 6 (1 seed).")
         .unwrap_or_else(|| panic!("{out}"));
     assert!(recap < out.find("Final score").unwrap(), "{out}");
+}
+
+// ---------- The AI opponent (add-minimax-ai, task 6.2) ----------
+
+// Scenario: The AI announces its moves
+#[test]
+fn the_ai_announces_its_moves() {
+    // A small late-game position, so a hard (deep) search is quick even in a debug build.
+    let start = Board::from_parts([1; 6], 18, [1; 6], 18, Player::North);
+    let ai = Players::against(Player::South, Controller::Ai(Level::Hard));
+    let (_, out) = play(ai, 1, start, "q\n");
+    assert!(out.contains("North (AI, hard) plays pit "), "{out}");
+    assert_eq!(
+        count(&out, NORTH_PROMPT),
+        0,
+        "nobody types for the AI: {out}"
+    );
+}
+
+// Scenario: Recap of the AI's turn
+#[test]
+fn recap_of_the_ais_turn() {
+    let ai = Players::against(Player::South, Controller::Ai(Level::Medium));
+    let (_, out) = play(ai, 1, Board::new(), "1\nq\n");
+    let recap = out
+        .find("--- North's turn ---")
+        .expect("a recap of the AI's turn");
+    assert!(recap < out.rfind(SOUTH_PROMPT).unwrap(), "{out}");
+}
+
+// Scenario: Replaying a game against the AI
+#[test]
+fn replaying_a_game_against_the_ai() {
+    let script = "1\n2\n3\n4\n5\n6\n1\n2\n3\nq\n";
+    let ai = Players::against(Player::South, Controller::Ai(Level::Medium));
+    let first = play(ai, 42, Board::new(), script);
+    let second = play(ai, 42, Board::new(), script);
+    assert_eq!(
+        first, second,
+        "same seed, level and moves must give the same game"
+    );
+}
+
+#[test]
+fn ai_against_random_finishes_and_ai_usually_wins() {
+    let players = Players {
+        south: Controller::Ai(Level::Easy),
+        north: Controller::RandomBot,
+    };
+    let wins = (0..20)
+        .filter(|&seed| {
+            let (end, _) = play(players, seed, Board::new(), "");
+            end == GameEnd::Finished(Status::Finished {
+                winner: Some(Player::South),
+            })
+        })
+        .count();
+    assert!(wins >= 15, "easy AI won only {wins} of 20 against random");
 }

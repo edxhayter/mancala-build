@@ -2,6 +2,7 @@
 
 use std::io::{self, BufRead, Write};
 
+use mancala_ai::{Level, choose_move};
 use mancala_core::{Board, MoveError, MoveOutcome, Player, Rng, Status};
 
 use crate::input::{Command, InputError, parse_input};
@@ -14,8 +15,18 @@ use crate::render::{BoardView, player_name};
 pub enum Controller {
     /// A person typing at the keyboard.
     Human,
-    /// The computer, picking a random legal move. A stand-in until the real AI (change 3).
+    /// The computer, picking a random legal move.
     RandomBot,
+    /// The computer, searching ahead at the given level.
+    Ai(Level),
+}
+
+impl Controller {
+    /// True for any computer player (the random bot or the AI). Everything the
+    /// spec says about "the bot" uses this, so it applies to the AI too.
+    pub fn is_computer(self) -> bool {
+        matches!(self, Controller::RandomBot | Controller::Ai(_))
+    }
 }
 
 /// The controller for each side.
@@ -34,15 +45,15 @@ impl Players {
         }
     }
 
-    /// A person playing `human`'s side against the random bot.
-    pub fn against_bot(human: Player) -> Self {
+    /// A person playing `human`'s side against the computer `opponent`.
+    pub fn against(human: Player, opponent: Controller) -> Self {
         match human {
             Player::South => Players {
                 south: Controller::Human,
-                north: Controller::RandomBot,
+                north: opponent,
             },
             Player::North => Players {
-                south: Controller::RandomBot,
+                south: opponent,
                 north: Controller::Human,
             },
         }
@@ -97,7 +108,7 @@ pub fn run<R: BufRead, W: Write>(
             let last = config.players.controller(turn_log.player);
             let next_is_human = config.players.controller(board.to_move()) == Controller::Human;
             let show = if finished {
-                last == Controller::RandomBot // the bot ended the game
+                last.is_computer() // the computer ended the game
             } else {
                 next_is_human // a person is about to move after someone else's turn
             };
@@ -128,6 +139,7 @@ pub fn run<R: BufRead, W: Write>(
         let turn = match config.players.controller(mover) {
             Controller::Human => human_turn(&board, &mut input, &mut output)?,
             Controller::RandomBot => bot_turn(&board, &mut rng, &mut output)?,
+            Controller::Ai(level) => ai_turn(&board, level, &mut rng, &mut output)?,
         };
 
         match turn {
@@ -211,20 +223,50 @@ fn viewer(players: &Players, board: &Board) -> Player {
     }
 }
 
-/// The bot picks a random legal move and says which pit it chose.
+/// The bot picks a random legal move.
 fn bot_turn<W: Write>(board: &Board, rng: &mut Rng, output: &mut W) -> io::Result<Turn> {
     let legal = board.legal_moves();
     let pit = legal[rng.below(legal.len())];
+    computer_plays(board, pit, "bot", output)
+}
+
+/// The AI searches ahead and picks its best move (ties broken by `rng`).
+fn ai_turn<W: Write>(
+    board: &Board,
+    level: Level,
+    rng: &mut Rng,
+    output: &mut W,
+) -> io::Result<Turn> {
+    let pit = choose_move(board, level, rng);
+    computer_plays(board, pit, &format!("AI, {}", level_name(level)), output)
+}
+
+/// Announces a computer's move, e.g. "North (AI, hard) plays pit 3.", and plays it.
+fn computer_plays<W: Write>(
+    board: &Board,
+    pit: usize,
+    who: &str,
+    output: &mut W,
+) -> io::Result<Turn> {
     writeln!(
         output,
-        "{} (bot) plays pit {}.",
+        "{} ({who}) plays pit {}.",
         player_name(board.to_move()),
         pit + 1 // engine 0-5 back to the players' 1-6
     )?;
     let (next, outcome) = board
         .play(pit)
-        .expect("a move from legal_moves() is always legal");
+        .expect("computer players only choose legal moves");
     Ok(Turn::Played(pit, next, outcome))
+}
+
+/// The level's name as players see it.
+fn level_name(level: Level) -> &'static str {
+    match level {
+        Level::Easy => "easy",
+        Level::Medium => "medium",
+        Level::Hard => "hard",
+    }
 }
 
 /// Asks the person to move until they enter a legal move or quit.

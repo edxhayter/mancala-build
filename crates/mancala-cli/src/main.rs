@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use clap::Parser;
 use mancala_cli::args::{Cli, Opponent};
-use mancala_cli::game::{GameConfig, Players, run};
+use mancala_cli::game::{Controller, GameConfig, Players, run};
 use mancala_core::Board;
 
 fn main() -> ExitCode {
@@ -13,15 +13,16 @@ fn main() -> ExitCode {
 
     let players = match cli.opponent {
         Opponent::Human => Players::hotseat(),
-        Opponent::Random => Players::against_bot(cli.side.player()),
+        Opponent::Random => Players::against(cli.side.player(), Controller::RandomBot),
+        Opponent::Ai => Players::against(cli.side.player(), Controller::Ai(cli.level.ai_level())),
     };
 
     let seed = match cli.seed {
         Some(seed) => seed,
         None => {
             let seed = seed_from_clock();
-            if cli.opponent == Opponent::Random {
-                println!("Bot seed: {seed} (replay this game with --seed {seed})");
+            if cli.opponent != Opponent::Human {
+                println!("Seed: {seed} (replay this game with --seed {seed})");
             }
             seed
         }

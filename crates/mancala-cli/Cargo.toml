@@ -9,4 +9,5 @@ path = "src/main.rs"
 
 [dependencies]
 mancala-core = { path = "../mancala-core" }
+mancala-ai = { path = "../mancala-ai" }
 clap = { version = "4", features = ["derive"] }
