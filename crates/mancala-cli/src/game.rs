@@ -2,7 +2,7 @@
 
 use std::io::{self, BufRead, Write};
 
-use mancala_core::{Board, MoveError, MoveOutcome, Player, Status};
+use mancala_core::{Board, MoveError, MoveOutcome, Player, Rng, Status};
 
 use crate::input::{Command, InputError, parse_input};
 use crate::render::{BoardView, player_name};
@@ -14,6 +14,8 @@ use crate::render::{BoardView, player_name};
 pub enum Controller {
     /// A person typing at the keyboard.
     Human,
+    /// The computer, picking a random legal move. A stand-in until the real AI (change 3).
+    RandomBot,
 }
 
 /// The controller for each side.
@@ -29,6 +31,20 @@ impl Players {
         Players {
             south: Controller::Human,
             north: Controller::Human,
+        }
+    }
+
+    /// A person playing `human`'s side against the random bot.
+    pub fn against_bot(human: Player) -> Self {
+        match human {
+            Player::South => Players {
+                south: Controller::Human,
+                north: Controller::RandomBot,
+            },
+            Player::North => Players {
+                south: Controller::RandomBot,
+                north: Controller::Human,
+            },
         }
     }
 
@@ -70,9 +86,10 @@ pub fn run<R: BufRead, W: Write>(
     mut output: W,
 ) -> io::Result<GameEnd> {
     let mut board = config.start;
+    let mut rng = Rng::new(config.seed);
 
     loop {
-        let viewer = viewer(&board);
+        let viewer = viewer(&config.players, &board);
         writeln!(output)?;
         writeln!(
             output,
@@ -91,6 +108,7 @@ pub fn run<R: BufRead, W: Write>(
         let mover = board.to_move();
         let turn = match config.players.controller(mover) {
             Controller::Human => human_turn(&board, &mut input, &mut output)?,
+            Controller::RandomBot => bot_turn(&board, &mut rng, &mut output)?,
         };
 
         match turn {
@@ -116,13 +134,36 @@ enum Turn {
     Quit,
 }
 
-/// Whose side the board is drawn from. Hotseat: the player to move sees their
-/// own side at the bottom, and South once the game is over.
-fn viewer(board: &Board) -> Player {
-    match board.status() {
-        Status::InProgress => board.to_move(),
-        Status::Finished { .. } => Player::South,
+/// Whose side the board is drawn from (design.md decision 5).
+fn viewer(players: &Players, board: &Board) -> Player {
+    match (players.south, players.north) {
+        // Hotseat: the player to move sees their own side; South once it's over.
+        (Controller::Human, Controller::Human) => match board.status() {
+            Status::InProgress => board.to_move(),
+            Status::Finished { .. } => Player::South,
+        },
+        // Against the bot: always the human's side.
+        (Controller::Human, _) => Player::South,
+        (_, Controller::Human) => Player::North,
+        // Bot against bot (only used in tests).
+        _ => Player::South,
     }
+}
+
+/// The bot picks a random legal move and says which pit it chose.
+fn bot_turn<W: Write>(board: &Board, rng: &mut Rng, output: &mut W) -> io::Result<Turn> {
+    let legal = board.legal_moves();
+    let pit = legal[rng.below(legal.len())];
+    writeln!(
+        output,
+        "{} (bot) plays pit {}.",
+        player_name(board.to_move()),
+        pit + 1 // engine 0-5 back to the players' 1-6
+    )?;
+    let (next, outcome) = board
+        .play(pit)
+        .expect("a move from legal_moves() is always legal");
+    Ok(Turn::Played(next, outcome))
 }
 
 /// Asks the person to move until they enter a legal move or quit.
