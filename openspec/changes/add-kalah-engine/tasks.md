@@ -78,9 +78,9 @@
 
 ## 6. Captures
 
-- [ ] 6.1 **(test first)** Write tests for *South captures*, *North captures*, *No capture when the opposite pit is empty*, *No capture on the opponent's side*, *No capture when landing in a non-empty own pit*, and *A lap of 13 seeds returns to the starting pit*, including the `captured` counts. Verify: the tests fail.
+- [x] 6.1 **(test first)** Write tests for *South captures*, *North captures*, *No capture when the opposite pit is empty*, *No capture on the opponent's side*, *No capture when landing in a non-empty own pit*, and *A lap of 13 seeds returns to the starting pit*, including the `captured` counts. Verify: the tests fail.
 
-- [ ] 6.2 Implement captures as described in the *Capture* requirement and record the count in `MoveOutcome::captured`. Verify: all 6.1 tests and all earlier tests pass.
+- [x] 6.2 Implement captures as described in the *Capture* requirement and record the count in `MoveOutcome::captured`. Verify: all 6.1 tests and all earlier tests pass.
   <details><summary>Hint 1</summary>"Landed in an empty pit" means the pit holds exactly 1 seed after sowing: the one you just dropped.</details>
   <details><summary>Hint 2</summary>There are three conditions, and all must hold: the last index is on the mover's side (not a store), that pit now holds exactly 1, and the opposite pit is non-zero.</details>
   <details><summary>Hint 3</summary>If the 13-seed lap test fails but the others pass, check whether you emptied the starting pit <em>before</em> sowing began. When does the origin pit become 0 in your code?</details>

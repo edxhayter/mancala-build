@@ -171,15 +171,43 @@ impl Board {
         // Extra turn if the last seed landed in the mover's own store.
         let extra_turn= if index == mover.store_index() { true } else { false };
 
-        // Captures (section 6) and game end (section 7) will go here.
+        let captured = self.capture(mover, index);
+
+        // Game end (section 7) will go here.
 
         if !extra_turn {
             self.to_move = mover.opponent();
         }
         Ok(MoveOutcome {
             extra_turn,
-            captured: 0,
+            captured,
         })
+    }
+
+    /// If `last` (where the mover's last seed landed) qualifies for a capture,
+    /// moves that seed and everything opposite into the mover's store.
+    /// Returns the number of seeds captured (0 if no capture).
+    fn capture(&mut self, mover: Player, last: usize) -> u8 {
+        // 1. The last seed must be in one of the mover's own pits (not a store).
+        let my_pits = mover.pit_index(0)..=mover.pit_index(5);
+        if !my_pits.contains(&last) {
+            return 0;
+        }
+        // 2. That pit must have been empty, so it now holds only the seed just dropped.
+        if self.slots[last] != 1 {
+            return 0;
+        }
+        // 3. The opposite pit must have something to take.
+        let across = opposite(last);
+        if self.slots[across] == 0 {
+            return 0;
+        }
+
+        let captured = self.slots[across] + self.slots[last];
+        self.slots[across] = 0;
+        self.slots[last] = 0;
+        self.slots[mover.store_index()] += captured;
+        captured
     }
 }
 
