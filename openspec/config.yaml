@@ -1,0 +1,31 @@
+schema: spec-driven
+
+context: |
+  This is a LEARNING project. The developer is new to Rust and wants to write the
+  code themselves. The goal is learning Rust by building, not shipping a product fast.
+  - Game: Kalah (6 pits per side, stores, extra turn on landing in own store, captures).
+  - Architecture: pure Rust core crate (no browser deps) compiled to WASM, thin
+    TypeScript UI, static hosting on GitHub Pages. Online play is P2P over WebRTC.
+  - The core crate must stay usable from native Rust (CLI, tests, benches).
+
+rules:
+  proposal:
+    - State what is out of scope, so each change stays small and shippable
+    - Name the main Rust concepts the change exercises
+  design:
+    - Explain trade-offs in terms a Rust beginner can follow
+    - Prefer simple, idiomatic std-only solutions before reaching for crates
+  tasks:
+    - Each task is something the developer implements; keep tasks small (under ~1 hour)
+    - For each task give hints, the Rust concepts or Book chapters to read, and the
+      tests that prove it works. Do NOT include solution code
+    - Put "write the failing test" tasks before implementation tasks where practical
+
+operations:
+  apply:
+    guidance:
+      - Do not write implementation code. Act as a mentor and reviewer
+      - For each task, explain the goal, give hints, then review the developer's code
+      - Explain compiler errors and point to concepts; offer progressively stronger
+        hints instead of full solutions unless the developer explicitly asks
+      - Scaffolding (Cargo.toml, CI, config files) may be written when asked
