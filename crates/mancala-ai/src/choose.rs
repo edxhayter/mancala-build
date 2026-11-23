@@ -14,12 +14,13 @@ pub enum Level {
 
 impl Level {
     /// Search depth in moves (each move, including extra-turn moves, counts as one).
-    /// Starting values; task 5.2 measures and adjusts them (design.md decision 6).
+    /// Chosen from `examples/depth_table.rs` (design.md decision 6): hard takes
+    /// about 0.25 s from the start position in a release build.
     pub fn depth(self) -> u32 {
         match self {
             Level::Easy => 2,
-            Level::Medium => 5,
-            Level::Hard => 8,
+            Level::Medium => 6,
+            Level::Hard => 12,
         }
     }
 }

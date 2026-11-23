@@ -32,9 +32,9 @@
 
 ## 5. Strength and speed
 
-- [ ] 5.1 In `tests/strength.rs`, write *Never plays an illegal move* (all levels, both sides, many seeds, against the random bot), *Medium is a real challenge* (100 games, at least 90 wins), and an `#[ignore]`d *Harder beats easier*. Verify: `cargo test -p mancala-ai` passes, and `cargo test --release -p mancala-ai -- --ignored` passes.
+- [x] 5.1 In `tests/strength.rs`, write *Never plays an illegal move* (all levels, both sides, many seeds, against the random bot), *Medium is a real challenge* (100 games, at least 90 wins), and an `#[ignore]`d *Harder beats easier*. Verify: `cargo test -p mancala-ai` passes, and `cargo test --release -p mancala-ai -- --ignored` passes.
   - **Concepts:** integration tests for a library, `#[ignore]`, release vs debug test speed (design.md decision 9).
-- [ ] 5.2 Add `examples/depth_table.rs` (positions searched and time for depths 1–10 from the start and a mid-game position) and the criterion benchmarks in `benches/search.rs` (design.md decision 7). Run both in release mode, pick the final depths for easy, medium and hard, update `Level::depth()`, and record the chosen depths and measured times in design.md decision 6. Verify: hard takes under about 0.5 s per move in release, and the 5.1 tests still pass with the final depths.
+- [x] 5.2 Add `examples/depth_table.rs` (positions searched and time for depths 1–10 from the start and a mid-game position) and the criterion benchmarks in `benches/search.rs` (design.md decision 7). Run both in release mode, pick the final depths for easy, medium and hard, update `Level::depth()`, and record the chosen depths and measured times in design.md decision 6. Verify: hard takes under about 0.5 s per move in release, and the 5.1 tests still pass with the final depths.
   - **Concepts:** `std::time::Instant`, `criterion::black_box`, reading criterion's report, measuring before optimising.
   - **Your piece (optional):** run the depth table yourself and suggest the depths before Claude updates them.
 

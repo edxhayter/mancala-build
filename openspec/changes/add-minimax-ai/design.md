@@ -90,17 +90,25 @@ At the root, each legal move is searched with a **full window** (`alpha = MIN`, 
 
 ```
 pub enum Level { Easy, Medium, Hard }
-impl Level { pub fn depth(self) -> u32 }   // starting values: 2 / 5 / 8
+impl Level { pub fn depth(self) -> u32 }   // final: 2 / 6 / 12
 ```
 
-The depths are **starting values**. Task group 5 measures them and adjusts them so that hard takes under about half a second per move in a release build on the developer's machine, and medium wins at least 90% against random. The final numbers are recorded in this decision when that task is done.
+The depths started at 2 / 5 / 8 and were then **measured** (task 5.2). Alpha-beta made the search much cheaper than expected, so medium and hard were deepened:
+
+| Level | Depth | Start position | Mid-game | Result |
+|---|---|---|---|---|
+| easy | 2 | 0.003 ms | 0.002 ms | beaten by hard 16-1 (3 draws) over 20 games |
+| medium | 6 | 0.33 ms | 0.13 ms | beats the random bot 99 / 100 |
+| hard | 12 | 290 ms | 29 ms | under the 0.5 s target |
+
+Times are criterion medians (`cargo bench -p mancala-ai`), release build, on the developer's machine. The start position is the most expensive point of a game (most seeds, most branching). Depth 13 would take about 0.8 s there, so 12 is the deepest that fits. `examples/depth_table.rs` prints the full table for depths 1-14.
 
 The CLI's clap `Level` value enum maps onto `mancala_ai::Level`, the same way `Side` maps onto `Player`, so `mancala-ai` never depends on clap.
 
 ### 7. Benchmarks: criterion for timing, a small example for the depth table
 
 - `benches/search.rs` uses criterion to time `search_scores` at each level's depth from the start position and from a fixed mid-game position. Run it with `cargo bench -p mancala-ai`. Criterion runs each case many times and reports a confidence interval, so small changes are measurable.
-- `examples/depth_table.rs` prints, for depths 1 to 10, the positions searched and the time taken (`std::time::Instant`). That's the table used to choose the level depths. Run it with `cargo run --release -p mancala-ai --example depth_table`.
+- `examples/depth_table.rs` prints, for depths 1 to 14, the positions searched and the time taken (`std::time::Instant`). That's the table used to choose the level depths. Run it with `cargo run --release -p mancala-ai --example depth_table`.
 
 **Why both:** criterion is precise but measures time only. Positions searched explains *why* a depth is slow, and shows how much alpha-beta saves.
 **Teaches:** `--release` versus debug speed (often 10–50×), `black_box`, reading benchmark output.
