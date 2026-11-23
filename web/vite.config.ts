@@ -7,6 +7,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/mancala-build/' : '/',
   plugins: [react()],
+  // The AI worker imports modules (the engine), so build it as an ES module too.
+  worker: { format: 'es' },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

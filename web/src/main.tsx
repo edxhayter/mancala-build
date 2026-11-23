@@ -8,6 +8,7 @@ import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import './styles/global.css';
 
+import { createWorkerAiClient } from './ai/client';
 import { App } from './App';
 import { initEngine } from './engine';
 
@@ -16,6 +17,6 @@ await initEngine();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <App ai={createWorkerAiClient()} />
   </StrictMode>,
 );

@@ -1,6 +1,6 @@
-import type { Player } from '../engine';
+import type { Level, Player } from '../engine';
 
-export type Level = 'easy' | 'medium' | 'hard';
+export type { Level };
 
 /** What the New game sheet chooses (design.md decision 4). */
 export interface Settings {

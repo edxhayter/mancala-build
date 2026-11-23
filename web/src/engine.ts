@@ -4,9 +4,12 @@
 // and returns plain data ("snapshots"), and frees each WASM object before it
 // returns, so React state never holds WebAssembly memory.
 
-import init, { WasmBoard } from './wasm/mancala_wasm';
+import init, { Ai, WasmBoard } from './wasm/mancala_wasm';
 
 export type Player = 'south' | 'north';
+
+/** How hard the AI plays: search depth 2, 6 or 12 (see mancala-ai). */
+export type Level = 'easy' | 'medium' | 'hard';
 
 /** Whether the game is still going, and if not, how it ended. */
 export type Status =
@@ -138,4 +141,29 @@ export function play(board: BoardSnapshot, pit: number): MoveResult {
       result.free();
     }
   });
+}
+
+// --- The AI -------------------------------------------------------------------
+
+const LEVEL_NUMBERS: Record<Level, number> = { easy: 0, medium: 1, hard: 2 };
+
+/**
+ * The AI for one game. Its random tie-breaks come from `seed`, so the same
+ * seed always plays the same way. Call `free()` when the game is over.
+ */
+export class AiPlayer {
+  private ai: Ai;
+
+  constructor(seed: number) {
+    this.ai = new Ai(seed);
+  }
+
+  /** The pit (0..=5) the AI plays for whoever is to move in `board`. */
+  choose(board: BoardSnapshot, level: Level): number {
+    return withWasm(board, (wasm) => this.ai.choose(wasm, LEVEL_NUMBERS[level]));
+  }
+
+  free(): void {
+    this.ai.free();
+  }
 }

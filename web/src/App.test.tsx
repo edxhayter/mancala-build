@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { App } from './App';
+import { silentAi } from './test/ai';
 import type { BoardSnapshot } from './engine';
 import { initialState, type GameState } from './game/reducer';
 import type { Settings } from './game/settings';
@@ -23,7 +24,7 @@ async function startHotseat() {
 describe('App', () => {
   // Scenario: Ready on first visit
   it('opens ready to play: you as South, first, against the AI at medium', () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     expect(screen.getByRole('heading', { name: 'Mancala' })).toBeInTheDocument();
     expect(screen.getByText(/You vs/)).toHaveTextContent('You vs AI · Medium');
     expect(status()).toHaveTextContent('Your move');
@@ -35,7 +36,7 @@ describe('App', () => {
 
   // Scenario: Choosing a different game
   it('New game → Two players → Start: a hotseat game from the start', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await userEvent.click(pit('South pit 1')); // the old game has a move in it
     await startHotseat();
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -45,7 +46,7 @@ describe('App', () => {
   });
 
   it('the sheet shows the computer options only for Computer, and Cancel changes nothing', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     const sheet = screen.getByRole('dialog', { name: 'New game' });
     expect(within(sheet).getByRole('button', { name: /Computer/ })).toHaveAttribute('aria-pressed', 'true');
@@ -62,14 +63,14 @@ describe('App', () => {
   });
 
   it('Escape closes the sheet', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('choosing Hard and Second starts a game where the computer moves first', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     await userEvent.click(screen.getByRole('button', { name: 'Hard' }));
     await userEvent.click(screen.getByRole('button', { name: 'Second' }));
@@ -82,7 +83,7 @@ describe('App', () => {
 
   // Scenario: Modes that are not available yet
   it('Online and Puzzles are listed as coming later and cannot be chosen', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     for (const name of [/Online/, /Puzzles/]) {
       const mode = screen.getByRole('button', { name });
@@ -94,7 +95,7 @@ describe('App', () => {
   // Scenario: Playing a pit (hotseat, animation off)
   // Scenario: Extra turn is reported
   it('clicking South pit 3 plays it: the board follows the rules, and the extra turn is announced', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await startHotseat();
     await userEvent.click(pit('South pit 3'));
     expect(pit('South pit 3')).toHaveAccessibleName('South pit 3, 0 seeds');
@@ -107,7 +108,7 @@ describe('App', () => {
 
   // Scenario: Hotseat turns to the player to move
   it('in hotseat, the board turns to North after South passes the turn', async () => {
-    render(<App />);
+    render(<App ai={silentAi} />);
     await startHotseat();
     await userEvent.click(pit('South pit 1'));
     expect(status()).toHaveTextContent('North to move');
@@ -119,6 +120,7 @@ describe('App', () => {
   it('a capture is announced', async () => {
     render(
       <App
+        ai={silentAi}
         start={hotseatAt({
           pits: { south: [1, 0, 0, 2, 0, 0], north: [1, 1, 1, 1, 5, 1] },
           stores: { south: 0, north: 0 },
@@ -135,6 +137,7 @@ describe('App', () => {
   it('the last move ends the game: scores, the winner, no pits, and a new game on offer', async () => {
     render(
       <App
+        ai={silentAi}
         start={hotseatAt({
           pits: { south: [0, 0, 0, 0, 0, 1], north: [0, 0, 0, 0, 0, 4] },
           stores: { south: 25, north: 18 },
