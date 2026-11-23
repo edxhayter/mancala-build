@@ -6,15 +6,15 @@
 
 ## 1. Crate setup
 
-- [ ] 1.1 Create `crates/mancala-ai` (library) depending on `mancala-core`, with `criterion` as a dev-dependency and a `[[bench]] name = "search", harness = false` entry with an empty benchmark. Verify: `cargo build -p mancala-ai` succeeds, `cargo tree -p mancala-ai -e normal` lists only `mancala-core`, and `cargo tree -p mancala-core` still lists nothing.
+- [x] 1.1 Create `crates/mancala-ai` (library) depending on `mancala-core`, with `criterion` as a dev-dependency and a `[[bench]] name = "search", harness = false` entry with an empty benchmark. Verify: `cargo build -p mancala-ai` succeeds, `cargo tree -p mancala-ai -e normal` lists only `mancala-core`, and `cargo tree -p mancala-core` still lists nothing.
   - **Concepts:** `[dependencies]` vs `[dev-dependencies]`, bench targets, why `harness = false` (design.md decision 1).
   - **Your piece (optional):** add `criterion` with `cargo add --dev criterion -p mancala-ai` and compare what it writes.
 
 ## 2. Evaluation and plain minimax
 
-- [ ] 2.1 **(test first, then implement)** Write unit tests for `evaluate`: the start position scores 0, being 3 seeds ahead scores +3 (and -3 for the other player), a finished win scores above `WIN`, and a finished loss scores below `-WIN`. Then implement `evaluate` and `WIN` (design.md decision 3). Verify: the tests pass.
+- [x] 2.1 **(test first, then implement)** Write unit tests for `evaluate`: the start position scores 0, being 3 seeds ahead scores +3 (and -3 for the other player), a finished win scores above `WIN`, and a finished loss scores below `-WIN`. Then implement `evaluate` and `WIN` (design.md decision 3). Verify: the tests pass.
   - **Concepts:** `const`, `i32` vs `u8` (and why to convert before subtracting), `match` on `Status`.
-- [ ] 2.2 **(test first, then implement)** Write tests for a plain, test-only `minimax_full` (no pruning): at depth 1 the capture position scores pit 1 best, an extra-turn position keeps maximising for the same player, and depth 0 returns `evaluate`. Then implement it recursively, counting positions in a `&mut u64` (design.md decision 2). Verify: the tests pass.
+- [x] 2.2 **(test first, then implement)** Write tests for a plain, test-only `minimax_full` (no pruning): at depth 1 the capture position scores pit 1 best, an extra-turn position keeps maximising for the same player, and depth 0 returns `evaluate`. Then implement it recursively, counting positions in a `&mut u64` (design.md decision 2). Verify: the tests pass.
   - **Concepts:** Book ch. 3.3 (functions), recursion, `&mut` parameters, deciding max or min from `board.to_move()`.
   - **Your piece (optional):** write the depth-0 / game-over base case.
 
