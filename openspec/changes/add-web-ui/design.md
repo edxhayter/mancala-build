@@ -35,9 +35,10 @@ web/
   src/
     wasm/                     # wasm-pack output (git-ignored, generated)
     engine.ts                 # loads the WASM once; typed wrapper (Board, play, legalMoves…)
-    game/                     # pure TS: state reducer, viewer rule, recap, messages, animation steps
+    game/                     # pure TS: state reducer, viewer rule, captions, animation steps
     ai/                       # worker + AiClient interface
-    components/               # React: App, NewGamePanel, Board, Pit, Store, StatusBar, Recap
+    components/               # React: App, Header, Board (SVG), StatusLine, NewGameSheet, SettingsPopover, RotatePrompt, EndOfGame
+    styles/tokens.css         # design tokens from decision 10
   test/                       # Vitest setup: loads the real WASM from disk
 .github/workflows/pages.yml
 ```
@@ -64,12 +65,11 @@ web/
 #[wasm_bindgen] pub struct Ai { rng: Rng }
   new(seed: u32)
   choose(&mut self, board: &WasmBoard, level: u8) -> u8    // the AI: 0 easy, 1 medium, 2 hard
-  random_move(&mut self, board: &WasmBoard) -> u8           // the random bot
 ```
 
 - **Players and levels cross the boundary as small numbers.** wasm-bindgen can export Rust enums, but plain numbers keep the JS side simple, and the TypeScript wrapper (`engine.ts`) turns them back into readable types (`'south' | 'north'`, `'easy' | …`).
 - **`play` returns a new board.** This matches the engine's `play(&self)` and React's preference for immutable state, so each render gets its own `WasmBoard`.
-- **The seed is `u32` in JS and widened to `u64` in Rust.** A JS `number` can't hold every `u64`, and a `BigInt` seed would be awkward in a form field. 4 billion seeds is plenty.
+- **The seed is `u32` in JS and widened to `u64` in Rust.** A JS `number` can't hold every `u64`, and `u32` avoids `BigInt`. The page picks a fresh seed for each game (`crypto.getRandomValues`) and never shows it. Tests pass fixed seeds so AI games are repeatable. 4 billion seeds is plenty.
 - **No `serde`.** Getters returning numbers and `Vec<u8>` are enough, and they keep the crate small.
 
 **Teaches:** `#[wasm_bindgen]`, how Rust types map to JS (`Vec<u8>` ↔ `Uint8Array`, `Result` ↔ thrown exception), and why a thin adapter keeps the core portable.
@@ -94,17 +94,16 @@ The whole game is one `useReducer` state:
 
 ```ts
 type GameState = {
-  settings: { opponent: 'ai' | 'random' | 'human'; level: Level; side: Side; seed: number };
+  settings: { opponent: 'ai' | 'local'; level: Level; playerFirst: boolean };
+  seed: number;                    // picked per game, never shown (decision 2)
   board: BoardSnapshot;            // plain numbers copied out of WasmBoard: pits, stores, toMove, status
   phase: 'human' | 'thinking' | 'animating' | 'over';
-  turnLog: TurnLog;                // like the CLI's: who, storeBefore, moves[]
-  recap: string[] | null;          // shown before a person moves
-  messages: string[];              // "South gets another turn." etc.
+  caption: string | null;          // "South gets another turn." / "AI captured 6 seeds." (spec: Move announcements)
   gameId: number;                  // bumps on every new game
 };
 ```
 
-Events: `newGame`, `movePlayed(PlayResult)`, `animationDone`, `aiChose(pit, gameId)`. The functions that compute the viewer, the recap text and the messages are **plain TypeScript functions ported from the CLI**, unit-tested with Vitest.
+Events: `newGame`, `movePlayed(PlayResult)`, `animationDone`, `aiChose(pit, gameId)`. The functions that compute the viewer and the caption text are **plain TypeScript functions ported from the CLI** (its viewer rule and `describe_outcome`), unit-tested with Vitest. The CLI's turn recap is **not** ported: the sowing animation shows the same thing.
 
 **Why a reducer:** every transition is a pure function, `(state, event) → state`, so it can be tested without React or a browser.
 **Why snapshots instead of keeping a `WasmBoard` in state:** WASM objects hold memory that must be freed (`.free()`). Copying out plain numbers means React state never holds WASM memory, and only the engine wrapper creates and frees WASM objects.
@@ -120,7 +119,7 @@ main thread                         worker (ai.worker.ts)
 - A **Web Worker** runs a script on a separate thread. Heavy work there can't freeze the page. The worker loads its own copy of the WASM module.
 - The worker keeps one `Ai` per game, created from the game's seed, so the random tie-breaks follow the same sequence as the CLI and stay repeatable.
 - **Stale answers:** every request carries the `gameId`. If a new game starts while the AI is thinking, the reply arrives with the old `gameId` and the reducer ignores it. That's the spec's *The page stays responsive* scenario.
-- **The random bot** goes through the same `AiClient` and worker, calling `Ai::random_move`. It's instant, but using one path for both computer opponents keeps the reducer simple, and the seed works the same way.
+- **No random bot on the web.** The only computer opponent is the AI. The random bot stays a CLI feature.
 - `AiClient` is a TypeScript interface. The real implementation uses the worker. Tests use a **direct** implementation that calls the WASM in-process, so tests don't need worker support in jsdom.
 
 **Teaches:** threads in the browser, `postMessage`, why stale responses need an ID.
@@ -141,33 +140,76 @@ A React hook plays the steps at the chosen speed: **slow** (about 400 ms per see
 
 - `Board` draws the board as **SVG** (decision 10): the opponent's row (pits 6 → 1), the two end-cup stores, and the viewer's row (pits 1 → 6), all chosen with the viewer rule.
 - Each playable cup is a focusable SVG group with `role="button"`, `tabIndex={0}`, `aria-disabled` when it can't be played, and a label such as "South pit 3, 5 seeds". Enter and Space play it, the same as a click. Testing Library finds these by role and label just like HTML buttons.
-- `NewGamePanel` holds the opponent, level, side and seed inputs and a "New game" button.
-- `StatusBar` shows whose turn it is and the thinking state. `Recap` and the messages show the text from decision 4. A final-score panel appears when the game is over.
+- `Board` also takes optional **puzzle marks** for the viewer's pits: `wrong` (rust ring) and `reveal` (warm glow). This change doesn't use them, but the puzzle change will, without reworking the board (decision 10).
+- `Header`: title, the current matchup ("You vs AI · Medium" / "Two players"), a **New game** button and a **settings** icon button (`aria-label="Settings"`).
+- `NewGameSheet` (a dialog): four choices in a 2×2 grid. **Computer** and **Two players** are selectable; **Online** and **Puzzles** are shown "coming later", disabled. With Computer: level (Easy/Medium/Hard) and *You play* First/Second. Buttons: Cancel, Start game. Choices are `<button aria-pressed>`.
+- `SettingsPopover`: anchored under the settings icon. It holds only **Sowing speed** (Slow/Normal/Instant).
+- `StatusLine`: "Your move" / "AI is thinking…" / "North to move", plus the caption from decision 4, in an `aria-live="polite"` region so screen readers hear it.
+- `RotatePrompt`: shown instead of the game on a phone held upright (decision 10).
+- `EndOfGame`: the scores, the result and a New game button, replacing the status line when the game is over.
 
 **Testing:** React Testing Library renders components and interacts the way a user would ("click the button labelled South pit 3"). It works with the real WASM loaded by a Vitest setup file (`initSync` with the `.wasm` bytes read from disk) and the direct `AiClient`.
 
-### 10. Visual design: an homage to a real board
+### 10. Visual design: an homage to a real board (approved brief)
 
 **Reference:** `design/reference/example_board.webp`, the developer's own folding Oware board from Ghana/Nigeria. The look is built from that object, not from a general idea of "African games".
+**Approved concepts:** `design/concepts/`, which holds the source of the concept canvas (Design artboards, `.dc.html`). The canvas itself is at https://claude.ai/artifact/63vpXyWpBqrsvUeaeiDGX7 (private to the developer). Its **Concept A** page is the approved direction:
+- `Main.dc.html`: desktop, playing
+- `NewGame.dc.html`: the New game sheet
+- `Settings.dc.html`: the settings pop-over
+- `PhoneLandscape.dc.html`: phone, landscape
+- `PhoneRotate.dc.html`: phone, held upright
+- `Puzzle.dc.html`: a later change
+- `Board.dc.html`: the shared board, including the geometry and seed-placement code to port
 
-**From the board:**
-- **Form (seen straight down):** two halves meeting at a seam, with the round **hinge knob** at the centre. A 2×6 grid of deep round cups. A **scalloped outline** that follows the cups. Kalah needs stores, so a larger **carved oval end cup** is added at each end in the same style.
-- **Wood:** honey to orange-brown, an oiled satin finish, subtle grain running along the board. Each cup has a darker inner shadow so it reads as deep.
-- **Seeds:** grey-green, matte, slightly irregular ovals (nickernut seeds). Each is drawn with a small variation in size, angle and tone. Placement is **deterministic** per cup and count, so seeds don't jump around on re-render, and they pack tighter past about 12. The count is always shown beside the cup.
-- **Surround:** the board rests on a cloth inspired by the woven textile in the photo (cream ground, black geometric bands, small rust-red accents), drawn for this game rather than copied. The carved figures and other objects in the photo are not used.
-- **Lettering:** an incised or carved-feeling display face for the title, scores and result, echoing the pedestal's cut-outs, and a plain readable face for messages and controls. Both are self-hosted (no requests to third-party font servers).
-- **Starting palette** (to be refined by sampling the photo in task 1.2): honey wood, cup shadow, seed grey-green, linen cream, ink black, rust red.
+The "Earlier takes" (B carved print, C cloth-forward, two upright phone layouts) were **rejected** and are kept only for reference.
 
-**Motion:** speeds as in decision 6. A seed travels from cup to cup and settles with a small ease-out, like a hand dropping it. The highlight on the receiving cup is subtle (a warm glow on the wood), not a bright UI colour.
+**Decisions made while reviewing (2026-11-23):**
+- Concept A ("honey and linen") chosen. The cloth surround (C) was too loud; the linen ground keeps one thin woven band under the header.
+- Stores are **round cups the same size as the pits**, one at each end on the centre line between the rows, like the end lobes of the real board. They are labelled with their owner ("AI" / "You").
+- Less on screen: no subtitle, no turn recap, no seed. The opponent is **Computer** or **Two players**. Online and Puzzles appear in the New game sheet as "coming later".
+- Sowing speed lives in a small **settings pop-over**, not on the main screen.
+- **Phones play in landscape.** Upright phones get a "turn your phone sideways" prompt. That keeps "your side at the bottom" everywhere and gives 76 px cups.
+- **Caption** for extra turns and captures: shown quietly beside the turn indicator and announced to screen readers. This was recommended and pending the developer's confirmation when the brief was written.
 
-**What we avoid:** default system or Inter fonts, gradients, glassmorphism, drop-shadow cards on grey, emoji icons, generic "African pattern" clip-art, and anything that reads as a stock SaaS dashboard. Controls (new game, opponent, speed) are styled to belong to the scene, like labels and small wooden tabs, not default form widgets.
+**Palette (design tokens, sampled from the photo):**
 
-**Why SVG:** curved cups, a scalloped outline and dozens of individually shaped seeds are natural in SVG and awkward with CSS boxes. SVG also scales cleanly from phone to desktop, and it can be tested by role and label.
+| Token | Value | Use |
+|---|---|---|
+| `--wood` | `#ba6f35` | board surface (with grain) |
+| `--wood-edge` | `#834d2d` | hinge knob, shadows on the wood |
+| `--cup-lip` | `#c17b51` | lighter ring at the top of a cup |
+| `--cup` | `#965d31` | cup interior |
+| `--cup-deep` | `#532004` | inner shadow of a cup |
+| `--seed` / `--seed-alt` | `#958f85` / `#8a877c` | seeds (alternating tone; cooled slightly from the photo's warm cast) |
+| `--seed-light` / `--seed-dark` | `#b3ada2` / `#615c53` | seed highlight and shadow, scar (hilum) |
+| `--linen` | `#efe4d3` | page ground (fine weave texture) |
+| `--linen-panel` | `#f4eadb` | sheets and pop-overs |
+| `--ink` | `#2b1810` | text, icons, selected underlines |
+| `--ink-soft` | `#6b4a35` | secondary text, unselected options (passes 4.5:1 on linen) |
+| `--rust` | `#8e2a2e` | woven band accent; puzzle "wrong" ring |
+| `--tab` | `#c8844c` | wooden-tab buttons (ink text on it) |
 
-**Process:**
-1. Task 1.1, before any code, makes 2–3 static concepts of the same position (close to the photo; a stylised "carved print" take; a cloth-forward take). The developer chooses one, or a mix.
-2. Task 1.2 records the choice here, with the final colour values, fonts, sizes and spacing, and updates the plan if the design needs anything from the code. Task 4.1 then sets these up as CSS variables ("design tokens") that every component uses.
-3. Each visual component task is done only after the developer has reviewed it in the browser.
+**Type:** *Marcellus SC* (display: title, status, numbers on the board, button labels) and *Atkinson Hyperlegible* (everything else). Both are under the SIL Open Font Licence and are **self-hosted** via the `@fontsource` npm packages. Sizes: title 48 (desktop) / 24 (phone landscape); status 30 / 20; body 16; small labels 12, upper case, tracking 0.12em; board numbers 12 + 0.10 × cup size.
+
+**Board geometry** (from `Board.dc.html`; D = cup diameter): pitch between cup centres P = 1.18 D; wood disc around each cup r = 0.62 D; number band beside the board 30 + 0.28 D. The opponent's numbers are on their side, the viewer's on theirs. Cup size: **100 px desktop**, **76 px phone landscape**, scaling down to fit narrower windows. **Seeds:** a sunflower spiral (golden angle) per cup with fixed per-cup variation in size (±2 px), angle and tone, and a scar on every third seed. They pack tighter above 9 seeds (stores can hold up to 48). The hinge knob is 0.32 D, at the centre on the seam.
+
+**Controls:** quiet underlined text options for choices, and the wooden "tab" button (`--tab`, rounded, soft bevel) for the main action. Icons are inline stroke SVG (the sliders icon for settings), never emoji. Touch targets are at least 44 px.
+
+**Layouts:**
+- **Desktop and tablet:** header row (title left; matchup, New game and settings right), the woven band, the board centred, the status line under it.
+- **Phone landscape:** one slim header row (title, status in the middle, matchup, New game, settings), with the board filling the rest. Side padding of 48 px clears the notch.
+- **Phone upright** (`(orientation: portrait) and (max-width: 599px)`): `RotatePrompt`, which shows the title, a small decorative board, a rotate icon and "Turn your phone sideways to play". The game state is kept and the board reappears when the phone is turned.
+
+**Motion:** speeds as in decision 6. A seed travels from cup to cup and settles with a small ease-out, like a hand dropping it. The highlight on the receiving cup is a subtle warm glow on the wood, not a bright UI colour.
+
+**Puzzle marks (for a later change):** `wrong` is a 4 px `--rust` ring just outside the cup. `reveal` is a warm glow (`rgba(255,214,150,.85)` ring plus a soft outer glow).
+
+**What we avoid:** default system or Inter fonts, gradient washes, glassmorphism, drop-shadow cards on grey, emoji icons, generic "African pattern" clip-art, and anything that reads as a stock SaaS dashboard.
+
+**Why SVG for the real board:** the concepts use HTML and CSS for speed, but the build draws the board in SVG. Curved cups, the scalloped outline and many small seeds are natural there, it scales cleanly, and it can be tested by role and label. The geometry and seed placement port across directly from `Board.dc.html`.
+
+**What this needs from the code** (checked in task 1.2): nothing new from the engine or the AI. The plan changes are: remove the random bot and the seed UI, replace the recap with captions, add the rotate prompt, the New game sheet and the settings pop-over, and add the board's puzzle-mark props. All of these are reflected in the spec and tasks.
 
 ### 8. Building
 
