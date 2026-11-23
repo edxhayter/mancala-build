@@ -23,9 +23,9 @@
 
 ## 3. The WASM API
 
-- [ ] 3.1 **(test first, then implement)** In `sow.rs`, write `sow_path(board, pit)` and its tests: the *Seeds travel pit to pit* path from the start, a path that skips the opponent's store, the 13-seed lap, and the property test from design.md decision 3 (path increments reproduce `play()` over thousands of seeded random moves). Verify: the tests pass.
+- [x] 3.1 **(test first, then implement)** In `sow.rs`, write `sow_path(board, pit)` and its tests: the *Seeds travel pit to pit* path from the start, a path that skips the opponent's store, the 13-seed lap, and the property test from design.md decision 3 (path increments reproduce `play()` over thousands of seeded random moves). Verify: the tests pass.
   - **Concepts:** modelling the ring with an enum (`Place::Pit(n) | Place::Store`), property tests against a trusted implementation.
-- [ ] 3.2 **(test first, then implement)** Add `WasmBoard`, `PlayResult` and `Ai` (design.md decision 2), with native unit tests for the number encodings (players, status, slots), `from_parts` round-tripping, `play` returning errors for illegal moves, and `Ai` repeatability from a seed. Verify: `cargo test -p mancala-wasm` passes and `wasm-pack build` succeeds. Then read the generated `.d.ts` together to see the TypeScript types wasm-bindgen produced.
+- [x] 3.2 **(test first, then implement)** Add `WasmBoard`, `PlayResult` and `Ai` (design.md decision 2), with native unit tests for the number encodings (players, status, slots), `from_parts` round-tripping, `play` returning errors for illegal moves, and `Ai` repeatability from a seed. Verify: `cargo test -p mancala-wasm` passes and `wasm-pack build` succeeds. Then read the generated `.d.ts` together to see the TypeScript types wasm-bindgen produced.
   - **Concepts:** `#[wasm_bindgen(constructor)]`, `Result<T, JsError>`, `&[u8]` / `Vec<u8>` ↔ `Uint8Array`, why `u32` for the seed.
 
 ## 4. The web app skeleton
