@@ -1,0 +1,43 @@
+/* The board's colours come from the design tokens (styles/tokens.css). */
+
+.board {
+  display: block;
+  max-width: 100%; /* shrink to fit narrower windows, keeping its shape */
+  height: auto;
+  overflow: visible; /* the wood's shadow and the puzzle glow spill past the edges */
+}
+
+.board .wood { fill: var(--wood); }
+.board .seam { fill: rgb(52 20 2 / 0.5); }
+.board .knob { fill: var(--wood-edge); }
+
+.board .cup { fill: var(--cup); }
+.board .lip {
+  fill: none;
+  stroke: rgb(255 214 176 / 0.16);
+  transition: stroke 150ms ease-out;
+}
+.board .scar { fill: var(--seed-dark); opacity: 0.85; }
+
+.board .count,
+.board .tag {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.board .tag { opacity: 0.6; letter-spacing: 0.06em; }
+
+/* Playable pits: a pointer, and the lip catches the light on hover. */
+.board .cup-group { outline: none; }
+.board .playable { cursor: pointer; }
+.board .playable:hover .lip { stroke: rgb(255 214 176 / 0.55); }
+
+/* Keyboard focus: an ink ring just outside the cup. */
+.board .focus-ring { fill: none; stroke: var(--ink); opacity: 0; }
+.board .cup-group:focus-visible .focus-ring { opacity: 1; }
+
+/* Puzzle marks (a later change). */
+.board .mark-wrong { fill: none; stroke: var(--rust); }
+.board .mark-reveal circle { fill: none; stroke: rgb(255 214 150 / 0.85); }
+.board .mark-reveal circle:first-child { stroke: rgb(255 196 110 / 0.55); }
