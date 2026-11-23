@@ -77,7 +77,7 @@ fn end_of_input_exits_successfully() {
 fn seed_is_shown_when_not_given() {
     let out = mancala(&[], "q\n");
     assert!(
-        text(&out.stdout).contains("Bot seed: "),
+        text(&out.stdout).contains("Seed: "),
         "{}",
         text(&out.stdout)
     );
@@ -86,5 +86,19 @@ fn seed_is_shown_when_not_given() {
 #[test]
 fn hotseat_has_no_seed_to_show() {
     let out = mancala(&["--opponent", "human"], "q\n");
-    assert!(!text(&out.stdout).contains("Bot seed"));
+    assert!(!text(&out.stdout).contains("Seed: "));
+}
+
+// Scenario: Playing the AI (from the real program)
+#[test]
+fn playing_the_ai_at_hard_then_quitting() {
+    let out = mancala(&["--opponent", "ai", "--level", "hard"], "q\n");
+    let stdout = text(&out.stdout);
+    assert!(out.status.success(), "{out:?}");
+    assert!(
+        stdout.contains("Seed: "),
+        "a computer opponent prints its seed: {stdout}"
+    );
+    assert!(stdout.contains("South, choose a pit"), "{stdout}");
+    assert!(stdout.contains("Game abandoned."), "{stdout}");
 }

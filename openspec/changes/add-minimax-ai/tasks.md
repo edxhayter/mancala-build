@@ -40,10 +40,10 @@
 
 ## 6. The AI in the terminal
 
-- [ ] 6.1 **(test first, then implement)** Extend `args.rs`: tests for *Playing the AI*, *Choosing the AI's level*, *Invalid option value* (now listing `ai`) and *Invalid level*; then add `Opponent::Ai`, a `Level` value enum and `--level` (default `medium`), mapping to `mancala_ai::Level`. Verify: the tests pass, and `--help` shows the new option.
-- [ ] 6.2 **(test first, then implement)** In `tests/game_play.rs`, add *The AI announces its moves*, *Recap of the AI's turn* and *Replaying a game against the AI*. Then add `Controller::Ai(Level)`, `Controller::is_computer()`, `Players::against(human, opponent)` (replacing `against_bot`), and an AI turn that calls `choose_move`. Update the viewer and recap checks to use `is_computer()` (design.md decision 8). Verify: the new tests and every existing CLI test pass.
+- [x] 6.1 **(test first, then implement)** Extend `args.rs`: tests for *Playing the AI*, *Choosing the AI's level*, *Invalid option value* (now listing `ai`) and *Invalid level*; then add `Opponent::Ai`, a `Level` value enum and `--level` (default `medium`), mapping to `mancala_ai::Level`. Verify: the tests pass, and `--help` shows the new option.
+- [x] 6.2 **(test first, then implement)** In `tests/game_play.rs`, add *The AI announces its moves*, *Recap of the AI's turn* and *Replaying a game against the AI*. Then add `Controller::Ai(Level)`, `Controller::is_computer()`, `Players::against(human, opponent)` (replacing `against_bot`), and an AI turn that calls `choose_move`. Update the viewer and recap checks to use `is_computer()` (design.md decision 8). Verify: the new tests and every existing CLI test pass.
   - **Concepts:** enum variants carrying data, `matches!`, refactoring with the compiler's help.
-- [ ] 6.3 Wire up `main`: `--opponent ai --level …` builds the AI player, and the seed is printed for any computer opponent. Add a binary test that `--opponent ai --level hard` followed by `q` exits successfully and prints a seed. Verify: the tests pass, and you can play a full game against each level by hand.
+- [x] 6.3 Wire up `main`: `--opponent ai --level …` builds the AI player, and the seed is printed for any computer opponent. Add a binary test that `--opponent ai --level hard` followed by `q` exits successfully and prints a seed. Verify: the tests pass, and you can play a full game against each level by hand.
   - **Your piece (optional):** play one game at each level and say whether the strengths feel right.
 
 ## 7. Final checks
