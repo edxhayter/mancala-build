@@ -1,7 +1,7 @@
 //! Rule tests, one per scenario in openspec/.../specs/kalah-rules/spec.md.
 //! These can only use the crate's public API, like any outside user.
 
-use mancala_core::{Board, MoveError, Player};
+use mancala_core::{Board, MoveError, MoveOutcome, Player};
 
 /// Checks every pit and store on the board in one call.
 fn assert_position(
@@ -39,6 +39,13 @@ fn reading_a_position() {
 #[test]
 fn legal_moves_at_the_start() {
     assert_eq!(Board::new().legal_moves(), vec![0, 1, 2, 3, 4, 5]);
+}
+
+/// Plays a move that the test expects to be legal, and returns the result.
+fn play_ok(board: &Board, pit: usize) -> (Board, MoveOutcome) {
+    board
+        .play(pit)
+        .unwrap_or_else(|e| panic!("pit {pit} should be legal, got {e:?}"))
 }
 
 /// The position from the *Empty pits are not legal* scenario.
@@ -81,4 +88,82 @@ fn empty_pit_is_rejected() {
     let before = board;
     assert_eq!(board.play(0), Err(MoveError::EmptyPit));
     assert_eq!(board, before, "a rejected move must not change the board");
+}
+
+// Scenario: Empty pit (the spec's version: South plays pit 2, then pit 2 again)
+#[test]
+fn empty_pit_after_extra_turn() {
+    let (board, _) = play_ok(&Board::new(), 2); // extra turn, so South moves again
+    let before = board;
+    assert_eq!(board.play(2), Err(MoveError::EmptyPit));
+    assert_eq!(board, before, "a rejected move must not change the board");
+}
+
+// ---------- Sowing (section 5) ----------
+
+// Scenario: Simple sow from the start
+#[test]
+fn simple_sow_from_the_start() {
+    let (board, _) = play_ok(&Board::new(), 0);
+    assert_position(&board, [0, 5, 5, 5, 5, 4], 0, [4; 6], 0);
+    assert_eq!(board.to_move(), Player::North);
+}
+
+// Scenario: Sowing crosses onto the opponent's side
+#[test]
+fn sowing_crosses_onto_the_opponents_side() {
+    let (board, _) = play_ok(&Board::new(), 5);
+    assert_position(&board, [4, 4, 4, 4, 4, 0], 1, [5, 5, 5, 4, 4, 4], 0);
+    assert_eq!(board.to_move(), Player::North);
+}
+
+// Scenario: Opponent's store is skipped
+#[test]
+fn opponents_store_is_skipped() {
+    let start = Board::from_parts([0, 0, 1, 0, 0, 10], 0, [0; 6], 0, Player::South);
+    let (board, _) = play_ok(&start, 5);
+    // North's store stays 0 even though sowing passed it.
+    assert_position(&board, [1, 1, 2, 0, 0, 0], 1, [1; 6], 0);
+}
+
+// Scenario: North chooses a pit by its own numbering
+#[test]
+fn north_chooses_a_pit_by_its_own_numbering() {
+    let (after_south, _) = play_ok(&Board::new(), 0); // now North to move
+    let (board, _) = play_ok(&after_south, 2);
+    assert_eq!(board.pits(Player::North)[2], 0, "North's pit 2 was emptied");
+    assert_eq!(
+        board.pits(Player::South),
+        after_south.pits(Player::South),
+        "South's side was not touched"
+    );
+}
+
+// ---------- Extra turn (section 5) ----------
+
+// Scenario: South earns an extra turn
+#[test]
+fn south_earns_an_extra_turn() {
+    let (board, outcome) = play_ok(&Board::new(), 2);
+    assert_position(&board, [4, 4, 0, 5, 5, 5], 1, [4; 6], 0);
+    assert_eq!(board.to_move(), Player::South);
+    assert!(outcome.extra_turn);
+}
+
+// Scenario: North earns an extra turn
+#[test]
+fn north_earns_an_extra_turn() {
+    let (after_south, _) = play_ok(&Board::new(), 0);
+    let (board, outcome) = play_ok(&after_south, 2);
+    assert_eq!(board.pits(Player::North), [4, 4, 0, 5, 5, 5]);
+    assert_eq!(board.store(Player::North), 1);
+    assert_eq!(board.to_move(), Player::North);
+    assert!(outcome.extra_turn);
+}
+
+// Scenario: No extra turn otherwise
+#[test]
+fn no_extra_turn_otherwise() {
+    let (_, outcome) = play_ok(&Board::new(), 0);
+    assert!(!outcome.extra_turn);
 }

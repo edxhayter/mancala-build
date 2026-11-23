@@ -62,18 +62,18 @@
 
 ## 5. Sowing and turn passing
 
-- [ ] 5.1 **(test first)** Write tests for *Simple sow from the start*, *Sowing crosses onto the opponent's side*, *Opponent's store is skipped*, and *North chooses a pit by its own numbering*. Verify: the tests compile but fail (nothing moves yet).
+- [x] 5.1 **(test first)** Write tests for *Simple sow from the start*, *Sowing crosses onto the opponent's side*, *Opponent's store is skipped*, and *North chooses a pit by its own numbering*. Verify: the tests compile but fail (nothing moves yet).
   <details><summary>Hint 1</summary>A small test helper, e.g. a function that asserts a board's pits and stores for both players in one call, will make the dozens of scenario tests ahead much shorter. Helpers in <code>tests/</code> files are ordinary functions.</details>
 
-- [ ] 5.2 Implement sowing in `apply`: pick up all the seeds from the pit and drop one into each following slot, skipping the opponent's store. Then set the player to move to the opponent (extra turns come next). Verify: all 5.1 tests pass.
+- [x] 5.2 Implement sowing in `apply`: pick up all the seeds from the pit and drop one into each following slot, skipping the opponent's store. Then set the player to move to the opponent (extra turns come next). Verify: all 5.1 tests pass.
   - **Read:** Book ch. 3.5 (Control flow: `loop`, `while`), ch. 3.2 (integer types; note the `%` operator).
   <details><summary>Hint 1</summary>Track two things: the current index, and how many seeds are left in your hand. Each step moves the index forward around the ring of 14.</details>
   <details><summary>Hint 2</summary>The skip is a check inside the loop: if the next index is the opponent's store, advance once more before dropping. Make sure a skipped slot doesn't use up a seed.</details>
   <details><summary>Hint 3</summary>Remember the last index you dropped into. Extra turns (5.4) and captures (6.2) both depend on it, so have the sowing step end with it available.</details>
 
-- [ ] 5.3 **(test first)** Write tests for *South earns an extra turn*, *North earns an extra turn* and *No extra turn otherwise*, checking both `to_move()` and `MoveOutcome::extra_turn`. Verify: the tests fail.
+- [x] 5.3 **(test first)** Write tests for *South earns an extra turn*, *North earns an extra turn* and *No extra turn otherwise*, checking both `to_move()` and `MoveOutcome::extra_turn`. Verify: the tests fail.
 
-- [ ] 5.4 Implement the extra turn: if the last seed landed in the mover's own store, keep the same player and report `extra_turn: true`. Verify: the 5.3 tests and all earlier tests pass.
+- [x] 5.4 Implement the extra turn: if the last seed landed in the mover's own store, keep the same player and report `extra_turn: true`. Verify: the 5.3 tests and all earlier tests pass.
   <details><summary>Hint 1</summary>This is a single comparison between the last index and the mover's store index. The <code>Player</code> helpers from 2.2 pay off here.</details>
 
 ## 6. Captures

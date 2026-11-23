@@ -149,8 +149,37 @@ impl Board {
             return Err(MoveError::EmptyPit);
         }
 
-        // Sowing, extra turns, captures and game end arrive in sections 5–7.
-        Ok(MoveOutcome::default())
+        let mover = self.to_move;
+        let start = mover.pit_index(pit);
+
+        // Sow: pick up every seed, then drop one in each following slot,
+        // skipping the opponent's store.
+        let mut seeds = self.slots[start];
+        self.slots[start] = 0;
+        let skip = mover.opponent().store_index();
+        let mut index = start;
+        while seeds > 0 {
+            index = (index + 1) % 14; // after slot 13, wrap round to slot 0
+            if index == skip {
+                continue;
+            }
+            self.slots[index] += 1;
+            seeds -= 1;
+        }
+        // `index` is now the slot where the last seed landed.
+
+        // Extra turn if the last seed landed in the mover's own store.
+        let extra_turn= if index == mover.store_index() { true } else { false };
+
+        // Captures (section 6) and game end (section 7) will go here.
+
+        if !extra_turn {
+            self.to_move = mover.opponent();
+        }
+        Ok(MoveOutcome {
+            extra_turn,
+            captured: 0,
+        })
     }
 }
 
