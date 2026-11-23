@@ -6,15 +6,15 @@
 
 ## 1. Crate setup
 
-- [ ] 1.1 Create `crates/mancala-cli` with both `src/lib.rs` and `src/main.rs`, a `[[bin]]` named `mancala`, a path dependency on `mancala-core`, and `clap` (version 4, `derive` feature). Declare the empty modules `args`, `render`, `input` and `game`. `main` prints a placeholder line. Verify: `cargo run -p mancala-cli` prints the placeholder, and `cargo tree -p mancala-core` still lists no dependencies.
+- [x] 1.1 Create `crates/mancala-cli` with both `src/lib.rs` and `src/main.rs`, a `[[bin]]` named `mancala`, a path dependency on `mancala-core`, and `clap` (version 4, `derive` feature). Declare the empty modules `args`, `render`, `input` and `game`. `main` prints a placeholder line. Verify: `cargo run -p mancala-cli` prints the placeholder, and `cargo tree -p mancala-core` still lists no dependencies.
   - **Concepts:** Book ch. 7.1 (packages and crates: one package, a lib and a bin), ch. 14.3 (workspace path dependencies), Cargo reference on `[[bin]]` and dependency features (design.md decision 1).
   - **Your piece (optional):** add the `clap` line to `Cargo.toml` yourself, or run `cargo add clap --features derive` and compare what it writes.
 
 ## 2. Command-line options
 
-- [ ] 2.1 **(test first)** In `args.rs`, write unit tests using `Cli::try_parse_from` for the scenarios *Defaults*, *Hotseat*, *Playing North against the bot* and *Invalid option value*, plus `--seed 42` parsing to `Some(42)`. Verify: the tests exist and fail to compile.
+- [x] 2.1 **(test first)** In `args.rs`, write unit tests using `Cli::try_parse_from` for the scenarios *Defaults*, *Hotseat*, *Playing North against the bot* and *Invalid option value*, plus `--seed 42` parsing to `Some(42)`. Verify: the tests exist and fail to compile.
   - **Concepts:** Book ch. 11.1 (tests), `Result::is_err`.
-- [ ] 2.2 Implement the `Cli` struct and the `Opponent` and `Side` value enums with clap's derive API, with doc comments that become the `--help` text (design.md decision 6). Verify: the 2.1 tests pass, and `cargo run -p mancala-cli -- --help` shows all three options and their defaults.
+- [x] 2.2 Implement the `Cli` struct and the `Opponent` and `Side` value enums with clap's derive API, with doc comments that become the `--help` text (design.md decision 6). Verify: the 2.1 tests pass, and `cargo run -p mancala-cli -- --help` shows all three options and their defaults.
   - **Concepts:** derive macros and attributes (`#[derive(Parser)]`, `#[arg(...)]`), `Option<u64>` for optional flags, Book ch. 19.5 (macros, skim).
   - **Your piece (optional):** write the doc comment for `--seed` and check how it appears in `--help`.
 
