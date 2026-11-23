@@ -26,7 +26,7 @@
 
 ## 4. Choosing a move
 
-- [ ] 4.1 **(test first, then implement)** Write tests for *Takes the big capture*, *Plays the winning move*, *Same seed, same move* and *Only best moves are chosen*, plus `Level::depth()` increasing from easy to hard. Then implement `Level` and `choose_move(board, level, rng)` with the seeded tie-break (design.md decisions 5 and 6). Verify: all the tests pass.
+- [x] 4.1 **(test first, then implement)** Write tests for *Takes the big capture*, *Plays the winning move*, *Same seed, same move* and *Only best moves are chosen*, plus `Level::depth()` increasing from easy to hard. Then implement `Level` and `choose_move(board, level, rng)` with the seeded tie-break (design.md decisions 5 and 6). Verify: all the tests pass.
   - **Concepts:** `Iterator::max`, `filter`, collecting the best moves, `impl` on an enum.
   - **Your piece (optional):** write `Level::depth()`.
 
