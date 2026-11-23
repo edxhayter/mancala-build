@@ -5,3 +5,4 @@ mod eval;
 mod search;
 
 pub use eval::{WIN, evaluate};
+pub use search::{SearchResult, search_scores};

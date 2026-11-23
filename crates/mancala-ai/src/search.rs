@@ -1,9 +1,86 @@
-//! Looking ahead: minimax search.
+//! Looking ahead: minimax search with alpha-beta pruning.
 
-#[cfg(test)]
 use crate::eval::evaluate;
-#[cfg(test)]
 use mancala_core::{Board, Player, Status};
+
+/// The result of searching every legal move from a position.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SearchResult {
+    /// Each legal pit (0-5) with its exact score for the player to move.
+    pub scores: Vec<(usize, i32)>,
+    /// How many positions were looked at (for benchmarks and curiosity).
+    pub nodes: u64,
+}
+
+/// Scores every legal move for the player to move, looking `depth` moves ahead
+/// (the move itself counts as one). `depth` must be at least 1.
+///
+/// Each root move is searched with a full window, so every score is exact and
+/// equal scores really are ties (design.md decision 5).
+pub fn search_scores(board: &Board, depth: u32) -> SearchResult {
+    assert!(depth >= 1, "search depth must be at least 1");
+    let me = board.to_move();
+    let mut nodes = 0;
+    let scores = board
+        .legal_moves()
+        .into_iter()
+        .map(|pit| {
+            let (child, _) = board.play(pit).expect("legal_moves() are legal");
+            let score = minimax(&child, depth - 1, me, i32::MIN, i32::MAX, &mut nodes);
+            (pit, score)
+        })
+        .collect();
+    SearchResult { scores, nodes }
+}
+
+/// Minimax with alpha-beta pruning. Same answer as `minimax_full`, less work.
+///
+/// - `alpha`: the score `me` is already guaranteed elsewhere in the tree.
+/// - `beta`: the score the opponent is already guaranteed (they want it low).
+///
+/// Once `alpha >= beta`, the player choosing here has found something the
+/// *other* player would never allow, so the remaining moves can't matter.
+fn minimax(
+    board: &Board,
+    depth: u32,
+    me: Player,
+    mut alpha: i32,
+    mut beta: i32,
+    nodes: &mut u64,
+) -> i32 {
+    *nodes += 1;
+
+    let moves = board.legal_moves();
+    if depth == 0 || board.status() != Status::InProgress || moves.is_empty() {
+        return evaluate(board, me);
+    }
+
+    if board.to_move() == me {
+        // My move: take the highest score.
+        let mut best = i32::MIN;
+        for pit in moves {
+            let (child, _) = board.play(pit).expect("legal_moves() are legal");
+            best = best.max(minimax(&child, depth - 1, me, alpha, beta, nodes));
+            alpha = alpha.max(best);
+            if alpha >= beta {
+                break; // the opponent would never let the game reach here
+            }
+        }
+        best
+    } else {
+        // Their move: they take the lowest score (worst for me).
+        let mut best = i32::MAX;
+        for pit in moves {
+            let (child, _) = board.play(pit).expect("legal_moves() are legal");
+            best = best.min(minimax(&child, depth - 1, me, alpha, beta, nodes));
+            beta = beta.min(best);
+            if alpha >= beta {
+                break; // I would never let the game reach here
+            }
+        }
+        best
+    }
+}
 
 /// Plain minimax with no pruning: looks at *every* position `depth` moves ahead.
 ///
@@ -107,5 +184,62 @@ mod tests {
             nodes += 1;
         }
         assert_eq!(nodes, 6);
+    }
+
+    /// A position part-way through a game: `moves` random legal moves from the start.
+    fn random_position(rng: &mut mancala_core::Rng, moves: usize) -> Board {
+        let mut board = Board::new();
+        for _ in 0..moves {
+            let legal = board.legal_moves();
+            if legal.is_empty() {
+                break;
+            }
+            board = board.play(legal[rng.below(legal.len())]).unwrap().0;
+        }
+        board
+    }
+
+    #[test]
+    fn alpha_beta_agrees_with_plain_minimax() {
+        let mut rng = mancala_core::Rng::new(2026);
+        let (mut full_nodes, mut pruned_nodes) = (0u64, 0u64);
+        let mut checked = 0;
+
+        while checked < 300 {
+            // Two steps: `rng` can't be borrowed mutably twice in one call.
+            let moves = rng.below(40);
+            let board = random_position(&mut rng, moves);
+            if board.status() != Status::InProgress {
+                continue;
+            }
+            for depth in 1..=5 {
+                let me = board.to_move();
+                let mut nodes = 0;
+                let full: Vec<(usize, i32)> = board
+                    .legal_moves()
+                    .into_iter()
+                    .map(|pit| {
+                        let (child, _) = board.play(pit).unwrap();
+                        (pit, minimax_full(&child, depth - 1, me, &mut nodes))
+                    })
+                    .collect();
+
+                let result = search_scores(&board, depth);
+                assert_eq!(result.scores, full, "depth {depth} on {board:?}");
+                assert!(
+                    result.nodes <= nodes,
+                    "alpha-beta searched more at depth {depth}"
+                );
+
+                full_nodes += nodes;
+                pruned_nodes += result.nodes;
+            }
+            checked += 1;
+        }
+
+        println!(
+            "plain minimax: {full_nodes} positions, alpha-beta: {pruned_nodes} ({:.0}% saved)",
+            100.0 * (1.0 - pruned_nodes as f64 / full_nodes as f64)
+        );
     }
 }

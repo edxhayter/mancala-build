@@ -20,8 +20,8 @@
 
 ## 3. Alpha-beta
 
-- [ ] 3.1 **(test first)** Write the property test (design.md decision 4): for 300 random positions (reached by seeded random play from the start) and depths 1–5, the alpha-beta search and `minimax_full` give the same score for every root move, and alpha-beta searches no more positions. Verify: it fails to compile, because the alpha-beta search doesn't exist yet.
-- [ ] 3.2 Implement the alpha-beta `minimax` and the public `search_scores(board, depth) -> SearchResult { scores, nodes }`, which uses a full window per root move (design.md decision 5). Verify: the 3.1 test passes, and print (in the test output) how many positions alpha-beta saved across the run.
+- [x] 3.1 **(test first)** Write the property test (design.md decision 4): for 300 random positions (reached by seeded random play from the start) and depths 1–5, the alpha-beta search and `minimax_full` give the same score for every root move, and alpha-beta searches no more positions. Verify: it fails to compile, because the alpha-beta search doesn't exist yet.
+- [x] 3.2 Implement the alpha-beta `minimax` and the public `search_scores(board, depth) -> SearchResult { scores, nodes }`, which uses a full window per root move (design.md decision 5). Verify: the 3.1 test passes, and print (in the test output) how many positions alpha-beta saved across the run.
   - **Concepts:** why pruning is safe (the opponent would never allow that line), `alpha`/`beta` as "already guaranteed" bounds, `break` out of a loop.
 
 ## 4. Choosing a move
