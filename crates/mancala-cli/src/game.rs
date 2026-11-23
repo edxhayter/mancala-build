@@ -87,8 +87,27 @@ pub fn run<R: BufRead, W: Write>(
 ) -> io::Result<GameEnd> {
     let mut board = config.start;
     let mut rng = Rng::new(config.seed);
+    let mut turn_log = TurnLog::start(&board);
 
     loop {
+        let finished = matches!(board.status(), Status::Finished { .. });
+
+        // A turn is over when the player to move changes or the game ends.
+        if finished || board.to_move() != turn_log.player {
+            let last = config.players.controller(turn_log.player);
+            let next_is_human = config.players.controller(board.to_move()) == Controller::Human;
+            let show = if finished {
+                last == Controller::RandomBot // the bot ended the game
+            } else {
+                next_is_human // a person is about to move after someone else's turn
+            };
+            if show && !turn_log.moves.is_empty() {
+                writeln!(output)?;
+                writeln!(output, "{}", turn_log.recap(&board))?;
+            }
+            turn_log = TurnLog::start(&board);
+        }
+
         let viewer = viewer(&config.players, &board);
         writeln!(output)?;
         writeln!(
@@ -100,7 +119,7 @@ pub fn run<R: BufRead, W: Write>(
             }
         )?;
 
-        if let Status::Finished { .. } = board.status() {
+        if finished {
             writeln!(output, "{}", describe_result(&board))?;
             return Ok(GameEnd::Finished(board.status()));
         }
@@ -112,7 +131,11 @@ pub fn run<R: BufRead, W: Write>(
         };
 
         match turn {
-            Turn::Played(next, outcome) => {
+            Turn::Played(pit, next, outcome) => {
+                let seeds = board.pits(mover)[pit];
+                turn_log
+                    .moves
+                    .push(describe_move(mover, pit, seeds, outcome));
                 board = next;
                 if let Some(message) = describe_outcome(mover, outcome) {
                     writeln!(output, "{message}")?;
@@ -128,10 +151,48 @@ pub fn run<R: BufRead, W: Write>(
 
 /// The result of asking a player for a move.
 enum Turn {
-    /// A legal move was played: the new position and what happened.
-    Played(Board, MoveOutcome),
+    /// A legal move was played: the pit (0-5), the new position and what happened.
+    Played(usize, Board, MoveOutcome),
     /// The player quit (or the input ran out).
     Quit,
+}
+
+/// Everything one player did in their current turn (several moves, with extra turns).
+/// See design.md decision 10.
+struct TurnLog {
+    player: Player,
+    store_before: u8,
+    /// One line per move, from `describe_move`.
+    moves: Vec<String>,
+}
+
+impl TurnLog {
+    /// A fresh log for the player about to move.
+    fn start(board: &Board) -> Self {
+        TurnLog {
+            player: board.to_move(),
+            store_before: board.store(board.to_move()),
+            moves: Vec::new(),
+        }
+    }
+
+    /// The recap printed for the other player, e.g.
+    ///
+    /// ```text
+    /// --- North's turn ---
+    /// North played pit 4 (5 seeds): extra turn.
+    /// North played pit 2 (5 seeds): captured 6.
+    /// North's store: 0 -> 7
+    /// ```
+    fn recap(&self, board: &Board) -> String {
+        let name = player_name(self.player);
+        let store_after = board.store(self.player);
+        format!(
+            "--- {name}'s turn ---\n{}\n{name}'s store: {} -> {store_after}",
+            self.moves.join("\n"),
+            self.store_before
+        )
+    }
 }
 
 /// Whose side the board is drawn from (design.md decision 5).
@@ -163,7 +224,7 @@ fn bot_turn<W: Write>(board: &Board, rng: &mut Rng, output: &mut W) -> io::Resul
     let (next, outcome) = board
         .play(pit)
         .expect("a move from legal_moves() is always legal");
-    Ok(Turn::Played(next, outcome))
+    Ok(Turn::Played(pit, next, outcome))
 }
 
 /// Asks the person to move until they enter a legal move or quit.
@@ -188,7 +249,7 @@ fn human_turn<R: BufRead, W: Write>(
         match parse_input(&line) {
             Ok(Command::Quit) => return Ok(Turn::Quit),
             Ok(Command::Move(pit)) => match board.play(pit) {
-                Ok((next, outcome)) => return Ok(Turn::Played(next, outcome)),
+                Ok((next, outcome)) => return Ok(Turn::Played(pit, next, outcome)),
                 Err(error) => writeln!(output, "{}", move_error_message(error))?,
             },
             Err(error) => writeln!(output, "{}", input_error_message(error))?,
@@ -233,6 +294,20 @@ pub fn describe_outcome(player: Player, outcome: MoveOutcome) -> Option<String> 
     } else {
         Some(parts.join(" "))
     }
+}
+
+/// One line of a turn recap. `pit` is the engine's 0-5; `seeds` is how many it held.
+pub fn describe_move(player: Player, pit: usize, seeds: u8, outcome: MoveOutcome) -> String {
+    let name = player_name(player);
+    let plural = if seeds == 1 { "seed" } else { "seeds" };
+    let what = if outcome.captured > 0 {
+        format!(": captured {}.", outcome.captured)
+    } else if outcome.extra_turn {
+        ": extra turn.".to_string()
+    } else {
+        ".".to_string()
+    };
+    format!("{name} played pit {} ({seeds} {plural}){what}", pit + 1)
 }
 
 /// The scores and the result, for a finished game.
@@ -294,6 +369,38 @@ mod tests {
         assert_eq!(
             describe_outcome(Player::South, outcome).as_deref(),
             Some("South captured 6 seeds.")
+        );
+    }
+
+    #[test]
+    fn move_lines_for_the_recap() {
+        let quiet = MoveOutcome {
+            extra_turn: false,
+            captured: 0,
+        };
+        let extra = MoveOutcome {
+            extra_turn: true,
+            captured: 0,
+        };
+        let capture = MoveOutcome {
+            extra_turn: false,
+            captured: 6,
+        };
+        assert_eq!(
+            describe_move(Player::South, 0, 4, quiet),
+            "South played pit 1 (4 seeds)."
+        );
+        assert_eq!(
+            describe_move(Player::North, 3, 5, extra),
+            "North played pit 4 (5 seeds): extra turn."
+        );
+        assert_eq!(
+            describe_move(Player::North, 1, 5, capture),
+            "North played pit 2 (5 seeds): captured 6."
+        );
+        assert_eq!(
+            describe_move(Player::South, 5, 1, quiet),
+            "South played pit 6 (1 seed)."
         );
     }
 

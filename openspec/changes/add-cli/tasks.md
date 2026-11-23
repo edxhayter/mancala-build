@@ -46,11 +46,14 @@
 - [x] 5.4 **(test first, then implement)** Add the random bot. First write tests in `tests/game_play.rs` for: *Bot replies to a move*; *Playing North puts North at the bottom* (human as North: the boards show North's side at the bottom); *Repeatable with a seed* (run the same script twice with seed 42 and compare the output); and a bot-vs-bot game (both sides `RandomBot`, empty input) that must end in `GameEnd::Finished`, which shows the bot only plays legal moves and a game always ends. Then implement `Controller::RandomBot` using `Rng::below` over `legal_moves()`, announcing each move as pit 1–6. Verify: the new tests and all earlier tests pass.
   - **Concepts:** `&mut` borrows of the RNG inside the loop (ch. 4.2), `match` over the controller.
 
+- [x] 5.5 **(test first, then implement)** Add the turn recap (design.md decision 10). First write tests in `tests/game_play.rs` for *Recap after the bot's turn*, *Recap covers a whole turn with extra turns*, *No recap of your own turn against the bot* and *Recap when the bot ends the game*, plus a unit test for the recap text. Then add `TurnLog`, record each move, and print the recap at the right moment. Verify: the new tests and all earlier tests pass, and a game against the bot shows a recap before each of your moves.
+  - **Concepts:** structs that collect data across loop passes, `Vec<String>`, plurals with `if`, carrying extra data in an enum variant (`Turn::Played(pit, ..)`).
+
 ## 6. Wiring up `main`
 
-- [ ] 6.1 **(test first)** In `tests/binary.rs`, run the real binary through `env!("CARGO_BIN_EXE_mancala")` and check: `--opponent wizard` exits with a non-zero status and names `human` and `random`; input `q` exits successfully and prints that the game was abandoned; a bot game with no `--seed` prints a seed. Verify: the tests exist and fail, because `main` is still the placeholder.
+- [x] 6.1 **(test first)** In `tests/binary.rs`, run the real binary through `env!("CARGO_BIN_EXE_mancala")` and check: `--opponent wizard` exits with a non-zero status and names `human` and `random`; input `q` exits successfully and prints that the game was abandoned; a bot game with no `--seed` prints a seed. Verify: the tests exist and fail, because `main` is still the placeholder.
   - **Concepts:** `std::process::Command`, `Stdio::piped`, writing to a child's stdin, `ExitStatus::success`.
-- [ ] 6.2 Implement `main`: parse `Cli`, build `Players` from the options, choose and print a seed when none is given (design.md decision 7), call `run` with locked stdin/stdout, and map the result to an `ExitCode` (design.md decision 8). Verify: the 6.1 tests pass, and `cargo run -p mancala-cli` lets you play a full game against the bot by hand.
+- [x] 6.2 Implement `main`: parse `Cli`, build `Players` from the options, choose and print a seed when none is given (design.md decision 7), call `run` with locked stdin/stdout, and map the result to an `ExitCode` (design.md decision 8). Verify: the 6.1 tests pass, and `cargo run -p mancala-cli` lets you play a full game against the bot by hand.
   - **Concepts:** `fn main() -> ExitCode`, `std::io::stdin().lock()`, `SystemTime` and `UNIX_EPOCH`, `eprintln!` for errors.
   - **Your piece (optional):** play a full hotseat game with `--opponent human` and note anything confusing about the output. We'll fix it before 7.1.
 

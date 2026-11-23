@@ -1,6 +1,7 @@
 //! Command-line options, parsed by `clap`.
 
 use clap::{Parser, ValueEnum};
+use mancala_core::Player;
 
 /// Play Kalah in your terminal.
 #[derive(Parser, Debug)]
@@ -36,6 +37,16 @@ pub enum Side {
     South,
     /// North: moves second.
     North,
+}
+
+impl Side {
+    /// The engine's player for this side.
+    pub fn player(self) -> Player {
+        match self {
+            Side::South => Player::South,
+            Side::North => Player::North,
+        }
+    }
 }
 
 #[cfg(test)]

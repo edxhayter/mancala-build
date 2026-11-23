@@ -128,6 +128,31 @@ After every move, by a human or the bot, the program SHALL report an extra turn 
 - **WHEN** South enters `1`
 - **THEN** the program reports that South captured 6 seeds
 
+### Requirement: Recap of the opponent's turn
+Before a human is asked to move, if the other player has moved since that human last moved, the program SHALL print a recap of the other player's whole turn: each pit played (1–6) and how many seeds it held, any extra turn or capture, and that player's store before and after the turn. When the game ends on the bot's turn, the recap SHALL be shown before the result. A human SHALL NOT be shown a recap of their own turn.
+
+#### Scenario: Recap after the bot's turn
+- **GIVEN** a game against the bot with the human as South
+- **WHEN** South plays a move that ends South's turn, and the bot then takes its turn
+- **THEN** before South is asked to move again, a recap lists every pit the bot played with its seed count
+- **AND** the recap shows North's store before and after the bot's turn
+
+#### Scenario: Recap covers a whole turn with extra turns
+- **GIVEN** a new hotseat game
+- **WHEN** South plays pit 3 (earning an extra turn) and then pit 1
+- **THEN** before North is asked to move, the recap lists South playing pit 3 with 4 seeds and an extra turn, then pit 1 with 4 seeds
+- **AND** it shows South's store going from 0 to 1
+
+#### Scenario: No recap of your own turn against the bot
+- **GIVEN** a game against the bot with the human as South
+- **WHEN** South plays a move that ends South's turn
+- **THEN** no recap of South's own moves is printed
+
+#### Scenario: Recap when the bot ends the game
+- **GIVEN** a game against the bot in which the bot's next move ends the game
+- **WHEN** the bot plays that move
+- **THEN** the recap of the bot's turn is printed before the final scores and result
+
 ### Requirement: End of game
 When the game ends, the program SHALL show the final position, both players' scores (their store totals), and the result: the winner, or a draw. The final position SHALL be shown from the human's side against the bot, and from South's side in hotseat. The program SHALL then exit with a success status without asking for another move.
 

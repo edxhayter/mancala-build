@@ -149,6 +149,19 @@ Use the current time's nanoseconds (`SystemTime::now().duration_since(UNIX_EPOCH
 
 All user-facing text is built in `game.rs` from small helper functions (e.g. `describe_outcome(player, outcome) -> Option<String>`, `describe_result(status) -> String`), so the tests and the loop share exactly the same wording. Prompts use `write!` (no newline) followed by `flush()`. Without the flush, the prompt can stay in the output buffer and never appear before the program waits for input.
 
+### 10. Turn recap: a small log of the current turn
+
+```
+struct TurnLog { player: Player, store_before: u8, moves: Vec<String> }
+```
+
+A *turn* is all the consecutive moves by one player (several, with extra turns). The loop keeps one `TurnLog`. Each played move adds a line such as `North played pit 4 (5 seeds): extra turn.`. When the player to move changes, or the game ends, the turn is over. Its recap is printed before the next board if the next prompt is for a human who didn't make that turn, or if the game ended on the bot's turn. Then a fresh log starts.
+
+The seed count comes from the board *before* the move (`board.pits(mover)[pit]`), so `Turn::Played` also carries the pit that was played. **No engine change** is needed, because everything comes from `Board` and `MoveOutcome`.
+
+**Why a recap rather than marking changed pits on the board:** chosen by the developer after playing. It reads well however many extra turns the bot chains together, and it helps hotseat players too.
+**Teaches:** a struct that collects data across loop passes, `Vec<String>` and `join`, deciding *when* something happens as well as *what*.
+
 ## Risks / Trade-offs
 
 - **[Tests that compare whole screens break on any spacing tweak]** → tests search the output for the key lines and numbers (`contains`). The exact layout is tested once, in `render.rs`'s unit tests.

@@ -246,3 +246,75 @@ fn bot_against_bot_always_finishes() {
         assert!(out.contains("Final score"), "seed {seed}:\n{out}");
     }
 }
+
+// ---------- Turn recap (task 5.5) ----------
+
+// Scenario: Recap after the bot's turn
+#[test]
+fn recap_after_the_bots_turn() {
+    let (_, out) = play(
+        Players::against_bot(Player::South),
+        1,
+        Board::new(),
+        "1\nq\n",
+    );
+    let recap = out
+        .find("--- North's turn ---")
+        .expect("a recap of the bot's turn");
+    let last_prompt = out.rfind(SOUTH_PROMPT).unwrap();
+    assert!(
+        recap < last_prompt,
+        "recap comes before South's next prompt:\n{out}"
+    );
+    assert!(out.contains("North played pit "), "{out}");
+    assert!(out.contains("North's store: 0 -> "), "{out}");
+}
+
+// Scenario: Recap covers a whole turn with extra turns
+#[test]
+fn recap_covers_a_whole_turn_with_extra_turns() {
+    let (_, out) = hotseat(Board::new(), "3\n1\nq\n");
+    let recap = [
+        "--- South's turn ---",
+        "South played pit 3 (4 seeds): extra turn.",
+        "South played pit 1 (4 seeds).",
+        "South's store: 0 -> 1",
+    ]
+    .join("\n");
+    let at = out
+        .find(&recap)
+        .unwrap_or_else(|| panic!("missing recap:\n{out}"));
+    assert!(at < out.find(NORTH_PROMPT).unwrap(), "{out}");
+}
+
+// Scenario: No recap of your own turn against the bot
+#[test]
+fn no_recap_of_your_own_turn_against_the_bot() {
+    let (_, out) = play(
+        Players::against_bot(Player::South),
+        1,
+        Board::new(),
+        "1\nq\n",
+    );
+    assert!(!out.contains("South played pit"), "{out}");
+    assert!(!out.contains("--- South's turn ---"), "{out}");
+}
+
+// Scenario: Recap when the bot ends the game
+#[test]
+fn recap_when_the_bot_ends_the_game() {
+    // North (the bot) has one seed left; playing it ends the game in a 24-24 draw.
+    let start = Board::from_parts(
+        [1, 0, 0, 0, 0, 0],
+        23,
+        [0, 0, 0, 0, 0, 1],
+        23,
+        Player::North,
+    );
+    let (end, out) = play(Players::against_bot(Player::South), 1, start, "");
+    assert!(matches!(end, GameEnd::Finished(_)));
+    let recap = out
+        .find("North played pit 6 (1 seed).")
+        .unwrap_or_else(|| panic!("{out}"));
+    assert!(recap < out.find("Final score").unwrap(), "{out}");
+}
