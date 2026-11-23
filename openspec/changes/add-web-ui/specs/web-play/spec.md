@@ -7,20 +7,25 @@ Lets people play Kalah in a web browser, with the rules from `kalah-rules` and t
 ## ADDED Requirements
 
 ### Requirement: Starting a game
-The page SHALL let the player choose an opponent (the AI at easy, medium or hard; the random bot; or hotseat), their side against a computer opponent (South or North), and optionally a seed, then start a new game. When the page first opens, a game SHALL already be ready: the player as South against the AI at medium. Starting a new game SHALL be possible at any time and SHALL abandon the current one.
+The page SHALL offer a New game choice of Computer (the AI at easy, medium or hard) or Two players taking turns on this device, and, against the computer, whether the player moves first or second. Online play and puzzles SHALL be listed as coming later and SHALL NOT be selectable. On first opening, a game SHALL be ready with the player moving first against the AI at medium. A new game SHALL be possible at any time and SHALL abandon the current one.
 
 #### Scenario: Ready on first visit
 - **WHEN** the page is opened
-- **THEN** a new game is shown with the player as South against the AI at the medium level
+- **THEN** a new game is shown with the player as South, moving first, against the AI at the medium level
 - **AND** South is to move
 
 #### Scenario: Choosing a different game
-- **WHEN** the player chooses hotseat and starts a new game
-- **THEN** a new game begins from the starting position in which both sides are played by clicking
+- **WHEN** the player chooses Two players and starts a new game
+- **THEN** a new game begins from the starting position in which both sides are played by clicking (hotseat)
 
-#### Scenario: Computer moves first when the player is North
-- **WHEN** the player chooses to play North against a computer opponent and starts a new game
-- **THEN** the computer plays South's first move without the player doing anything
+#### Scenario: Computer moves first when the player moves second
+- **WHEN** the player chooses to move second against the computer and starts a new game
+- **THEN** the computer plays South's first move without the player doing anything, and the player plays North
+
+#### Scenario: Modes that are not available yet
+- **WHEN** the New game choices are shown
+- **THEN** Online and Puzzles are listed as coming later
+- **AND** neither can be selected
 
 ### Requirement: Board from the viewer's side
 The board SHALL show all twelve pits and both stores with their seed counts, from one player's side as in `terminal-play`: the viewer's pits along the bottom numbered 1–6 left to right with their store on the right, and the opponent's pits along the top, each above the pit opposite it. Against a computer the viewer SHALL be the player. In hotseat it SHALL be the player to move. The page SHALL say whose turn it is.
@@ -108,11 +113,11 @@ The player SHALL be able to choose the animation speed: slow, normal or instant.
 - **WHEN** the page is closed and opened again in the same browser
 - **THEN** the speed is still slow
 
-### Requirement: Computer opponents in the page
-The AI and the random bot SHALL play their side by themselves, moving again after an extra turn, and SHALL never freeze the page: while the AI is thinking the page SHALL show that it is thinking and SHALL stay responsive (for example, a new game can still be started). Given the same seed, level and player moves, a computer opponent SHALL make the same moves. The seed in use SHALL be shown so a game can be replayed.
+### Requirement: The AI in the page
+The AI SHALL play its side by itself, moving again after an extra turn, and SHALL never freeze the page: while it is thinking the page SHALL show that it is thinking and SHALL stay responsive (for example, a new game can still be started). How it breaks ties between equally good moves SHALL be seeded per game, and the seed SHALL NOT be shown to the player.
 
 #### Scenario: The AI replies
-- **GIVEN** a game against the AI with the player as South
+- **GIVEN** a game against the AI with the player moving first
 - **WHEN** South plays a move that passes the turn
 - **THEN** the page shows that the AI is thinking, then shows the AI's move being sown
 - **AND** the player is asked to move again once the AI's turn is over
@@ -122,23 +127,34 @@ The AI and the random bot SHALL play their side by themselves, moving again afte
 - **WHEN** the player starts a new game
 - **THEN** the new game starts without waiting for the AI to finish, and the old game's AI move is never played on the new board
 
-#### Scenario: Replaying with a seed
-- **GIVEN** two games against the AI with the same seed and level
-- **WHEN** the player makes the same moves in both
-- **THEN** the AI makes the same moves in both
-
-### Requirement: Move feedback and recap
-After each move the page SHALL say what happened (an extra turn, seeds captured). Before a person is asked to move after the other side's turn, the page SHALL show a recap of that whole turn, as in `terminal-play`: each pit played (1–6) with its seed count, any extra turns and captures, and that side's store before and after.
-
-#### Scenario: Recap of the computer's turn
-- **GIVEN** a game against the AI with the player as South
-- **WHEN** the AI's turn ends and it is South's move
-- **THEN** the page shows a recap listing each pit the AI played and its store before and after
+### Requirement: Move announcements
+After each move, the page SHALL announce an extra turn, or a capture with the number of seeds, in a short caption beside the turn indicator, and SHALL announce the same text to assistive technology. It SHALL NOT show a turn-by-turn recap: the sowing animation shows what happened.
 
 #### Scenario: Extra turn is reported
 - **GIVEN** a new hotseat game
 - **WHEN** South plays pit 3
-- **THEN** the page says South gets another turn
+- **THEN** a short caption says South gets another turn, and the same text is announced to screen readers
+
+#### Scenario: A capture is reported
+- **GIVEN** the `kalah-rules` `South captures` position, with South to move
+- **WHEN** South plays pit 1
+- **THEN** a short caption says South captured 6 seeds
+
+#### Scenario: No recap
+- **GIVEN** a game against the AI
+- **WHEN** the AI's turn ends with several moves
+- **THEN** no list of the AI's moves is shown; the player sees them through the sowing animation
+
+### Requirement: Playing on a phone
+On a phone-sized screen held upright, the page SHALL ask the player to turn the phone sideways instead of showing the board. Held sideways, it SHALL show the whole board from the viewer's side, as on a larger screen, with every playable pit large enough to tap comfortably.
+
+#### Scenario: Phone held upright
+- **WHEN** the page is opened on a phone held upright
+- **THEN** it shows a message asking the player to turn the phone sideways, and no playable board
+
+#### Scenario: Phone held sideways
+- **WHEN** the phone is turned sideways
+- **THEN** the full board appears from the viewer's side with the game exactly where it was
 
 ### Requirement: End of game
 When the game ends, the page SHALL show the final position, both scores, and the result (who won, or a draw), SHALL stop accepting moves, and SHALL offer to start a new game.

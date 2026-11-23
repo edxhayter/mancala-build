@@ -1,2 +1,7 @@
 /target
 DS.store
+
+# web app
+web/node_modules
+web/dist
+web/src/wasm

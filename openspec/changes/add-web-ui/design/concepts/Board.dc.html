@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Board</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div role="img" aria-label="{{label}}" style="position: relative; {{rootStyle}}">
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; {{layerStyle}} {{woodFilter}}">
+    <sc-for list="{{wood}}" as="w" hint-placeholder-count="16">
+      <div style="position: absolute; {{w.style}}"></div>
+    </sc-for>
+  </div>
+  <div aria-hidden="true" style="position: absolute; {{seamStyle}}"></div>
+  <div aria-hidden="true" style="position: absolute; {{knobStyle}}"></div>
+  <sc-for list="{{cups}}" as="c" hint-placeholder-count="14">
+    <div aria-hidden="true" style="position: absolute; {{c.markStyle}}"></div>
+    <div aria-hidden="true" style="position: absolute; {{c.style}}">
+      <sc-for list="{{c.seeds}}" as="s" hint-placeholder-count="4">
+        <div style="position: absolute; {{s.style}}"><div style="position: absolute; {{s.hilum}}"></div></div>
+      </sc-for>
+    </div>
+    <div style="position: absolute; {{c.countStyle}}">{{c.count}}</div>
+    <div style="position: absolute; {{c.tagStyle}}">{{c.tag}}</div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["shaded","flat"],"default":"shaded"},"orientation":{"editor":"enum","options":["across","lengthwise"],"default":"across"},"cup":{"editor":"range","min":32,"max":120,"step":1,"default":100},"wrongPit":{"editor":"int","min":0,"max":6,"default":0},"revealPit":{"editor":"int","min":0,"max":6,"default":0},"opponentName":{"editor":null},"viewerName":{"editor":null},"wood":{"editor":null},"woodEdge":{"editor":null},"cupLip":{"editor":null},"cupMid":{"editor":null},"cupDeep":{"editor":null},"seed":{"editor":null},"seedAlt":{"editor":null},"seedLight":{"editor":null},"seedDark":{"editor":null},"ink":{"editor":null},"numeral":{"editor":null},"numeralFont":{"editor":null},"$preview":{"width":950,"height":358}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const flat = (p.variant ?? 'shaded') === 'flat';
+    const lengthwise = (p.orientation ?? 'across') === 'lengthwise';
+    const D = Number(p.cup ?? 100);
+    const wood = p.wood ?? '#ba6f35';
+    const woodEdge = p.woodEdge ?? '#834d2d';
+    const cupMid = p.cupMid ?? '#965d31';
+    const cupDeep = p.cupDeep ?? '#532004';
+    const seed = p.seed ?? '#958f85';
+    const seedAlt = p.seedAlt ?? '#8a877c';
+    const seedLight = p.seedLight ?? '#b3ada2';
+    const seedDark = p.seedDark ?? '#615c53';
+    const ink = p.ink ?? '#2b1810';
+    const numeral = p.numeral ?? ink;
+    const font = p.numeralFont ?? "'Marcellus SC', serif";
+    const oppName = p.opponentName ?? 'AI';
+    const youName = p.viewerName ?? 'You';
+
+    // A real position from a CLI game. North = opponent (top), South = viewer (bottom).
+    const north = [4, 4, 0, 5, 0, 6];
+    const south = [1, 6, 2, 6, 6, 5];
+    const northStore = 2;
+    const southStore = 1;
+
+    // Geometry in "across" space: m runs along the board, c across it.
+    const P = D * 1.18;            // distance between cup centres
+    const r = D * 0.62;            // wood disc around each cup
+    const L = 30 + 0.28 * D;       // band for numbers on each side
+    const main = 7 * P + 2 * r;
+    const cross = P + 2 * r + 2 * L;
+    const cMid = cross / 2;
+    const mAt = (k) => r + (k + 1) * P;   // k = -1 (opponent store) .. 6 (viewer store)
+    const cTop = cMid - P / 2;
+    const cBot = cMid + P / 2;
+
+    const W = lengthwise ? cross : main;
+    const H = lengthwise ? main : cross;
+    // across -> screen. Lengthwise turns the board a quarter turn anticlockwise:
+    // the opponent's row ends up on the left, the viewer's on the right, the viewer's store at the top.
+    const pt = (m, c) => (lengthwise ? { x: c, y: main - m } : { x: m, y: c });
+    const box = (m0, c0, m1, c1) => {
+      const a = pt(m0, c0), b = pt(m1, c1);
+      return { l: Math.min(a.x, b.x), t: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) };
+    };
+    const px = (v) => v.toFixed(1) + 'px';
+
+    const grainAngle = lengthwise ? 87 : 177;
+    const g = (v) => (v * D / 100).toFixed(1);
+    const grain = 'repeating-linear-gradient(' + grainAngle + 'deg, rgba(70,28,4,0.08) 0px, rgba(70,28,4,0.08) ' + g(2) + 'px, transparent ' + g(2) + 'px, transparent ' + g(9) + 'px, rgba(255,226,190,0.07) ' + g(9) + 'px, rgba(255,226,190,0.07) ' + g(11) + 'px, transparent ' + g(11) + 'px, transparent ' + g(24) + 'px), repeating-linear-gradient(' + (grainAngle + 4) + 'deg, rgba(70,28,4,0.05) 0px, rgba(70,28,4,0.05) 1px, transparent 1px, transparent ' + g(37) + 'px)';
+    const woodStyle = (b, radius) =>
+      'left: ' + px(b.l) + '; top: ' + px(b.t) + '; width: ' + px(b.w) + '; height: ' + px(b.h) + '; border-radius: ' + radius + '; background-color: ' + wood + ';' +
+      (flat ? '' : ' background-image: ' + grain + '; background-position: ' + px(-b.l) + ' ' + px(-b.t) + ';');
+    const disc = (m, c, rad) => box(m - rad, c - rad, m + rad, c + rad);
+
+    const woodPieces = [];
+    for (let k = 0; k < 6; k++) {
+      woodPieces.push({ style: woodStyle(disc(mAt(k), cTop, r), '50%') });
+      woodPieces.push({ style: woodStyle(disc(mAt(k), cBot, r), '50%') });
+    }
+    woodPieces.push({ style: woodStyle(disc(mAt(-1), cMid, r), '50%') });
+    woodPieces.push({ style: woodStyle(disc(mAt(6), cMid, r), '50%') });
+    woodPieces.push({ style: woodStyle(box(mAt(-1), cTop, mAt(6), cBot), '0') });
+
+    const GOLD = 2.39996;
+    const seedsFor = (n, key) => {
+      const out = [];
+      const dense = n > 9;
+      const spread = (dense ? 5.4 : 8.4) * D / 100;
+      const sz = (dense ? 0.85 : 1) * D / 100;
+      for (let k = 0; k < n; k++) {
+        const rr = n === 1 ? 0 : spread * Math.sqrt(k + 0.6);
+        const a = k * GOLD + key * 0.9;
+        const w = (21 + ((k * 7 + key * 3) % 4)) * sz;
+        const h = w * 0.8;
+        const rot = (k * 53 + key * 29) % 180;
+        const base = (k + key) % 3 === 1 ? seedAlt : seed;
+        const look = flat
+          ? 'background: ' + base + '; border: 1.5px solid ' + ink + ';'
+          : 'background: radial-gradient(ellipse at 34% 30%, ' + seedLight + ' 0%, ' + base + ' 48%, ' + seedDark + ' 100%); box-shadow: 0 ' + g(2) + 'px ' + g(2) + 'px rgba(35,14,2,0.45);';
+        out.push({
+          style: 'left: calc(50% + ' + (Math.cos(a) * rr - w / 2).toFixed(1) + 'px); top: calc(50% + ' + (Math.sin(a) * rr - h / 2).toFixed(1) + 'px); width: ' + w.toFixed(1) + 'px; height: ' + h.toFixed(1) + 'px; border-radius: 50%; box-sizing: border-box; transform: rotate(' + rot + 'deg); ' + look,
+          hilum: 'left: ' + (w * 0.62).toFixed(1) + 'px; top: ' + (h * 0.42).toFixed(1) + 'px; width: ' + g(4) + 'px; height: ' + g(3) + 'px; border-radius: 50%; background: ' + (flat ? ink : seedDark) + '; opacity: ' + ((k + key) % 3 === 0 ? 0.85 : 0) + ';',
+        });
+      }
+      return out;
+    };
+
+    const hollowLook = flat
+      ? 'background: ' + cupMid + '; border: 2.5px solid ' + ink + '; box-shadow: inset 0 ' + g(13) + 'px 0 ' + cupDeep + ';'
+      : 'background: ' + cupMid + '; box-shadow: inset 0 ' + g(12) + 'px ' + g(20) + 'px rgba(58,20,2,0.62), inset 0 -' + g(6) + 'px ' + g(10) + 'px rgba(255,212,170,0.16), 0 0 0 ' + g(2) + 'px rgba(255,214,176,0.16);';
+    const countSize = 12 + 0.10 * D;
+    const tagSize = 9 + 0.03 * D;
+
+    // A number placed outside the board, `side` = -1 (opponent's side) or +1 (viewer's side).
+    const label = (m, side, offset, size, extra) => {
+      const c = side < 0 ? L * offset : cross - L * offset;
+      const q = pt(m, c);
+      return 'left: ' + px(q.x - 40) + '; top: ' + px(q.y - size / 2) + '; width: 80px; font-family: ' + font + '; font-size: ' + size.toFixed(1) + 'px; color: ' + numeral + '; text-align: center; line-height: 1; ' + (extra || '');
+    };
+
+    // Puzzle feedback on the viewer's pits (1-6; 0 = none): wrong = rust ring, reveal = warm glow.
+    const wrongPit = Number(p.wrongPit ?? 0);
+    const revealPit = Number(p.revealPit ?? 0);
+    const markFor = (side, tag, q) => {
+      const pit = side > 0 ? Number(tag) : 0;
+      const ring = D + 10 * D / 100;
+      const at = 'left: ' + px(q.x - ring / 2) + '; top: ' + px(q.y - ring / 2) + '; width: ' + px(ring) + '; height: ' + px(ring) + '; border-radius: 50%; box-sizing: border-box;';
+      if (pit && pit === wrongPit) return at + ' border: ' + g(4) + 'px solid #8e2a2e;';
+      if (pit && pit === revealPit) return at + ' box-shadow: 0 0 0 ' + g(4) + 'px rgba(255,214,150,0.85), 0 0 ' + g(22) + 'px ' + g(8) + 'px rgba(255,196,110,0.55);';
+      return 'display: none;';
+    };
+
+    const cups = [];
+    const cup = (m, c, n, key, side, tag) => {
+      const q = pt(m, c);
+      cups.push({
+        markStyle: markFor(side, tag, q),
+        style: 'left: ' + px(q.x - D / 2) + '; top: ' + px(q.y - D / 2) + '; width: ' + px(D) + '; height: ' + px(D) + '; border-radius: 50%; box-sizing: border-box; ' + hollowLook,
+        seeds: seedsFor(n, key),
+        count: String(n),
+        countStyle: label(m, side, 0.62, countSize),
+        tag,
+        tagStyle: label(m, side, 0.2, tagSize, 'opacity: 0.6; letter-spacing: 0.06em;'),
+      });
+    };
+    for (let k = 0; k < 6; k++) {
+      cup(mAt(k), cTop, north[5 - k], k + 1, -1, String(6 - k));
+      cup(mAt(k), cBot, south[k], k + 7, +1, String(k + 1));
+    }
+    cup(mAt(-1), cMid, northStore, 13, -1, oppName);
+    cup(mAt(6), cMid, southStore, 14, +1, youName);
+
+    const seamBox = box(mAt(-1) + r, cMid - 1, mAt(6) - r, cMid + 1);
+    const seamStyle = 'left: ' + px(seamBox.l) + '; top: ' + px(seamBox.t) + '; width: ' + px(seamBox.w) + '; height: ' + px(seamBox.h) + '; background: ' + (flat ? ink : 'rgba(52,20,2,0.5)') + ';';
+    const kq = pt(main / 2, cMid);
+    const kd = D * 0.32;
+    const knobStyle = 'left: ' + px(kq.x - kd / 2) + '; top: ' + px(kq.y - kd / 2) + '; width: ' + px(kd) + '; height: ' + px(kd) + '; border-radius: 50%; box-sizing: border-box; ' +
+      (flat ? 'background: ' + wood + '; border: 2.5px solid ' + ink + ';' : 'background: ' + woodEdge + '; box-shadow: inset 0 ' + g(2) + 'px ' + g(3) + 'px rgba(255,222,186,0.35), inset 0 -' + g(2) + 'px ' + g(3) + 'px rgba(30,10,0,0.35), 0 ' + g(3) + 'px ' + g(5) + 'px rgba(30,10,0,0.45);');
+    const woodFilter = flat
+      ? 'filter: drop-shadow(2.5px 0 0 ' + ink + ') drop-shadow(-2.5px 0 0 ' + ink + ') drop-shadow(0 2.5px 0 ' + ink + ') drop-shadow(0 -2.5px 0 ' + ink + ') drop-shadow(7px 7px 0 ' + ink + ');'
+      : 'filter: drop-shadow(0 ' + g(10) + 'px ' + g(12) + 'px rgba(40,16,3,0.38)) drop-shadow(0 ' + g(2) + 'px ' + g(2) + 'px rgba(40,16,3,0.3));';
+
+    return {
+      rootStyle: 'width: ' + px(W) + '; height: ' + px(H) + ';',
+      layerStyle: 'width: ' + px(W) + '; height: ' + px(H) + ';',
+      wood: woodPieces,
+      woodFilter,
+      seamStyle,
+      knobStyle,
+      cups,
+      label: 'Board: opponent pits 6 to 1 with 6, 0, 5, 0, 4, 4 seeds and store 2; your pits 1 to 6 with 1, 6, 2, 6, 6, 5 seeds and store 1.',
+    };
+  }
+}
+</script>
+</body>
+</html>

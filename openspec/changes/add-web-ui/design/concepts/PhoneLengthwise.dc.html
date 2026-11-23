@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone · board lengthwise</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 14px 16px 20px; display: flex; flex-direction: column; gap: 10px; background-color: #efe4d3; background-image: repeating-linear-gradient(0deg, rgba(122,90,58,0.06) 0px, rgba(122,90,58,0.06) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(122,90,58,0.05) 0px, rgba(122,90,58,0.05) 1px, transparent 1px, transparent 3px); color: #2b1810; font-family: 'Atkinson Hyperlegible', sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="margin: 0; font-family: 'Marcellus SC', serif; font-weight: 400; font-size: 28px; letter-spacing: 0.04em;">Mancala</h1>
+    <div style="display: flex; align-items: center; gap: 4px;">
+      <button style="all: unset; cursor: pointer; padding: 10px 16px; border-radius: 20px; background: #c8844c; font-family: 'Marcellus SC', serif; font-size: 15px; box-shadow: inset 0 1px 0 rgba(255,226,190,0.5), inset 0 -2px 0 rgba(83,32,4,0.35);">New game</button>
+      <button aria-label="Settings" style="all: unset; cursor: pointer; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b1810" stroke-width="1.8" stroke-linecap="round">
+          <line x1="4" y1="7" x2="20" y2="7"></line><circle cx="9" cy="7" r="2.2" fill="#efe4d3"></circle>
+          <line x1="4" y1="17" x2="20" y2="17"></line><circle cx="15" cy="17" r="2.2" fill="#efe4d3"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div aria-hidden="true" style="height: 9px; background-image: repeating-linear-gradient(90deg, #2b1810 0px, #2b1810 6px, transparent 6px, transparent 9px), repeating-linear-gradient(90deg, #8e2a2e 0px, #8e2a2e 4px, transparent 4px, transparent 7px); background-size: 100% 3px, 100% 2px; background-position: 0 0, 0 6px; background-repeat: no-repeat; opacity: 0.85;"></div>
+  <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: #6b4a35;">
+    <span>You vs <span style="color: #2b1810; font-weight: 700;">AI · Medium</span></span>
+    <span aria-live="polite" style="font-family: 'Marcellus SC', serif; font-size: 20px; color: #2b1810;">Your move</span>
+  </div>
+  <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center;">
+    <dc-import name="Board" variant="shaded" orientation="lengthwise" cup="{{ 70 }}" opponent-name="AI" viewer-name="You" hint-size="269px,665px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

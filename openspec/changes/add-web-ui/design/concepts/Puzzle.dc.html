@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Desktop · puzzle (later change)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; padding: 40px 56px 48px; display: flex; flex-direction: column; gap: 22px; background-color: #efe4d3; background-image: repeating-linear-gradient(0deg, rgba(122,90,58,0.06) 0px, rgba(122,90,58,0.06) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(122,90,58,0.05) 0px, rgba(122,90,58,0.05) 1px, transparent 1px, transparent 3px); color: #2b1810; font-family: 'Atkinson Hyperlegible', sans-serif;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 32px;">
+    <h1 style="margin: 0; font-family: 'Marcellus SC', serif; font-weight: 400; font-size: 48px; letter-spacing: 0.04em; line-height: 1;">Mancala</h1>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <span style="font-size: 16px; color: #6b4a35;">Puzzle · <span style="color: #2b1810; font-weight: 700;">Find the best move</span></span>
+      <button style="all: unset; cursor: pointer; padding: 12px 22px; border-radius: 22px; background: #c8844c; color: #2b1810; font-family: 'Marcellus SC', serif; font-size: 18px; letter-spacing: 0.04em; box-shadow: inset 0 1px 0 rgba(255,226,190,0.5), inset 0 -2px 0 rgba(83,32,4,0.35), 0 3px 6px rgba(43,24,16,0.25);">New game</button>
+      <button aria-label="Settings" style="all: unset; cursor: pointer; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 22px;">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b1810" stroke-width="1.8" stroke-linecap="round">
+          <line x1="4" y1="7" x2="20" y2="7"></line><circle cx="9" cy="7" r="2.2" fill="#efe4d3"></circle>
+          <line x1="4" y1="17" x2="20" y2="17"></line><circle cx="15" cy="17" r="2.2" fill="#efe4d3"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div aria-hidden="true" style="height: 12px; background-image: repeating-linear-gradient(90deg, #2b1810 0px, #2b1810 7px, transparent 7px, transparent 11px), repeating-linear-gradient(90deg, #8e2a2e 0px, #8e2a2e 5px, transparent 5px, transparent 9px); background-size: 100% 4px, 100% 3px; background-position: 0 0, 0 8px; background-repeat: no-repeat; opacity: 0.85;"></div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;">
+    <dc-import name="Board" variant="shaded" orientation="across" cup="{{ 100 }}" opponent-name="AI" viewer-name="You" wrong-pit="{{ 2 }}" hint-size="950px,358px"></dc-import>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <p aria-live="polite" style="margin: 0; font-family: 'Marcellus SC', serif; font-size: 30px; letter-spacing: 0.04em;">Not that one. Try again.</p>
+      <p style="margin: 0; font-size: 16px; color: #6b4a35;">Two tries left</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <button style="all: unset; cursor: pointer; padding: 10px 4px; font-size: 17px; color: #6b4a35; border-bottom: 1.5px solid #b89a7e;">Show the answer</button>
+      <button style="all: unset; cursor: pointer; padding: 12px 22px; border-radius: 22px; background: #c8844c; color: #2b1810; font-family: 'Marcellus SC', serif; font-size: 18px; letter-spacing: 0.04em; box-shadow: inset 0 1px 0 rgba(255,226,190,0.5), inset 0 -2px 0 rgba(83,32,4,0.35), 0 3px 6px rgba(43,24,16,0.25);">Next puzzle</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

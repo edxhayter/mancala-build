@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Concept C · On the cloth</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Forum&amp;family=Libre+Franklin:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8e2a2e}a:hover{color:#2b1810}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 820px; overflow: hidden; background: #e9dbc7; color: #2b1810; font-family: 'Libre Franklin', sans-serif;">
+
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 820px; display: flex; flex-direction: column;">
+    <sc-for list="{{bands}}" as="b" hint-placeholder-count="20">
+      <div style="flex: none; width: 1280px; {{b.style}}"></div>
+    </sc-for>
+  </div>
+  <sc-for list="{{glyphs}}" as="g" hint-placeholder-count="8">
+    <div aria-hidden="true" style="position: absolute; {{g.style}}">
+      <div style="position: absolute; left: 0; top: 0; width: 100%; height: 4px; background: {{g.color}};"></div>
+      <div style="position: absolute; left: 0; top: 4px; width: 100%; height: 14px; background-image: repeating-linear-gradient(90deg, {{g.color}} 0px, {{g.color}} 3px, transparent 3px, transparent 6px);"></div>
+    </div>
+  </sc-for>
+
+  <div style="position: absolute; left: 48px; top: 34px; padding: 12px 20px 10px; background: #f4eadb; border: 1.5px dashed #8e2a2e; outline: 5px solid #f4eadb; display: flex; flex-direction: column; gap: 2px;">
+    <h1 style="margin: 0; font-family: 'Forum', serif; font-weight: 400; font-size: 46px; letter-spacing: 0.08em; line-height: 1;">MANCALA</h1>
+    <span style="font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #5e3f2c;">Kalah · six pits · four seeds</span>
+  </div>
+
+  <div style="position: absolute; right: 48px; top: 34px; padding: 12px 18px; background: #f4eadb; border: 1.5px dashed #8e2a2e; outline: 5px solid #f4eadb; display: flex; align-items: center; gap: 22px; font-size: 15px;">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5e3f2c;">Opponent</span>
+      <div style="display: flex; gap: 12px;">
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid #8e2a2e; font-weight: 600;">AI</button>
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Random bot</button>
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Hotseat</button>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5e3f2c;">Level</span>
+      <div style="display: flex; gap: 12px;">
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Easy</button>
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid #8e2a2e; font-weight: 600;">Medium</button>
+        <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Hard</button>
+      </div>
+    </div>
+    <button style="all: unset; cursor: pointer; padding: 10px 18px; background: #2b1810; color: #f4eadb; font-family: 'Forum', serif; font-size: 19px; letter-spacing: 0.08em;">NEW GAME</button>
+  </div>
+
+  <div style="position: absolute; left: 140px; top: 214px;">
+    <dc-import name="Board" variant="shaded" numeral="#2b1810" numeral-font="'Forum', serif" hint-size="1000px,360px"></dc-import>
+  </div>
+
+  <div style="position: absolute; left: 48px; bottom: 40px; padding: 12px 20px; background: #f4eadb; border: 1.5px dashed #8e2a2e; outline: 5px solid #f4eadb; display: flex; gap: 28px; align-items: flex-start;">
+    <span style="font-family: 'Forum', serif; font-size: 30px; letter-spacing: 0.04em; line-height: 1.1;">Your move,<br>South</span>
+    <div style="display: flex; flex-direction: column; gap: 3px; font-size: 15px;">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5e3f2c;">North's turn</span>
+      <span>Played pit 3 (4 seeds): extra turn.</span>
+      <span>Played pit 5 (5 seeds).</span>
+      <span>Store 0 → 2</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; right: 48px; bottom: 40px; padding: 12px 18px; background: #f4eadb; border: 1.5px dashed #8e2a2e; outline: 5px solid #f4eadb; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; font-size: 15px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5e3f2c;">Sowing</span>
+      <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Slow</button>
+      <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid #8e2a2e; font-weight: 600;">Normal</button>
+      <button style="all: unset; cursor: pointer; padding-bottom: 2px; border-bottom: 2px solid transparent; color: #5e3f2c;">Instant</button>
+    </div>
+    <span style="font-size: 13px; color: #5e3f2c;">Seed 5 · you play South</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ink = '#2b1810';
+    const rust = '#8e2a2e';
+    const dash = (c, on, off, h) => 'height: ' + h + 'px; background-image: repeating-linear-gradient(90deg, ' + c + ' 0px, ' + c + ' ' + on + 'px, transparent ' + on + 'px, transparent ' + (on + off) + 'px);';
+    const ladder = (h) => 'height: ' + h + 'px; background-image: repeating-linear-gradient(90deg, ' + ink + ' 0px, ' + ink + ' 3px, transparent 3px, transparent 10px); opacity: 0.85;';
+    const gap = (h) => 'height: ' + h + 'px;';
+    const unit = [
+      gap(22), dash(ink, 9, 5, 7), gap(4), dash(rust, 6, 4, 5), gap(4), dash(ink, 9, 5, 7),
+      gap(30), ladder(30), gap(30),
+      dash(ink, 4, 4, 4), gap(5), dash(ink, 12, 6, 9), gap(5), dash(ink, 4, 4, 4),
+      gap(26),
+    ];
+    const bands = [];
+    for (let r = 0; r < 4; r++) unit.forEach((style) => bands.push({ style }));
+    const glyphAt = [[318, 77, ink], [690, 77, rust], [1010, 77, ink], [96, 287, rust], [1176, 287, ink], [210, 497, ink], [1080, 497, rust], [600, 707, ink]];
+    const glyphs = glyphAt.map(([x, y, color]) => ({ color, style: 'left: ' + x + 'px; top: ' + y + 'px; width: 24px; height: 18px;' }));
+    return { bands, glyphs };
+  }
+}
+</script>
+</body>
+</html>

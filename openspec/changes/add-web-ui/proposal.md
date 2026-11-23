@@ -8,10 +8,10 @@ The engine and the AI only run in a terminal, so playing needs Rust installed an
 
 - Add a fourth Rust crate, `crates/mancala-wasm`, that wraps `mancala-core` and `mancala-ai` for JavaScript using `wasm-bindgen`, and is built with `wasm-pack`. The core and AI crates don't change.
 - Add a web app in `web/`, built with Vite, React and TypeScript:
-  - New game options: opponent (AI easy, medium or hard; random bot; hotseat), your side, and an optional seed.
-  - A clickable board drawn from the viewer's side, using the same rule as the CLI: your pits along the bottom running towards your store on the right, with hotseat turning to face whoever is moving.
+  - A New game sheet: **Computer** (the AI at easy, medium or hard; you move first or second) or **Two players** on one device. **Online** and **Puzzles** are listed as coming later, ready for those changes.
+  - A clickable board drawn from the viewer's side, using the same rule as the CLI: your pits along the bottom running towards your store on the right, with hotseat turning to face whoever is moving. On phones the game is played in **landscape**, and an upright phone is asked to turn sideways.
   - **Sowing animation:** after every move, the seeds visibly travel pit to pit, skipping the opponent's store, then any capture and the end-of-game sweep play out.
-  - The computer's moves are announced, with per-move feedback, a recap of the opponent's turn, and a final score with the result.
+  - A quiet caption for extra turns and captures (also announced to screen readers), with no turn-by-turn recap, because the animation shows what happened. Sowing speed lives in a small settings pop-over. A final score and result end the game.
 - **A visual design rooted in a real board.** The look is an homage to the developer's own Ghana/Nigeria Oware board (photo in `design/reference/`): honey-coloured carved wood, a scalloped outline, a hinge knob, grey-green nickernut seeds, and a woven cream, black and rust cloth. Two or three concepts are reviewed and one is chosen before any components are built.
 - Run the AI in a **Web Worker**, so the page never freezes while it thinks. A "thinking…" state shows while it works.
 - Publish the site to GitHub Pages automatically with a GitHub Actions workflow on every push to `main`. The workflow runs the Rust and web tests before it deploys.

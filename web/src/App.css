@@ -1,0 +1,296 @@
+/* The page layout and controls, to the approved brief (design.md decision 10). */
+
+.page {
+  min-height: 100%;
+  padding: 40px 56px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* --- Header ---------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+.title { font-size: 48px; line-height: 1; }
+.header-controls { display: flex; align-items: center; gap: 22px; }
+.matchup { color: var(--ink-soft); }
+.matchup strong { color: var(--ink); }
+
+/* --- Buttons --------------------------------------------------------------- */
+
+/* The main action: a wooden tab with a soft bevel. */
+.tab-button {
+  all: unset;
+  cursor: pointer;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 12px 22px;
+  border-radius: 22px;
+  background: var(--tab);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  box-shadow:
+    inset 0 1px 0 rgb(255 226 190 / 0.5),
+    inset 0 -2px 0 rgb(83 32 4 / 0.35),
+    0 3px 6px rgb(43 24 16 / 0.25);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+}
+.tab-button:hover { filter: brightness(1.04); }
+.tab-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 226 190 / 0.4),
+    inset 0 -1px 0 rgb(83 32 4 / 0.35),
+    0 1px 3px rgb(43 24 16 / 0.25);
+}
+
+.text-button {
+  all: unset;
+  cursor: pointer;
+  padding: 10px 4px;
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+.text-button:hover { color: var(--ink); }
+
+/* Keyboard focus for every control. `all: unset` removes the browser's own. */
+.tab-button:focus-visible,
+.text-button:focus-visible,
+.choice:focus-visible,
+.mode-card:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* --- The board and the status line ----------------------------------------- */
+
+.play {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+
+.status {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  min-height: 44px;
+  text-align: center;
+}
+.status p { margin: 0; }
+.status-text {
+  font-family: var(--font-display);
+  font-size: 30px;
+  letter-spacing: 0.04em;
+}
+.caption { color: var(--ink-soft); font-size: 17px; }
+
+.end-of-game { align-items: center; }
+.scores { font-size: 18px; color: var(--ink-soft); }
+.scores strong { color: var(--ink); font-family: var(--font-display); font-size: 22px; font-weight: 400; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- The New game sheet ---------------------------------------------------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(43 24 16 / 0.42);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 16px 16px;
+  overflow-y: auto;
+}
+
+.sheet {
+  width: 520px;
+  max-width: 100%;
+  padding: 30px 36px 28px;
+  background: var(--linen-panel);
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgb(43 24 16 / 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.sheet-title { font-size: 32px; }
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mode-card {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 2px solid #d8c6b0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mode-card[aria-pressed='true'] { border-color: var(--ink); }
+.mode-card:hover:not(:disabled) { border-color: var(--ink-soft); }
+.mode-card[aria-pressed='true']:hover { border-color: var(--ink); }
+.mode-card:disabled { cursor: default; border-style: dashed; color: var(--ink-soft); }
+.mode-title { font-family: var(--font-display); font-size: 20px; }
+.mode-detail { font-size: 14px; color: var(--ink-soft); }
+
+.choice-groups { display: flex; flex-wrap: wrap; gap: 16px 40px; }
+.choice-group { display: flex; flex-direction: column; gap: 8px; }
+.small-label {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.choices { display: flex; gap: 18px; font-size: 17px; }
+
+/* Quiet underlined text options. */
+.choice {
+  all: unset;
+  cursor: pointer;
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-soft);
+}
+.choice:hover { color: var(--ink); }
+.choice[aria-pressed='true'] { border-bottom-color: var(--ink); color: var(--ink); font-weight: 700; }
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 22px;
+  padding-top: 4px;
+}
+
+/* --- Phone held sideways (design.md decision 10) --------------------------- */
+
+.page.phone {
+  height: 100dvh; /* exactly the screen: the board shrinks to fit, nothing scrolls */
+  padding: 10px max(48px, env(safe-area-inset-right)) 12px max(48px, env(safe-area-inset-left));
+  gap: 6px;
+}
+
+.header.compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+}
+.header.compact .title { font-size: 24px; }
+.header.compact .header-controls { justify-content: flex-end; gap: 4px; }
+.header.compact .matchup { font-size: 13px; padding-right: 8px; }
+.header.compact .tab-button { padding: 10px 14px; font-size: 14px; border-radius: 20px; }
+
+/* The status in the middle of the header: smaller, with the caption under it. */
+.header-status .status { flex-direction: column; align-items: center; gap: 0; min-height: 0; }
+.header-status .status-text { font-size: 20px; }
+.header-status .caption,
+.header-status .scores { font-size: 13px; }
+.header-status .scores strong { font-size: 15px; }
+.header-status .end-of-game { flex-direction: row; flex-wrap: wrap; gap: 2px 10px; }
+.header-status .end-of-game .tab-button { padding: 6px 12px; min-height: 32px; font-size: 13px; }
+
+/* The board takes all the space left and keeps its shape inside it. */
+.page.phone .play { min-height: 0; gap: 0; }
+.page.phone .board {
+  width: 100%;
+  height: 100%;
+  max-width: 722px; /* 76 px cups; smaller phones scale it down */
+}
+
+/* --- Phone held upright ---------------------------------------------------- */
+
+.rotate-prompt {
+  min-height: 100dvh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+}
+.rotate-title { font-size: 34px; }
+.rotate-icon { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rotate-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  max-width: 13em;
+  text-wrap: balance; /* even line lengths instead of one word on its own */
+}
+
+/* --- Settings ---------------------------------------------------------------- */
+
+.settings-anchor { position: relative; }
+.settings-button {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+}
+.settings-button:hover,
+.settings-button[aria-expanded='true'] { background: rgb(43 24 16 / 0.06); }
+.settings-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.settings-button svg { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; }
+.settings-button circle { fill: var(--linen); }
+
+/* The pop-over hangs under the icon, with a small pointer towards it. */
+.popover {
+  position: absolute;
+  right: -8px;
+  top: calc(100% + 12px);
+  z-index: 10;
+  width: 300px;
+  padding: 20px 22px 22px;
+  background: var(--linen-panel);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgb(43 24 16 / 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.popover::before {
+  content: '';
+  position: absolute;
+  right: 23px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  background: var(--linen-panel);
+  transform: rotate(45deg);
+}
+.popover .choices { gap: 20px; }
+.popover-note { font-size: 14px; color: var(--ink-soft); }
