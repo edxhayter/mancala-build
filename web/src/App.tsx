@@ -1,17 +1,21 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { AiClient } from './ai/client';
+import { STEP_MS, useSpeed } from './animation/speed';
+import { arrivals } from './animation/steps';
+import { usePlayback } from './animation/usePlayback';
 import { Board } from './board/Board';
 import { EndOfGame } from './components/EndOfGame';
 import { Header } from './components/Header';
 import { NewGameSheet } from './components/NewGameSheet';
 import { RotatePrompt } from './components/RotatePrompt';
+import { SettingsPopover } from './components/SettingsPopover';
 import { StatusLine } from './components/StatusLine';
 import { legalMoves, type BoardSnapshot, type Player } from './engine';
 import { describeResult, playerName } from './game/presentation';
 import { freshSeed, gameReducer, initialState, shownViewer, type GameState } from './game/reducer';
 import type { Settings } from './game/settings';
 import { statusText } from './game/status';
-import { SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
+import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
 import './App.css';
 
 interface AppProps {
@@ -30,11 +34,17 @@ export function App({ ai, start }: AppProps) {
   const askedAbout = useRef<BoardSnapshot | null>(null);
   const upright = useMediaQuery(UPRIGHT_PHONE);
   const phone = useMediaQuery(SIDEWAYS_PHONE);
+  const reducedMotion = useMediaQuery(REDUCED_MOTION);
+  const [speed, setSpeed] = useSpeed();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsButton = useRef<HTMLButtonElement>(null);
 
-  // Until the sowing animation exists (task 8.2), every move finishes at once.
-  useEffect(() => {
-    if (state.phase === 'animating') dispatch({ type: 'animationDone' });
-  }, [state.phase, state.lastMove]);
+  // Show each move seed by seed, then let the game carry on (design.md decision 6).
+  // Reduced motion means no animation at all, whatever the speed.
+  const stepMs = reducedMotion ? 0 : STEP_MS[speed];
+  const playback = usePlayback(state.lastMove, state.phase === 'animating', stepMs, () =>
+    dispatch({ type: 'animationDone' }),
+  );
 
   // When it's the computer's turn, ask the AI. The answer comes back later,
   // tagged with this game's id: if a new game has started by then, the
@@ -58,6 +68,10 @@ export function App({ ai, start }: AppProps) {
   const playable = phase === 'human' ? legalMoves(board) : [];
 
   const startGame = (next: Settings) => dispatch({ type: 'newGame', settings: next, seed: freshSeed() });
+  const closeSettings = useCallback(() => {
+    setSettingsOpen(false);
+    settingsButton.current?.focus();
+  }, []);
   const closeSheet = () => {
     setSheetOpen(false);
     newGameButton.current?.focus(); // put keyboard focus back where it was
@@ -87,17 +101,25 @@ export function App({ ai, start }: AppProps) {
         newGameRef={newGameButton}
         compact={phone}
         status={status}
+        settingsOpen={settingsOpen}
+        onSettings={() => (settingsOpen ? closeSettings() : setSettingsOpen(true))}
+        settingsRef={settingsButton}
+        settings_panel={<SettingsPopover speed={speed} onSpeed={setSpeed} onClose={closeSettings} />}
       />
       {!phone && <div className="woven-band" aria-hidden="true" />}
 
       <main className="play">
         <Board
-          board={board}
+          board={playback ? playback.step.board : board}
           viewer={shownViewer(state)}
           names={names}
           playable={playable}
           onPlay={(pit) => dispatch({ type: 'movePlayed', pit })}
           cup={phone ? 76 : 100}
+          glow={playback ? (playback.step.kind === 'lift' ? playback.step.from : playback.step.to) : []}
+          arrivals={playback ? arrivals(playback.step, playback.previous) : []}
+          travelMs={stepMs * 0.85}
+          stepKey={playback?.index ?? 0}
         />
         {!phone && status}
       </main>

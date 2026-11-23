@@ -25,7 +25,15 @@ export interface GameState {
   /** "South gets another turn." etc., shown once the latest move has landed. */
   caption: string | null;
   /** The latest move and the board before it, for the animation. */
-  lastMove: { by: Player; before: BoardSnapshot; result: MoveResult } | null;
+  lastMove: PlayedMove | null;
+}
+
+/** A move that has been played: who played which pit, from which board, with what result. */
+export interface PlayedMove {
+  by: Player;
+  pit: number;
+  before: BoardSnapshot;
+  result: MoveResult;
 }
 
 export type GameEvent =
@@ -72,7 +80,7 @@ function applyMove(state: GameState, pit: number): GameState {
     board: result.board,
     phase: 'animating',
     caption: null,
-    lastMove: { by: state.board.toMove, before: state.board, result },
+    lastMove: { by: state.board.toMove, pit, before: state.board, result },
   };
 }
 

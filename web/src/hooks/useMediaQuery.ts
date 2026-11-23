@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 /** A phone held upright (design.md decision 10). */
 export const UPRIGHT_PHONE = '(orientation: portrait) and (max-width: 599px)';
+/** The system asks for less motion (an accessibility setting). */
+export const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /** A phone held sideways: wide, but short. */
 export const SIDEWAYS_PHONE = '(orientation: landscape) and (max-height: 500px)';
 

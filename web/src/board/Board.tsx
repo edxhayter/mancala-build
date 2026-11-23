@@ -5,10 +5,11 @@
 // playable pit is reported through `onPlay`. The viewer's pits run along the
 // bottom 1 to 6 towards their store on the right (the CLI's viewer rule).
 
-import { useId, type KeyboardEvent } from 'react';
-import { opponent, type BoardSnapshot, type Player } from '../engine';
+import { useId, type CSSProperties, type KeyboardEvent } from 'react';
+import type { Arrival } from '../animation/steps';
+import { opponent, type BoardSnapshot, type Player, type Slot } from '../engine';
 import { geometry } from './geometry';
-import { seedSpots } from './seeds';
+import { seedSpots, type SeedSpot } from './seeds';
 import './Board.css';
 
 /** Puzzle feedback on the viewer's pits, 0..5 (used by a later change). */
@@ -31,6 +32,14 @@ export interface BoardProps {
   marks?: PuzzleMarks;
   /** Draw the numbers and names beside the board (off for a small decorative board). */
   labels?: boolean;
+  /** Cups that glow warmly: the ones receiving seeds during the animation. */
+  glow?: Slot[];
+  /** Seeds on their way during this animation step, drawn flying in on top. */
+  arrivals?: Arrival[];
+  /** How long a seed takes to fly from cup to cup, in ms. */
+  travelMs?: number;
+  /** Changes with every animation step, so the flight starts again. */
+  stepKey?: number;
 }
 
 /** One cup on screen: which pit or store it is, and where it's drawn. */
@@ -62,6 +71,10 @@ export function Board({
   cup = 100,
   marks = {},
   labels = true,
+  glow = [],
+  arrivals = [],
+  travelMs = 0,
+  stepKey = 0,
 }: BoardProps) {
   const g = geometry(cup, labels);
   const { D, r, L } = g;
@@ -84,6 +97,28 @@ export function Board({
   }
   cups.push({ player: other, place: 'store', x: g.x(-1), y: g.yMid, band: 'top', tag: names[other] });
   cups.push({ player: viewer, place: 'store', x: g.x(6), y: g.yMid, band: 'bottom', tag: names[viewer] });
+
+  const same = (a: { player: Player; place: number | 'store' }, b: Slot) =>
+    a.player === b.player && a.place === b.place;
+  const placeOf = (slot: Slot) => cups.find((c) => same(c, slot))!;
+  const countOf = (slot: Slot) =>
+    slot.place === 'store' ? board.stores[slot.player] : board.pits[slot.player][slot.place];
+
+  /** One seed, drawn at `spot` relative to the point (x, y). */
+  const seedShape = (spot: SeedSpot, x: number, y: number, key: number | string) => (
+    <g key={key} data-seed="" transform={`translate(${fixed(x + spot.x)} ${fixed(y + spot.y)}) rotate(${spot.rotate})`}>
+      <ellipse rx={fixed(spot.rx)} ry={fixed(spot.ry)} fill={url(spot.alt ? 'seed-alt' : 'seed')} />
+      {spot.scar && (
+        <ellipse
+          className="scar"
+          cx={fixed(spot.rx * 0.24 + s(2))}
+          cy={fixed(-spot.ry * 0.16 + s(1.5))}
+          rx={fixed(s(2))}
+          ry={fixed(s(1.5))}
+        />
+      )}
+    </g>
+  );
 
   // A label in the number band: `fromEdge` is how far in from the board's outer edge, in bands.
   const bandY = (band: 'top' | 'bottom', fromEdge: number) =>
@@ -131,6 +166,9 @@ export function Board({
         </filter>
         <filter id={id('seed-shadow')} x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy={s(2)} stdDeviation={s(1)} floodColor="rgb(35 14 2)" floodOpacity="0.45" />
+        </filter>
+        <filter id={id('glow-soft')} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation={s(3)} />
         </filter>
         <filter id={id('glow')} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation={s(8)} />
@@ -203,29 +241,18 @@ export function Board({
             )}
             <circle className="focus-ring" cx={c.x} cy={c.y} r={0.5 * D + s(5)} strokeWidth={s(3)} />
 
+            {glow.some((slot) => same(c, slot)) && (
+              <circle className="receiving" cx={c.x} cy={c.y} r={D / 2 + s(3)} strokeWidth={s(7)} filter={url('glow-soft')} />
+            )}
             <circle className="cup" cx={c.x} cy={c.y} r={D / 2} />
             <circle cx={c.x} cy={c.y} r={D / 2} fill={url('hollow')} />
             <circle className="lip" cx={c.x} cy={c.y} r={D / 2} strokeWidth={s(2)} />
 
             <g filter={url('seed-shadow')}>
-              {seedSpots(count, key, D).map((seed, n) => (
-                <g
-                  key={n}
-                  data-seed=""
-                  transform={`translate(${fixed(c.x + seed.x)} ${fixed(c.y + seed.y)}) rotate(${seed.rotate})`}
-                >
-                  <ellipse rx={fixed(seed.rx)} ry={fixed(seed.ry)} fill={url(seed.alt ? 'seed-alt' : 'seed')} />
-                  {seed.scar && (
-                    <ellipse
-                      className="scar"
-                      cx={fixed(seed.rx * 0.24 + s(2))}
-                      cy={fixed(-seed.ry * 0.16 + s(1.5))}
-                      rx={fixed(s(2))}
-                      ry={fixed(s(1.5))}
-                    />
-                  )}
-                </g>
-              ))}
+              {/* Seeds still in flight are drawn on top instead (below). */}
+              {seedSpots(count, key, D)
+                .slice(0, count - (arrivals.find((a) => same(c, a.to))?.from.length ?? 0))
+                .map((spot, n) => seedShape(spot, c.x, c.y, n))}
             </g>
 
             {labels && (
@@ -241,6 +268,34 @@ export function Board({
           </g>
         );
       })}
+
+      {/* Seeds in flight: each starts at the cup it left and settles into its
+          place in the receiving cup. The key restarts the flight every step. */}
+      {arrivals.length > 0 && (
+        <g key={stepKey} className="arriving" filter={url('seed-shadow')}>
+          {arrivals.flatMap((arrival) => {
+            const target = placeOf(arrival.to);
+            const spots = seedSpots(countOf(arrival.to), seedKey(arrival.to.player, arrival.to.place), D);
+            const first = spots.length - arrival.from.length;
+            return arrival.from.map((source, n) => {
+              const start = placeOf(source);
+              const spot = spots[first + n];
+              const style = {
+                '--dx': `${fixed(start.x - (target.x + spot.x))}px`,
+                '--dy': `${fixed(start.y - (target.y + spot.y))}px`,
+                animationDuration: `${travelMs}ms`,
+                // A gather sends its seeds one just after another, like a handful poured.
+                animationDelay: `${Math.round(n * Math.min(25, travelMs / 4 / arrival.from.length))}ms`,
+              } as CSSProperties;
+              return (
+                <g key={`${arrival.to.player}-${arrival.to.place}-${n}`} className="flying" style={style}>
+                  {seedShape(spot, target.x, target.y, 'seed')}
+                </g>
+              );
+            });
+          })}
+        </g>
+      )}
     </svg>
   );
 }

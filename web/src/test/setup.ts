@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest'; // adds matchers like toBeInTheDocument()
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { initSync } from '../wasm/mancala_wasm';
 
@@ -15,3 +15,6 @@ initSync({ module: readFileSync(wasmFile) });
 
 // Unmount whatever the previous test rendered, so tests can't see each other's DOM.
 afterEach(cleanup);
+
+// Moves finish at once unless a test chooses a speed (the animation tests do).
+beforeEach(() => localStorage.setItem('mancala.speed', 'instant'));

@@ -41,3 +41,27 @@
 .board .mark-wrong { fill: none; stroke: var(--rust); }
 .board .mark-reveal circle { fill: none; stroke: rgb(255 214 150 / 0.85); }
 .board .mark-reveal circle:first-child { stroke: rgb(255 196 110 / 0.55); }
+
+/* The sowing animation (design.md decision 10: Motion). */
+
+/* The cup receiving seeds: a subtle warm glow on the wood. */
+.board .receiving {
+  fill: none;
+  stroke: rgb(255 206 140 / 0.75);
+  animation: glow-in 120ms ease-out;
+}
+@keyframes glow-in {
+  from { opacity: 0; }
+}
+
+/* A seed travelling from the cup it left, settling with a small ease-out,
+   like a hand dropping it. --dx/--dy is where it starts, relative to where it ends. */
+.board .flying {
+  animation-name: travel;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-fill-mode: both;
+}
+@keyframes travel {
+  from { transform: translate(var(--dx), var(--dy)); }
+  to { transform: translate(0, 0); }
+}

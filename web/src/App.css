@@ -246,3 +246,51 @@
   max-width: 13em;
   text-wrap: balance; /* even line lengths instead of one word on its own */
 }
+
+/* --- Settings ---------------------------------------------------------------- */
+
+.settings-anchor { position: relative; }
+.settings-button {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+}
+.settings-button:hover,
+.settings-button[aria-expanded='true'] { background: rgb(43 24 16 / 0.06); }
+.settings-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.settings-button svg { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; }
+.settings-button circle { fill: var(--linen); }
+
+/* The pop-over hangs under the icon, with a small pointer towards it. */
+.popover {
+  position: absolute;
+  right: -8px;
+  top: calc(100% + 12px);
+  z-index: 10;
+  width: 300px;
+  padding: 20px 22px 22px;
+  background: var(--linen-panel);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgb(43 24 16 / 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.popover::before {
+  content: '';
+  position: absolute;
+  right: 23px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  background: var(--linen-panel);
+  transform: rotate(45deg);
+}
+.popover .choices { gap: 20px; }
+.popover-note { font-size: 14px; color: var(--ink-soft); }
