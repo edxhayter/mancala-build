@@ -48,8 +48,8 @@
 
 ## 7. Final checks
 
-- [ ] 7.1 Run `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, and `cargo test --release -p mancala-ai -- --ignored`. Confirm `cargo tree -p mancala-core` is empty and `cargo tree -p mancala-ai -e normal` lists only `mancala-core`. Verify: all clean.
-- [ ] 7.2 Check that every scenario in both delta specs has a test with a `// Scenario:` comment. Verify: none are missing.
+- [x] 7.1 Run `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, and `cargo test --release -p mancala-ai -- --ignored`. Confirm `cargo tree -p mancala-core` is empty and `cargo tree -p mancala-ai -e normal` lists only `mancala-core`. Verify: all clean.
+- [x] 7.2 Check that every scenario in both delta specs has a test with a `// Scenario:` comment. Verify: none are missing.
 
 ## Workflow follow-up
 
