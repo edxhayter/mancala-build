@@ -31,20 +31,20 @@
 
 ## 3. Board basics
 
-- [ ] 3.1 **(test first)** In `tests/rules.rs`, write integration tests for the scenarios *New game*, *Reading a position* and *Legal moves at the start*. Verify: the tests exist and fail to compile.
+- [x] 3.1 **(test first)** In `tests/rules.rs`, write integration tests for the scenarios *New game*, *Reading a position* and *Legal moves at the start*. Verify: the tests exist and fail to compile.
   - **Read:** Book ch. 11.3 (Integration tests).
   <details><summary>Hint 1</summary>These tests may only use <code>pub</code> items. If you find yourself wanting to read a private field, that's a sign the public API is missing a method.</details>
 
-- [ ] 3.2 Implement `pub struct Board` with private fields (`[u8; 14]` and the player to move), `Board::new()`, and getters `pits(player)`, `store(player)`, `to_move()`. Re-export `Board` and `Player` from `lib.rs` and give each public item a `///` doc comment. Verify: *New game* and *Reading a position* pass, and `cargo doc --open` shows the documented API.
+- [x] 3.2 Implement `pub struct Board` with private fields (`[u8; 14]` and the player to move), `Board::new()`, and getters `pits(player)`, `store(player)`, `to_move()`. Re-export `Board` and `Player` from `lib.rs` and give each public item a `///` doc comment. Verify: *New game* and *Reading a position* pass, and `cargo doc --open` shows the documented API.
   - **Read:** Book ch. 5.1–5.3 (Structs, methods, associated functions), ch. 7.3–7.4 (`pub`, `use`, re-exports with `pub use`).
   <details><summary>Hint 1</summary><code>Board::new()</code> is an associated function (no <code>self</code>) that returns <code>Self</code>. Array repeat syntax builds an array where every element has the same value.</details>
   <details><summary>Hint 2</summary>For <code>pits(player)</code>, you need six consecutive elements of the array starting at that player's first pit. Look up slicing with ranges. Then decide (an open question in design.md) whether to return the slice itself or copy it into a <code>[u8; 6]</code>. <code>try_into()</code> is one way to do the copy.</details>
   <details><summary>Hint 3</summary>If <code>pits</code> returns <code>&[u8]</code>, the compiler links that borrow to <code>&self</code>. That's lifetime elision in action (ch. 10.3, just skim it for now).</details>
 
-- [ ] 3.3 Implement `Board::from_parts(south_pits, south_store, north_pits, north_store, to_move)` with a doc comment saying it does not check seed totals. Add a test that builds the *Empty pits are not legal* position and reads it back. Verify: that test passes.
+- [x] 3.3 Implement `Board::from_parts(south_pits, south_store, north_pits, north_store, to_move)` with a doc comment saying it does not check seed totals. Add a test that builds the *Empty pits are not legal* position and reads it back. Verify: that test passes.
   <details><summary>Hint 1</summary>Start from an all-zero array and copy each side in. <code>copy_from_slice</code> on a sub-slice is worth looking up.</details>
 
-- [ ] 3.4 Implement `legal_moves()` returning the pit numbers (0..=5) on the mover's side that have seeds. For now, ignore the game-over case (task 7.3 adds it). Verify: *Legal moves at the start* and *Empty pits are not legal* pass.
+- [x] 3.4 Implement `legal_moves()` returning the pit numbers (0..=5) on the mover's side that have seeds. For now, ignore the game-over case (task 7.3 adds it). Verify: *Legal moves at the start* and *Empty pits are not legal* pass.
   - **Read:** Book ch. 8.1 (Vectors), ch. 13.2 (Iterators). The iterator version is optional but worth trying.
   <details><summary>Hint 1</summary>Returning a <code>Vec&lt;usize&gt;</code> is the simplest choice. A loop with <code>push</code> works fine.</details>
   <details><summary>Hint 2</summary>Iterator version: a range over 0..6, keep only the pits with seeds, then collect. Look up <code>filter</code> and <code>collect</code>.</details>
