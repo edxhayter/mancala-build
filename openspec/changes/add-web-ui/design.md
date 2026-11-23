@@ -156,7 +156,7 @@ A React hook plays the steps at the chosen speed: **slow** (about 400 ms per see
 - **Seeds:** grey-green, matte, slightly irregular ovals (nickernut seeds). Each is drawn with a small variation in size, angle and tone. Placement is **deterministic** per cup and count, so seeds don't jump around on re-render, and they pack tighter past about 12. The count is always shown beside the cup.
 - **Surround:** the board rests on a cloth inspired by the woven textile in the photo (cream ground, black geometric bands, small rust-red accents), drawn for this game rather than copied. The carved figures and other objects in the photo are not used.
 - **Lettering:** an incised or carved-feeling display face for the title, scores and result, echoing the pedestal's cut-outs, and a plain readable face for messages and controls. Both are self-hosted (no requests to third-party font servers).
-- **Starting palette** (to be refined by sampling the photo in task 5.2): honey wood, cup shadow, seed grey-green, linen cream, ink black, rust red.
+- **Starting palette** (to be refined by sampling the photo in task 1.2): honey wood, cup shadow, seed grey-green, linen cream, ink black, rust red.
 
 **Motion:** speeds as in decision 6. A seed travels from cup to cup and settles with a small ease-out, like a hand dropping it. The highlight on the receiving cup is subtle (a warm glow on the wood), not a bright UI colour.
 
@@ -165,8 +165,8 @@ A React hook plays the steps at the chosen speed: **slow** (about 400 ms per see
 **Why SVG:** curved cups, a scalloped outline and dozens of individually shaped seeds are natural in SVG and awkward with CSS boxes. SVG also scales cleanly from phone to desktop, and it can be tested by role and label.
 
 **Process:**
-1. Task 5.1 makes 2–3 static concepts of the same position (close to the photo; a stylised "carved print" take; a cloth-forward take). The developer chooses one, or a mix.
-2. Task 5.2 records the choice here, with the final colour values, fonts, sizes and spacing, and sets them up as CSS variables ("design tokens") that every component uses.
+1. Task 1.1, before any code, makes 2–3 static concepts of the same position (close to the photo; a stylised "carved print" take; a cloth-forward take). The developer chooses one, or a mix.
+2. Task 1.2 records the choice here, with the final colour values, fonts, sizes and spacing, and updates the plan if the design needs anything from the code. Task 4.1 then sets these up as CSS variables ("design tokens") that every component uses.
 3. Each visual component task is done only after the developer has reviewed it in the browser.
 
 ### 8. Building
