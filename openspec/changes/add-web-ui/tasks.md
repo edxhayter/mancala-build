@@ -10,15 +10,15 @@
 
 - [x] 1.1 Make 2–3 static concepts of the board in a starting position, following design.md decision 10, each a different take: close to the reference photo, a stylised "carved print" take, and a cloth-forward take. Publish them as one page to compare side by side. Verify: **you have chosen one** (or a mix) and noted what to change.
   - **Your piece:** this task is mostly yours. Mark up what you like and don't like in each concept.
-- [ ] 1.2 Write the design brief into design.md decision 10: the chosen concept, the palette sampled from the photo, fonts (and their licences), sizes, spacing and motion notes. List anything the design needs from the code that the plan doesn't yet provide, and update the spec, design and tasks for it. Verify: **you approve the brief**, and any code implications are either handled in the plan or confirmed as not needed.
+- [x] 1.2 Write the design brief into design.md decision 10: the chosen concept, the palette sampled from the photo, fonts (and their licences), sizes, spacing and motion notes. List anything the design needs from the code that the plan doesn't yet provide, and update the spec, design and tasks for it. Verify: **you approve the brief**, and any code implications are either handled in the plan or confirmed as not needed.
   - **Concepts:** design tokens, font licensing for self-hosting, turning a visual into rules a component can follow.
 
 ## 2. Tooling and the WASM crate
 
-- [ ] 2.1 Install the WebAssembly toolchain: `rustup target add wasm32-unknown-unknown` and `wasm-pack`. Verify: `rustup target list --installed` shows `wasm32-unknown-unknown`, and `wasm-pack --version` prints a version.
+- [x] 2.1 Install the WebAssembly toolchain: `rustup target add wasm32-unknown-unknown` and `wasm-pack`. Verify: `rustup target list --installed` shows `wasm32-unknown-unknown`, and `wasm-pack --version` prints a version.
   - **Concepts:** compile targets (your Mac's native one vs `wasm32`), what wasm-pack adds on top of `cargo build`.
   - **Your piece (optional):** run both install commands yourself.
-- [ ] 2.2 Create `crates/mancala-wasm` (`crate-type = ["cdylib", "rlib"]`, depending on `wasm-bindgen`, `mancala-core` and `mancala-ai`) with a single `#[wasm_bindgen]` function returning a version string. Verify: `cargo test --workspace` passes, `wasm-pack build crates/mancala-wasm --target web` produces a `.wasm` file and JS glue, and `cargo tree -p mancala-core` / `cargo tree -p mancala-ai -e normal` are unchanged.
+- [x] 2.2 Create `crates/mancala-wasm` (`crate-type = ["cdylib", "rlib"]`, depending on `wasm-bindgen`, `mancala-core` and `mancala-ai`) with a single `#[wasm_bindgen]` function returning a version string. Verify: `cargo test --workspace` passes, `wasm-pack build crates/mancala-wasm --target web` produces a `.wasm` file and JS glue, and `cargo tree -p mancala-core` / `cargo tree -p mancala-ai -e normal` are unchanged.
   - **Concepts:** crate types, `#[wasm_bindgen]`, the generated `pkg/` (look inside the `.d.ts` file).
 
 ## 3. The WASM API

@@ -170,7 +170,7 @@ The "Earlier takes" (B carved print, C cloth-forward, two upright phone layouts)
 - Less on screen: no subtitle, no turn recap, no seed. The opponent is **Computer** or **Two players**. Online and Puzzles appear in the New game sheet as "coming later".
 - Sowing speed lives in a small **settings pop-over**, not on the main screen.
 - **Phones play in landscape.** Upright phones get a "turn your phone sideways" prompt. That keeps "your side at the bottom" everywhere and gives 76 px cups.
-- **Caption** for extra turns and captures: shown quietly beside the turn indicator and announced to screen readers. This was recommended and pending the developer's confirmation when the brief was written.
+- **Caption** for extra turns and captures: shown quietly beside the turn indicator and announced to screen readers. Confirmed by the developer.
 
 **Palette (design tokens, sampled from the photo):**
 

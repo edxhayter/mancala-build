@@ -1,0 +1,14 @@
+[package]
+name = "mancala-wasm"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# cdylib: what wasm-pack needs to produce a .wasm file.
+# rlib:   lets `cargo test` link the crate natively, so its logic is tested like any other Rust.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mancala-core = { path = "../mancala-core" }
+mancala-ai = { path = "../mancala-ai" }
+wasm-bindgen = "0.2"
