@@ -37,10 +37,10 @@
 
 ## 5. Game state (pure TypeScript)
 
-- [ ] 5.1 **(test first, then implement)** In `game/`, port the CLI's presentation rules that the page needs: `viewer(settings, board)`, `caption(player, outcome)` (from `describe_outcome`: extra turn or "captured N seeds") and `describeResult`. The turn recap is not ported (design.md decision 4). Unit-test each against the same cases as the CLI tests. Verify: the tests pass.
+- [x] 5.1 **(test first, then implement)** In `game/`, port the CLI's presentation rules that the page needs: `viewer(settings, board)`, `caption(player, outcome)` (from `describe_outcome`: extra turn or "captured N seeds") and `describeResult`. The turn recap is not ported (design.md decision 4). Unit-test each against the same cases as the CLI tests. Verify: the tests pass.
   - **Concepts:** pure functions, `type` vs `interface`, discriminated unions, porting Rust `match` to TS `switch`.
   - **Your piece (optional):** port `describe_outcome` yourself from `crates/mancala-cli/src/game.rs` as `caption`.
-- [ ] 5.2 **(test first, then implement)** Write the game reducer (design.md decision 4): `newGame`, `movePlayed`, `animationDone`, `aiChose` (ignoring a stale `gameId`), with phase changes (`human` / `thinking` / `animating` / `over`), the caption set after each move, and a fresh unseen seed per game. Verify: reducer tests cover a hotseat turn change, an extra turn, a capture caption, a game against the AI, a stale AI answer and the end of a game.
+- [x] 5.2 **(test first, then implement)** Write the game reducer (design.md decision 4): `newGame`, `movePlayed`, `animationDone`, `aiChose` (ignoring a stale `gameId`), with phase changes (`human` / `thinking` / `animating` / `over`), the caption set after each move, and a fresh unseen seed per game. Verify: reducer tests cover a hotseat turn change, an extra turn, a capture caption, a game against the AI, a stale AI answer and the end of a game.
   - **Concepts:** reducers, immutability (`{ ...state, phase: 'over' }`), exhaustive `switch` with the `never` type.
 
 ## 6. The board and page (React)
