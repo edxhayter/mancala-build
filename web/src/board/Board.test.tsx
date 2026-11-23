@@ -151,3 +151,13 @@ describe('Board', () => {
     expect(pit3.querySelector('.mark-wrong')).not.toBeNull();
   });
 });
+
+describe('Board without labels', () => {
+  it('draws no numbers or names, and has no number bands', () => {
+    const { container } = render(
+      <Board board={newBoard()} viewer="south" names={names} playable={[]} onPlay={() => {}} cup={36} labels={false} />,
+    );
+    expect(container.querySelectorAll('text')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-seed]')).toHaveLength(48);
+  });
+});

@@ -20,10 +20,11 @@ export interface Geometry {
   x: (k: number) => number;
 }
 
-export function geometry(D: number): Geometry {
+/** `labels: false` leaves out the number bands (for a small decorative board). */
+export function geometry(D: number, labels = true): Geometry {
   const P = 1.18 * D;
   const r = 0.62 * D;
-  const L = 30 + 0.28 * D;
+  const L = labels ? 30 + 0.28 * D : 0;
   const width = 7 * P + 2 * r;
   const height = P + 2 * r + 2 * L;
   const yMid = height / 2;

@@ -187,3 +187,62 @@
   gap: 22px;
   padding-top: 4px;
 }
+
+/* --- Phone held sideways (design.md decision 10) --------------------------- */
+
+.page.phone {
+  height: 100dvh; /* exactly the screen: the board shrinks to fit, nothing scrolls */
+  padding: 10px max(48px, env(safe-area-inset-right)) 12px max(48px, env(safe-area-inset-left));
+  gap: 6px;
+}
+
+.header.compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+}
+.header.compact .title { font-size: 24px; }
+.header.compact .header-controls { justify-content: flex-end; gap: 4px; }
+.header.compact .matchup { font-size: 13px; padding-right: 8px; }
+.header.compact .tab-button { padding: 10px 14px; font-size: 14px; border-radius: 20px; }
+
+/* The status in the middle of the header: smaller, with the caption under it. */
+.header-status .status { flex-direction: column; align-items: center; gap: 0; min-height: 0; }
+.header-status .status-text { font-size: 20px; }
+.header-status .caption,
+.header-status .scores { font-size: 13px; }
+.header-status .scores strong { font-size: 15px; }
+.header-status .end-of-game { flex-direction: row; flex-wrap: wrap; gap: 2px 10px; }
+.header-status .end-of-game .tab-button { padding: 6px 12px; min-height: 32px; font-size: 13px; }
+
+/* The board takes all the space left and keeps its shape inside it. */
+.page.phone .play { min-height: 0; gap: 0; }
+.page.phone .board {
+  width: 100%;
+  height: 100%;
+  max-width: 722px; /* 76 px cups; smaller phones scale it down */
+}
+
+/* --- Phone held upright ---------------------------------------------------- */
+
+.rotate-prompt {
+  min-height: 100dvh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+}
+.rotate-title { font-size: 34px; }
+.rotate-icon { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rotate-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  max-width: 13em;
+  text-wrap: balance; /* even line lengths instead of one word on its own */
+}

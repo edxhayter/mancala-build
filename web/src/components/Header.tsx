@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { Settings } from '../game/settings';
 
 const LEVEL_NAMES = { easy: 'Easy', medium: 'Medium', hard: 'Hard' } as const;
@@ -8,20 +8,26 @@ interface HeaderProps {
   onNewGame: () => void;
   /** So focus can come back to the New game button when the sheet closes. */
   newGameRef?: Ref<HTMLButtonElement>;
+  /** Phone held sideways: one slim row, with `status` in the middle. */
+  compact?: boolean;
+  status?: ReactNode;
 }
 
-export function Header({ settings, onNewGame, newGameRef }: HeaderProps) {
+export function Header({ settings, onNewGame, newGameRef, compact = false, status }: HeaderProps) {
+  const opponent =
+    settings.opponent === 'ai' ? <strong>AI · {LEVEL_NAMES[settings.level]}</strong> : <strong>Two players</strong>;
   return (
-    <header className="header">
+    <header className={compact ? 'header compact' : 'header'}>
       <h1 className="title">Mancala</h1>
+      {compact && <div className="header-status">{status}</div>}
       <div className="header-controls">
         <span className="matchup">
           {settings.opponent === 'ai' ? (
             <>
-              You vs <strong>AI · {LEVEL_NAMES[settings.level]}</strong>
+              {compact ? 'vs' : 'You vs'} {opponent}
             </>
           ) : (
-            <strong>Two players</strong>
+            opponent
           )}
         </span>
         <button ref={newGameRef} type="button" className="tab-button" onClick={onNewGame}>

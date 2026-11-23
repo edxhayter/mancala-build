@@ -29,6 +29,8 @@ export interface BoardProps {
   /** Cup diameter in px: 100 on desktop, 76 on a phone. */
   cup?: number;
   marks?: PuzzleMarks;
+  /** Draw the numbers and names beside the board (off for a small decorative board). */
+  labels?: boolean;
 }
 
 /** One cup on screen: which pit or store it is, and where it's drawn. */
@@ -51,8 +53,17 @@ const fixed = (v: number) => v.toFixed(1);
 const seedKey = (player: Player, place: number | 'store') =>
   (player === 'south' ? 0 : 7) + (place === 'store' ? 6 : place) + 1;
 
-export function Board({ board, viewer, names, playable, onPlay, cup = 100, marks = {} }: BoardProps) {
-  const g = geometry(cup);
+export function Board({
+  board,
+  viewer,
+  names,
+  playable,
+  onPlay,
+  cup = 100,
+  marks = {},
+  labels = true,
+}: BoardProps) {
+  const g = geometry(cup, labels);
   const { D, r, L } = g;
   const s = (v: number) => (v * D) / 100; // concept values were drawn at D = 100
 
@@ -217,12 +228,16 @@ export function Board({ board, viewer, names, playable, onPlay, cup = 100, marks
               ))}
             </g>
 
-            <text className="count" x={c.x} y={bandY(c.band, 0.62)} fontSize={12 + 0.1 * D}>
-              {count}
-            </text>
-            <text className="tag" x={c.x} y={bandY(c.band, 0.2)} fontSize={9 + 0.03 * D}>
-              {c.tag}
-            </text>
+            {labels && (
+              <>
+                <text className="count" x={c.x} y={bandY(c.band, 0.62)} fontSize={12 + 0.1 * D}>
+                  {count}
+                </text>
+                <text className="tag" x={c.x} y={bandY(c.band, 0.2)} fontSize={9 + 0.03 * D}>
+                  {c.tag}
+                </text>
+              </>
+            )}
           </g>
         );
       })}
