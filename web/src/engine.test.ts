@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { legalMoves, newBoard, newPuzzle, play, type BoardSnapshot } from './engine';
+import { explainMoves, legalMoves, newBoard, newPuzzle, play, type BoardSnapshot } from './engine';
 
 describe('engine', () => {
   it('a new board is four seeds everywhere, South to move', () => {
@@ -94,6 +94,27 @@ describe('engine', () => {
         expect(legalMoves(board)).toContain(answer);
         expect(legalMoves(board).length).toBeGreaterThanOrEqual(2);
       }
+    });
+  });
+
+  describe('explanations', () => {
+    it('the start position explains all 6 moves, best first, each line starting with its pit', () => {
+      const explained = explainMoves(newBoard());
+      expect(explained.map((e) => e.pit).sort()).toEqual([0, 1, 2, 3, 4, 5]);
+      for (let i = 1; i < explained.length; i++) {
+        expect(explained[i - 1].score).toBeGreaterThanOrEqual(explained[i].score);
+      }
+      for (const e of explained) expect(e.line[0]).toBe(e.pit);
+    });
+
+    it('a finished game cannot be explained', () => {
+      const finished: BoardSnapshot = {
+        pits: { south: [0, 0, 0, 0, 0, 0], north: [0, 0, 0, 0, 0, 0] },
+        stores: { south: 30, north: 18 },
+        toMove: 'south',
+        status: { kind: 'won', winner: 'south' },
+      };
+      expect(() => explainMoves(finished)).toThrow(/nothing to explain/);
     });
   });
 });

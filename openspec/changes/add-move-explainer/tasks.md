@@ -16,7 +16,7 @@
 
 - [x] 2.1 **(test first, then implement)** In `mancala-wasm`, add `WasmMoveLine` and `explainMoves(board)`, returning a `Vec` of them and an error for a finished game (design.md decision 4). Native tests: the result matches `mancala_ai::explain_moves` for a few positions, and a finished game is an error. Verify: `cargo test -p mancala-wasm` passes, `npm run wasm` rebuilds, and the `.d.ts` shows `explainMoves(board: WasmBoard): WasmMoveLine[]`.
   - **Concepts:** returning `Vec<T>` of exported structs, `Result<Vec<T>, JsError>`.
-- [ ] 2.2 **(test first, then implement)** In `engine.ts`, add `MoveExplanation` and `explainMoves(board)`, freeing every WASM object. Tests against the real WASM: the start position explains 6 moves, best first, each line starting with its own pit, and a finished board throws. Verify: `npm test` passes.
+- [x] 2.2 **(test first, then implement)** In `engine.ts`, add `MoveExplanation` and `explainMoves(board)`, freeing every WASM object. Tests against the real WASM: the start position explains 6 moves, best first, each line starting with its own pit, and a finished board throws. Verify: `npm test` passes.
 
 ## 3. Words, steps and the explainer state (pure TypeScript)
 

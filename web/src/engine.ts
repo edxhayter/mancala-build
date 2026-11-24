@@ -4,7 +4,7 @@
 // and returns plain data ("snapshots"), and frees each WASM object before it
 // returns, so React state never holds WebAssembly memory.
 
-import init, { Ai, WasmBoard, generatePuzzle } from './wasm/mancala_wasm';
+import init, { Ai, WasmBoard, explainMoves as wasmExplainMoves, generatePuzzle } from './wasm/mancala_wasm';
 
 export type Player = 'south' | 'north';
 
@@ -46,6 +46,16 @@ export interface PuzzleSnapshot {
   board: BoardSnapshot;
   /** The one clearly best pit (0..=5, the mover's own numbering). */
   answer: number;
+}
+
+/** One move's explanation (add-move-explainer design.md decision 4). */
+export interface MoveExplanation {
+  /** The move (0..=5, the mover's own numbering). */
+  pit: number;
+  /** Its score from the mover's side: the store lead, ±1000 for a won or lost game. */
+  score: number;
+  /** The move, then each side's next moves in the AI's best play (each in its own player's numbering). */
+  line: number[];
 }
 
 /** Loads the WASM module. Call once, before anything else here (main.tsx does). */
@@ -167,6 +177,23 @@ export function newPuzzle(seed: number): PuzzleSnapshot {
   } finally {
     puzzle.free();
   }
+}
+
+// --- Explanations -------------------------------------------------------------
+
+/**
+ * Every legal move for the player to move, best first, looking 12 moves ahead.
+ * Can take a moment: call it in a worker. Throws if the game is over.
+ */
+export function explainMoves(board: BoardSnapshot): MoveExplanation[] {
+  return withWasm(board, (wasm) => {
+    const lines = wasmExplainMoves(wasm);
+    try {
+      return lines.map((l) => ({ pit: l.pit(), score: l.score(), line: Array.from(l.line()) }));
+    } finally {
+      lines.forEach((l) => l.free());
+    }
+  });
 }
 
 // --- The AI -------------------------------------------------------------------
