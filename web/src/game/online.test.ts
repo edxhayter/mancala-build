@@ -4,6 +4,7 @@ import type { RoomRecord, Seat } from '../online/protocol';
 import { newRecord } from '../online/record';
 import {
   initialOnline,
+  matchWords,
   nameOn,
   onlinePhase,
   onlineReducer,
@@ -245,5 +246,40 @@ describe('rematch', () => {
     const ed = edPlaying();
     expect(onlineReducer(ed, { type: 'rematchAsked' })).toBe(ed);
     expect(onlineReducer(ed, { type: 'rematchReceived', seatId: SAM.id, game: 0 })).toBe(ed);
+  });
+});
+
+describe('the match score in words', () => {
+  /** Ed's view with Sam, after earlier games with these results (Ed is the first player). */
+  const withResults = (results: number[]) => {
+    const ed = edPlaying();
+    const record = { ...ed.record, game: results.length, results };
+    return { ...ed, record };
+  };
+
+  it('says nothing before a game has finished', () => {
+    expect(matchWords(edPlaying())).toBeNull();
+  });
+
+  // Scenario: The score after a game
+  it('reads first player first, the same on both pages', () => {
+    expect(matchWords(withResults([12]))).toEqual({ score: 'Ed 1 – 0 Sam', short: '1 – 0', tieBreak: null });
+  });
+
+  // Scenario: Level wins, broken by seeds
+  it('names the leader on seeds when the wins are level', () => {
+    expect(matchWords(withResults([12, -5]))?.tieBreak).toBe('Ed leads by 7 seeds');
+    expect(matchWords(withResults([-12, 5]))?.tieBreak).toBe('Sam leads by 7 seeds');
+    expect(matchWords(withResults([2, -1]))?.tieBreak).toBe('Ed leads by 1 seed');
+  });
+
+  // Scenario: A draw counts for neither
+  it('counts a draw for neither', () => {
+    expect(matchWords(withResults([4, 0]))?.score).toBe('Ed 1 – 0 Sam');
+  });
+
+  // Scenario: All level
+  it('says when the match is level', () => {
+    expect(matchWords(withResults([6, -6]))?.tieBreak).toBe('the match is level');
   });
 });

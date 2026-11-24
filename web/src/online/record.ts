@@ -20,6 +20,7 @@ export function newRecord(typedName: string, first: Seat, now: number): RoomReco
     game: 0,
     moves: [],
     rematch: { first: false, second: false },
+    results: [],
   };
 }
 
@@ -160,11 +161,51 @@ export function meet(
 
 // --- Rematches ------------------------------------------------------------------
 
-/** The record after `seat` asks for a rematch; starts the next game once both have. */
+/**
+ * The record after `seat` asks for a rematch. Once both have, the finished
+ * game's result joins `results` and the next game starts.
+ */
 export function askRematch(record: RoomRecord, seat: SeatName): RoomRecord {
   const rematch = { ...record.rematch, [seat]: true };
-  if (rematch.first && rematch.second) {
-    return { ...record, game: record.game + 1, moves: [], rematch: { first: false, second: false } };
+  const result = gameResult(record);
+  if (rematch.first && rematch.second && result !== null) {
+    return {
+      ...record,
+      game: record.game + 1,
+      moves: [],
+      rematch: { first: false, second: false },
+      results: [...record.results, result],
+    };
   }
   return { ...record, rematch };
+}
+
+// --- The match score (spec: Match score) -----------------------------------------
+
+/** The current game's result (first player's store minus second's), or null while it's being played. */
+export function gameResult(record: RoomRecord): number | null {
+  const board = boardOf(record);
+  if (board === null || board.status.kind === 'playing') return null;
+  const first = sideOfSeat(record, 'first');
+  const second = first === 'south' ? 'north' : 'south';
+  return board.stores[first] - board.stores[second];
+}
+
+export interface MatchScore {
+  /** Finished games, including one that has just ended. */
+  games: number;
+  wins: Record<SeatName, number>;
+  /** The first player's total seed difference over those games (the tie-break). */
+  seeds: number;
+}
+
+/** The score so far: earlier games, plus the current one if it has finished. */
+export function matchScore(record: RoomRecord): MatchScore {
+  const current = gameResult(record);
+  const all = current === null ? record.results : [...record.results, current];
+  return {
+    games: all.length,
+    wins: { first: all.filter((r) => r > 0).length, second: all.filter((r) => r < 0).length },
+    seeds: all.reduce((sum, r) => sum + r, 0),
+  };
 }

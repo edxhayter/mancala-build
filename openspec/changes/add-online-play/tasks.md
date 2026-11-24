@@ -233,7 +233,7 @@
 
 ## 7. Match score (added 2026-11-24)
 
-- [ ] 7.1 **(test first, then implement)** Keep the score in the room record (design.md decision 3, the *Match score* note):
+- [x] 7.1 **(test first, then implement)** Keep the score in the room record (design.md decision 3, the *Match score* note):
   - `results` in `RoomRecord`, checked by `parseRecord` (one per earlier game, each −48 to 48), and appended by `askRematch`;
   - `matchScore(record)`, which counts the just-finished game too;
   - `matchWords` in `game/online.ts`.

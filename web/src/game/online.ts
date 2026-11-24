@@ -3,7 +3,7 @@
 // which turns what arrives into these events and sends what this accepts.
 
 import { legalMoves, play, type BoardSnapshot, type Player } from '../engine';
-import { askRematch, boardOf, meet, playerOn, seatOf, sideOf } from '../online/record';
+import { askRematch, boardOf, matchScore, meet, playerOn, seatOf, sideOf } from '../online/record';
 import type { RoomRecord, Seat } from '../online/protocol';
 import { stepCaption } from './explain';
 import type { PlayedMove } from './reducer';
@@ -253,6 +253,30 @@ export function onlineStatus(state: OnlineState): { message: string; detail: str
       return { message: mover === mySide(state) ? 'Your turn' : `${them}'s turn`, detail: null };
     }
   }
+}
+
+/** The match score in words, once a game has finished (spec: Match score). */
+export interface MatchWords {
+  /** "Ed 2 – 1 Sam", always first player first, the same on both pages. */
+  score: string;
+  /** Just "2 – 1", for a sideways phone's header. */
+  short: string;
+  /** "Ed leads by 7 seeds" or "the match is level" when the wins are level; otherwise null. */
+  tieBreak: string | null;
+}
+
+export function matchWords(state: OnlineState): MatchWords | null {
+  const { seats } = state.record;
+  const match = matchScore(state.record);
+  if (match.games === 0 || seats.second === null) return null;
+  const short = `${match.wins.first} – ${match.wins.second}`;
+  let tieBreak: string | null = null;
+  if (match.wins.first === match.wins.second) {
+    const leader = match.seeds > 0 ? seats.first.name : match.seeds < 0 ? seats.second.name : null;
+    const seeds = Math.abs(match.seeds);
+    tieBreak = leader === null ? 'the match is level' : `${leader} leads by ${seeds} ${seeds === 1 ? 'seed' : 'seeds'}`;
+  }
+  return { score: `${seats.first.name} ${short} ${seats.second.name}`, short, tieBreak };
 }
 
 /** Whether this browser has asked for a rematch already. */

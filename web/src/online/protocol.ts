@@ -39,6 +39,11 @@ export interface RoomRecord {
   /** This game's pits in order from the starting position, each 0..=5. */
   moves: number[];
   rematch: Record<SeatName, boolean>;
+  /**
+   * One per earlier game in this room: the first player's store minus the
+   * second's when it ended (positive: they won; 0: a draw). For the match score.
+   */
+  results: number[];
 }
 
 export type OnlineMessage =
@@ -87,7 +92,7 @@ function parseSeat(x: unknown): Seat | null {
 /** Checks a record's shape. Whether its moves are legal is `reconcile`'s job. */
 export function parseRecord(x: unknown): RoomRecord | null {
   if (!isObject(x)) return null;
-  const { key, name, openedAt, seats, game, moves, rematch } = x;
+  const { key, name, openedAt, seats, game, moves, rematch, results } = x;
   if (typeof name !== 'string' || displayName(name) !== name) return null;
   const expectedKey = roomKey(name);
   if (expectedKey === null || key !== expectedKey) return null;
@@ -100,6 +105,8 @@ export function parseRecord(x: unknown): RoomRecord | null {
   if (!isInt(game, 0, MAX_GAMES)) return null;
   if (!Array.isArray(moves) || moves.length > MAX_MOVES || !moves.every((m) => isInt(m, 0, 5))) return null;
   if (!isObject(rematch) || typeof rematch.first !== 'boolean' || typeof rematch.second !== 'boolean') return null;
+  // Exactly one result per earlier game; a store difference is at most 48.
+  if (!Array.isArray(results) || results.length !== game || !results.every((r) => isInt(r, -48, 48))) return null;
   return {
     key: expectedKey,
     name,
@@ -108,6 +115,7 @@ export function parseRecord(x: unknown): RoomRecord | null {
     game,
     moves: [...moves],
     rematch: { first: rematch.first, second: rematch.second },
+    results: [...results],
   };
 }
 

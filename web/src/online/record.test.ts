@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RoomRecord, Seat } from './protocol';
-import { admit, askRematch, boardOf, meet, newRecord, playerOn, reconcile, seatFor, sideOf } from './record';
+import { legalMoves, newBoard, play } from '../engine';
+import { admit, askRematch, boardOf, gameResult, matchScore, meet, newRecord, playerOn, reconcile, seatFor, sideOf } from './record';
 
 const ED: Seat = { id: 'ed0000000001', name: 'Ed' };
 const SAM: Seat = { id: 'sam000000001', name: 'Sam' };
@@ -152,16 +153,78 @@ describe('meet', () => {
   });
 });
 
+/** The moves of a whole game, always playing the first legal pit. */
+function wholeGame(): number[] {
+  const moves: number[] = [];
+  let board = newBoard();
+  while (board.status.kind === 'playing') {
+    const pit = legalMoves(board)[0];
+    moves.push(pit);
+    board = play(board, pit).board;
+  }
+  return moves;
+}
+
 describe('rematch', () => {
+  it("can't start until the game is over", () => {
+    const asked = askRematch(askRematch(playing([2, 5, 0]), 'first'), 'second');
+    expect(asked.game).toBe(0);
+  });
+
   it('needs both players, then swaps sides and clears the moves', () => {
-    const over = playing([2, 5, 0]);
+    const over = playing(wholeGame());
     const asked = askRematch(over, 'first');
     expect(asked.game).toBe(0);
     expect(asked.rematch).toEqual({ first: true, second: false });
 
     const again = askRematch(asked, 'second');
     expect(again).toMatchObject({ game: 1, moves: [], rematch: { first: false, second: false } });
+    expect(again.results).toEqual([gameResult(over)]);
     expect(again.name).toBe(over.name);
     expect(sideOf(again, SAM.id)).toBe('south');
+  });
+});
+
+describe('the match score', () => {
+  /** Ed's room with Sam, after earlier games with these results, in a fresh game. */
+  const after = (results: number[]) => playing([], { game: results.length, results });
+
+  it('is empty before any game has finished', () => {
+    expect(matchScore(playing([2]))).toEqual({ games: 0, wins: { first: 0, second: 0 }, seeds: 0 });
+  });
+
+  // Scenario: The score after a game
+  it('counts a game as soon as it ends', () => {
+    const over = playing(wholeGame());
+    const result = gameResult(over)!;
+    expect(result).not.toBe(0);
+    const score = matchScore(over);
+    expect(score.games).toBe(1);
+    expect(score.wins).toEqual(result > 0 ? { first: 1, second: 0 } : { first: 0, second: 1 });
+    expect(score.seeds).toBe(result);
+    // ...and only once after the rematch moves it into the results.
+    const next = askRematch(askRematch(over, 'first'), 'second');
+    expect(matchScore(next)).toEqual(score);
+  });
+
+  // Scenario: Level wins, broken by seeds
+  it('level wins are broken by the total seed difference', () => {
+    expect(matchScore(after([12, -5]))).toEqual({ games: 2, wins: { first: 1, second: 1 }, seeds: 7 });
+  });
+
+  // Scenario: A draw counts for neither
+  it('a draw is a win for neither', () => {
+    expect(matchScore(after([4, 0])).wins).toEqual({ first: 1, second: 0 });
+  });
+
+  // Scenario: All level
+  it('can be level on wins and seeds', () => {
+    expect(matchScore(after([6, -6]))).toMatchObject({ wins: { first: 1, second: 1 }, seeds: 0 });
+  });
+
+  it('travels with the record, so reconcile carries it', () => {
+    const behind = after([3]);
+    const ahead = after([3, -2]);
+    expect(matchScore(reconcile(behind, ahead)).games).toBe(2);
   });
 });

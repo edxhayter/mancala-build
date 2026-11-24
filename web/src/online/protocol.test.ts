@@ -9,6 +9,7 @@ const RECORD: RoomRecord = {
   game: 0,
   moves: [2, 5, 0],
   rematch: { first: false, second: false },
+  results: [],
 };
 
 const VALID: OnlineMessage[] = [
@@ -61,6 +62,9 @@ describe('parseMessage', () => {
     ['chat: text that is not text', tweak(VALID[4], { text: { html: '<b>' } })],
     ['chat: a bad id', tweak(VALID[4], { id: 'short' })],
     ['rematch: a negative game', tweak(VALID[5], { game: -1 })],
+    ['hello: results that do not match the game number', tweak(VALID[1], { record: { ...RECORD, game: 2, results: [4] } })],
+    ['hello: a result over 48', tweak(VALID[1], { record: { ...RECORD, game: 1, results: [49] } })],
+    ['hello: a result that is not a whole number', tweak(VALID[1], { record: { ...RECORD, game: 1, results: [2.5] } })],
   ])('rejects %s', (_why, data) => {
     expect(parseMessage(data)).toBeNull();
   });
