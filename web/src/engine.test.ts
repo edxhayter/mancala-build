@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { explainMoves, legalMoves, newBoard, newPuzzle, play, type BoardSnapshot } from './engine';
+import { explainMoves, legalMoves, newBoard, newPuzzle, play, replayMoves, type BoardSnapshot } from './engine';
 
 describe('engine', () => {
   it('a new board is four seeds everywhere, South to move', () => {
@@ -79,6 +79,22 @@ describe('engine', () => {
     const southToMoveWithEmptyPit: BoardSnapshot = { ...afterPit0, toMove: 'south' };
     expect(() => play(southToMoveWithEmptyPit, 0)).toThrow(/EmptyPit/);
     expect(() => play(newBoard(), 6)).toThrow();
+  });
+
+  // kalah-rules: Replaying a game (add-online-play task 1.3)
+  describe('replaying a game', () => {
+    it('a short game gives the same board as playing it move by move', () => {
+      const byHand = [2, 5, 0].reduce((board, pit) => play(board, pit).board, newBoard());
+      expect(replayMoves([2, 5, 0])).toEqual(byHand);
+    });
+
+    it('no moves is the starting position', () => {
+      expect(replayMoves([])).toEqual(newBoard());
+    });
+
+    it('an illegal list throws, naming the move and the reason', () => {
+      expect(() => replayMoves([0, 0, 0])).toThrow('move 3 (place 2): that pit is empty');
+    });
   });
 
   describe('puzzles', () => {

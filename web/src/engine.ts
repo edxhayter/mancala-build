@@ -4,7 +4,13 @@
 // and returns plain data ("snapshots"), and frees each WASM object before it
 // returns, so React state never holds WebAssembly memory.
 
-import init, { Ai, WasmBoard, explainMoves as wasmExplainMoves, generatePuzzle } from './wasm/mancala_wasm';
+import init, {
+  Ai,
+  WasmBoard,
+  explainMoves as wasmExplainMoves,
+  generatePuzzle,
+  replayMoves as wasmReplayMoves,
+} from './wasm/mancala_wasm';
 
 export type Player = 'south' | 'north';
 
@@ -162,6 +168,20 @@ export function play(board: BoardSnapshot, pit: number): MoveResult {
       result.free();
     }
   });
+}
+
+/**
+ * The position after playing `moves` (each 0..=5, the mover's own numbering)
+ * from the start. Throws, naming the first bad move and why, if any can't be
+ * played. Online play uses it to check a game sent by the other browser.
+ */
+export function replayMoves(moves: number[]): BoardSnapshot {
+  const wasm = wasmReplayMoves(Uint8Array.from(moves));
+  try {
+    return snapshotOf(wasm);
+  } finally {
+    wasm.free();
+  }
 }
 
 // --- Puzzles ------------------------------------------------------------------

@@ -220,6 +220,88 @@
   padding-top: 4px;
 }
 
+/* --- Online: the New game sheet's fields (add-online-play) ----------------- */
+
+.online-fields { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.text-field {
+  font: inherit;
+  font-size: 17px;
+  padding: 8px 10px;
+  border: 2px solid #d8c6b0;
+  border-radius: 6px;
+  background: var(--linen);
+  color: var(--ink);
+}
+.text-field:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: var(--ink); }
+.text-field[aria-invalid='true'] { border-color: var(--rust); }
+.field-hint { font-size: 13px; color: var(--ink-soft); }
+.field-hint.invalid { color: var(--rust); }
+.online-note { font-size: 14px; color: var(--ink-soft); }
+.tab-button:disabled { opacity: 0.5; cursor: default; }
+
+/* --- Online: header, status and chat (add-online-play) -------------------- */
+
+.room-title { margin-right: 12px; }
+.chat-button { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--rust);
+  color: var(--linen-panel);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+.online-status .slow-note { font-size: 14px; max-width: 46ch; }
+.link-field { width: 22ch; font-size: 14px; }
+
+.match-score .score-short { display: none; }
+.match-score .score-long { color: var(--ink-soft); }
+.match-line { font-weight: 700; color: var(--ink); }
+
+/* Docked at the right on a desktop; the page makes room, so the board beside it stays playable. */
+.page.chat-open:not(.phone) { padding-right: calc(16px + min(320px, calc(100vw - 32px)) + 24px); }
+.chat-panel {
+  position: fixed;
+  top: 96px;
+  right: 16px;
+  bottom: 16px;
+  width: min(320px, calc(100vw - 32px));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--linen-panel);
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgb(43 24 16 / 0.3);
+}
+.chat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.chat-title { font-size: 22px; overflow-wrap: anywhere; }
+.chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+}
+.chat-message { overflow-wrap: anywhere; white-space: pre-wrap; }
+.chat-message .chat-name { font-weight: 700; }
+.chat-message.mine .chat-name { color: var(--ink-soft); }
+.chat-empty { color: var(--ink-soft); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form .text-field { flex: 1; min-width: 0; }
+.chat-blocked { font-size: 14px; color: var(--ink-soft); margin: 0; }
+
 /* --- Phone held sideways (design.md decision 10) --------------------------- */
 
 .page.phone {
@@ -351,3 +433,12 @@
 }
 .popover .choices { gap: 20px; }
 .popover-note { font-size: 14px; color: var(--ink-soft); }
+
+/* On a sideways phone the chat covers the board until closed (spec: Chat on a phone). */
+.page.phone .chat-panel { top: 8px; right: 8px; bottom: 8px; left: 8px; width: auto; padding: 10px 14px; }
+.page.phone .room-title,
+.page.phone .room-players { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.header.compact .chat-button { padding: 4px 6px; font-size: 14px; }
+.page.phone .match-score .score-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.page.phone .match-score .score-short { display: inline; font-weight: 700; color: var(--ink); }
+.header.compact .tab-button { white-space: nowrap; }

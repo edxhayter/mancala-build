@@ -312,6 +312,21 @@ fn try_explain(board: &WasmBoard) -> Result<Vec<WasmMoveLine>, String> {
         .collect())
 }
 
+/// Replays a game's moves (each 0-5, the mover's own numbering) from the
+/// starting position. Throws naming the first bad move and why (add-online-play).
+#[wasm_bindgen(js_name = replayMoves)]
+pub fn replay_moves(moves: &[u8]) -> Result<WasmBoard, JsError> {
+    try_replay(moves).map_err(js)
+}
+
+fn try_replay(moves: &[u8]) -> Result<WasmBoard, String> {
+    // JavaScript sends bytes; the rules count pits with `usize`.
+    let pits: Vec<usize> = moves.iter().map(|&pit| usize::from(pit)).collect();
+    Board::replay(&pits)
+        .map(|board| WasmBoard { board })
+        .map_err(|error| error.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -470,5 +485,24 @@ mod tests {
     fn a_finished_game_cannot_be_explained() {
         let finished = WasmBoard::try_from_parts(&[0; 6], 30, &[0; 6], 18, 0).unwrap();
         assert!(try_explain(&finished).is_err());
+    }
+
+    #[test]
+    fn replay_matches_the_core() {
+        let moves = [2u8, 5, 0, 1];
+        let native = Board::replay(&[2, 5, 0, 1]).unwrap();
+        assert_eq!(try_replay(&moves).unwrap().board, native);
+        assert_eq!(try_replay(&[]).unwrap().board, Board::new());
+    }
+
+    #[test]
+    fn a_bad_replay_names_the_move_and_the_reason() {
+        let error = try_replay(&[0, 0, 0]).unwrap_err();
+        assert_eq!(error, "move 3 (place 2): that pit is empty");
+        assert!(
+            try_replay(&[7])
+                .unwrap_err()
+                .contains("pits are numbered 0 to 5")
+        );
     }
 }

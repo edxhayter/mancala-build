@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { App } from './App';
@@ -8,6 +8,8 @@ import { initialState } from './game/reducer';
 import { desktop, mockMedia, sideways, upright } from './test/media';
 import { explainMoves, newBoard } from './engine';
 import { fakePuzzle, manualAnalysis } from './test/analysis';
+import { createNetwork } from './test/network';
+import { clearAddress, enterRoom, openTab, pitIn } from './test/tabs';
 
 const hotseat = { ...initialState(1), settings: { opponent: 'local', level: 'medium', playerFirst: true } } as const;
 
@@ -99,5 +101,50 @@ describe('on a phone', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Why pit 1');
     expect(header).toContainElement(screen.getByRole('button', { name: 'Next move' }));
     expect(header).toContainElement(screen.getByRole('button', { name: 'Back' }));
+  });
+});
+
+describe('online on a sideways phone', () => {
+  it('the online status sits in the header, and the room name is the chat title', async () => {
+    mockMedia(sideways);
+    localStorage.removeItem('mancala.name');
+    const net = createNetwork();
+    const ed = openTab(net);
+    await enterRoom(ed, 'Ed', 'Friday Rematch');
+    const sam = openTab(net);
+    await enterRoom(sam, 'Sam', 'friday rematch');
+
+    const header = ed.view.container.querySelector('header')!;
+    expect(within(header).getByRole('status')).toHaveTextContent('Your turn');
+    // The room name stays in the header for screen readers (hidden on screen by CSS)...
+    expect(within(header).getByText('Friday Rematch')).toHaveClass('room-title');
+    // ...and titles the chat.
+    await userEvent.click(ed.ui.getByRole('button', { name: /^Chat/ }));
+    expect(ed.ui.getByRole('region', { name: /^Chat ·\s*Friday Rematch$/ })).toBeInTheDocument();
+    clearAddress();
+  });
+
+  // Scenario: Opening the chat on a phone
+  it('the chat opens over the board and closes with one tap, leaving the board as it was', async () => {
+    mockMedia(sideways);
+    localStorage.removeItem('mancala.name');
+    const net = createNetwork();
+    const ed = openTab(net);
+    await enterRoom(ed, 'Ed', 'friday rematch');
+    const sam = openTab(net);
+    await enterRoom(sam, 'Sam', 'friday rematch');
+    const before = ed.ui.getAllByRole('button', { name: /^South pit/ }).map((p: HTMLElement) => p.getAttribute('aria-label'));
+
+    await userEvent.click(ed.ui.getByRole('button', { name: /^Chat/ }));
+    const panel = ed.ui.getByRole('region', { name: /Chat/ });
+    expect(panel).toHaveClass('chat-panel'); // .page.phone .chat-panel covers the board
+    expect(ed.view.container.querySelector('.page.phone')).toContainElement(panel);
+    await userEvent.click(within(panel).getByRole('button', { name: 'Close chat' }));
+
+    expect(ed.ui.queryByRole('region', { name: /Chat/ })).toBeNull();
+    const after = ed.ui.getAllByRole('button', { name: /^South pit/ }).map((p: HTMLElement) => p.getAttribute('aria-label'));
+    expect(after).toEqual(before);
+    expect(pitIn(ed, 'South pit 1')).toHaveAttribute('aria-disabled', 'false');
+    clearAddress();
   });
 });

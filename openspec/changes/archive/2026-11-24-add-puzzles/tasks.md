@@ -45,8 +45,10 @@
 
 - [x] 5.1 Run the Rust checks (`cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`) and the web checks (`npm run typecheck`, `npm test`, `npm run build`). Confirm `cargo tree -p mancala-core` is still empty and `cargo tree -p mancala-ai -e normal` still lists only core. Check that every scenario in this change's three spec files has a test marked with a `Scenario:` comment. Verify: all clean, and none are missing.
   - **Done (2026-11-24):** Rust has 136 passed and 2 ignored (the slow 200-seed puzzle test, which passes in release, plus one existing slow test). The web suite has 119 passed, typecheck is clean, and the build succeeds. `mancala-core` still has no dependencies, and `mancala-ai` still depends only on core. Every scenario in `puzzle-generation`, `puzzle-play` and the `web-play` delta has a matching `Scenario:` comment.
-- [ ] 5.2 **(your step)** Merge to `main`, and confirm the Pages run is green and puzzles work on the live site. Verify: you've solved a few puzzles at `https://edxhayter.github.io/mancala-build/`.
+- [x] 5.2 **(your step)** Merge to `main`, and confirm the Pages run is green and puzzles work on the live site. Verify: you've solved a few puzzles at `https://edxhayter.github.io/mancala-build/`.
 
 ## Workflow follow-up
 
 - Archive the change after playing puzzles on the published site for a while.
+
+> **5.2 done (2026-11-24):** merged in PR #7, and the Pages run was green (45388553059). Puzzles were then shipped again with the explainer in PR #8 (Pages run 45415406894, green). Archived at the user's request.
