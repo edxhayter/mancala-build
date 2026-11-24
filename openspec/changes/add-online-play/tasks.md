@@ -244,7 +244,7 @@
   - reconcile and a rematch carry the score.
 
   Verify: the tests pass.
-- [ ] 7.2 **(test first, then implement)** Show the score:
+- [x] 7.2 **(test first, then implement)** Show the score:
   - the header's "Ed 2 – 1 Sam" once a game has finished (just "2 – 1" on a sideways phone, with the full score for screen readers);
   - the match line in the status when a game ends.
 

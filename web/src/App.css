@@ -259,6 +259,10 @@
 .online-status .slow-note { font-size: 14px; max-width: 46ch; }
 .link-field { width: 22ch; font-size: 14px; }
 
+.match-score .score-short { display: none; }
+.match-score .score-long { color: var(--ink-soft); }
+.match-line { font-weight: 700; color: var(--ink); }
+
 /* Docked at the right on a desktop; the page makes room, so the board beside it stays playable. */
 .page.chat-open:not(.phone) { padding-right: calc(16px + min(320px, calc(100vw - 32px)) + 24px); }
 .chat-panel {
@@ -435,4 +439,6 @@
 .page.phone .room-title,
 .page.phone .room-players { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .header.compact .chat-button { padding: 4px 6px; font-size: 14px; }
+.page.phone .match-score .score-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.page.phone .match-score .score-short { display: inline; font-weight: 700; color: var(--ink); }
 .header.compact .tab-button { white-space: nowrap; }

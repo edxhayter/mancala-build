@@ -27,7 +27,7 @@ import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './
 import { usePageVisible } from './hooks/usePageVisible';
 import { createDirectAnalysisClient, type AnalysisClient } from './analysis/client';
 import { usePuzzleSupply } from './puzzles/supply';
-import { chatBlockedReason, onlinePhase, onlineStatus, rematchAsked } from './game/online';
+import { chatBlockedReason, matchWords, onlinePhase, onlineStatus, rematchAsked } from './game/online';
 import { boardView } from './game/boardView';
 import { readRoomLink, roomKey, roomLink } from './online/rooms';
 import { loadRoom, type RoomStorage } from './online/saved';
@@ -270,6 +270,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
   const replayWords = replayStatus(explainer);
   const replaying = replayItem(explainer);
   const onlineWords = inOnline ? onlineStatus(room.state) : null;
+  const match = inOnline ? matchWords(room.state) : null;
   const phaseOnline = inOnline ? onlinePhase(room.state) : null;
   const status = replayWords && replaying ? (
     <ReplayBar
@@ -288,6 +289,11 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
       slowJoin={phaseOnline === 'waiting' && room.slowJoin}
       onRematch={phaseOnline === 'over' && !rematchAsked(room.state) ? room.askRematch : undefined}
       onNewGame={phaseOnline === 'ended' ? () => setSheetOpen(true) : undefined}
+      match={
+        phaseOnline === 'over' && match
+          ? `Match: ${match.score}${match.tieBreak ? ` · ${match.tieBreak[0].toUpperCase()}${match.tieBreak.slice(1)}` : ''}`
+          : null
+      }
     />
   ) : inPuzzles ? (
     <PuzzleStatus
@@ -323,9 +329,20 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
           inOnline ? (
             <span className="matchup">
               <strong className="room-title">{room.state.record.name}</strong>
-              <span className="room-players">
-                {room.state.record.seats.first.name} vs {room.state.record.seats.second?.name ?? '…'}
-              </span>
+              {match ? (
+                // The match score (spec: Match score). A sideways phone shows just "2 – 1";
+                // the full score stays for screen readers.
+                <span className="match-score">
+                  <span className="score-long">{match.score}</span>
+                  <span className="score-short" aria-hidden="true">
+                    {match.short}
+                  </span>
+                </span>
+              ) : (
+                <span className="room-players">
+                  {room.state.record.seats.first.name} vs {room.state.record.seats.second?.name ?? '…'}
+                </span>
+              )}
             </span>
           ) : inPuzzles ? (
             <span className="matchup">

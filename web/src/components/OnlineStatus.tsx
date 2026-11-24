@@ -12,6 +12,8 @@ interface OnlineStatusProps {
   onRematch?: () => void;
   /** When the room has ended (left, in use, closed). */
   onNewGame?: () => void;
+  /** When a game has just ended: "Match: Ed 1 – 1 Sam · Ed leads by 7 seeds". */
+  match?: string | null;
 }
 
 type Copied = 'no' | 'yes' | 'failed';
@@ -20,7 +22,7 @@ type Copied = 'no' | 'yes' | 'failed';
  * The online game's status line (add-online-play design.md decision 8). Like
  * the puzzle's, only the words are a live region; the buttons sit beside it.
  */
-export function OnlineStatus({ message, detail, link, slowJoin = false, onRematch, onNewGame }: OnlineStatusProps) {
+export function OnlineStatus({ message, detail, link, slowJoin = false, onRematch, onNewGame, match = null }: OnlineStatusProps) {
   const [copied, setCopied] = useState<Copied>('no');
 
   const copy = () => {
@@ -38,6 +40,7 @@ export function OnlineStatus({ message, detail, link, slowJoin = false, onRematc
     <div className="puzzle-status online-status">
       <div role="status" className="status">
         <p className="status-text">{message}</p>
+        {match && <p className="caption match-line">{match}</p>}
         {detail && <p className="caption">{detail}</p>}
         {copied === 'yes' && <p className="caption">Link copied.</p>}
         {slowJoin && (
