@@ -3,7 +3,9 @@
 
 mod sow;
 
-use mancala_ai::{Level, choose_move, generate_puzzle as make_puzzle};
+use mancala_ai::{
+    Level, MoveLine, choose_move, explain_moves as explain, generate_puzzle as make_puzzle,
+};
 use mancala_core::{Board, Player, Rng, Status};
 use wasm_bindgen::prelude::*;
 
@@ -270,6 +272,46 @@ pub fn generate_puzzle(seed: u32) -> WasmPuzzle {
     }
 }
 
+/// One move's explanation: its score and line of best play (add-move-explainer
+/// design.md decision 4).
+#[wasm_bindgen]
+#[derive(Clone, Debug)]
+pub struct WasmMoveLine {
+    line: MoveLine,
+}
+
+#[wasm_bindgen]
+impl WasmMoveLine {
+    pub fn pit(&self) -> u8 {
+        self.line.pit as u8
+    }
+
+    pub fn score(&self) -> i32 {
+        self.line.score
+    }
+
+    /// The move, then the moves both sides make next in the AI's best play.
+    pub fn line(&self) -> Vec<u8> {
+        self.line.line.iter().map(|&pit| pit as u8).collect()
+    }
+}
+
+/// Every legal move for the player to move, best first, looking 12 moves ahead.
+#[wasm_bindgen(js_name = explainMoves)]
+pub fn explain_moves(board: &WasmBoard) -> Result<Vec<WasmMoveLine>, JsError> {
+    try_explain(board).map_err(js)
+}
+
+fn try_explain(board: &WasmBoard) -> Result<Vec<WasmMoveLine>, String> {
+    if board.board.legal_moves().is_empty() {
+        return Err("there is nothing to explain: the game is over".to_string());
+    }
+    Ok(explain(&board.board)
+        .into_iter()
+        .map(|line| WasmMoveLine { line })
+        .collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -405,5 +447,28 @@ mod tests {
                 "seed {seed}"
             );
         }
+    }
+
+    #[test]
+    fn explanations_match_the_ai_crate() {
+        for board in [Board::new(), make_puzzle(3).board] {
+            let wasm = try_explain(&WasmBoard { board }).unwrap();
+            let native = explain(&board);
+            assert_eq!(wasm.len(), native.len());
+            for (w, n) in wasm.iter().zip(&native) {
+                assert_eq!(usize::from(w.pit()), n.pit);
+                assert_eq!(w.score(), n.score);
+                assert_eq!(
+                    w.line().iter().map(|&p| usize::from(p)).collect::<Vec<_>>(),
+                    n.line
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_finished_game_cannot_be_explained() {
+        let finished = WasmBoard::try_from_parts(&[0; 6], 30, &[0; 6], 18, 0).unwrap();
+        assert!(try_explain(&finished).is_err());
     }
 }
