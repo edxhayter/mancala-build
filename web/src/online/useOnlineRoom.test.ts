@@ -5,7 +5,7 @@ import { createNetwork, type Network } from '../test/network';
 import { blockedStorage, memoryStorage } from '../test/storage';
 import { ROOM_IDLE_MS } from './rooms';
 import type { RoomStorage } from './saved';
-import { SLOW_JOIN_MS, useOnlineRoom, type RoomEntry } from './useOnlineRoom';
+import { HELLO_MS, OFFLINE_MS, useOnlineRoom, type RoomEntry } from './useOnlineRoom';
 
 /** Lets queued network deliveries and the re-renders they cause run. */
 async function settle() {
@@ -143,15 +143,35 @@ describe('useOnlineRoom', () => {
     expect(onlinePhase(sam.result.current!.state)).toBe('theirs');
   });
 
-  // Scenario: A slow join
-  it('notes after 30 seconds that nobody has joined', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  // Scenario: A lost move arrives later
+  it('a move lost on the way arrives with the next hello, within 15 seconds', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
     const net = createNetwork();
     const ed = tab(net, ED);
+    const sam = tab(net, SAM);
     await settle();
-    expect(ed.result.current!.slowJoin).toBe(false);
-    act(() => vi.advanceTimersByTime(SLOW_JOIN_MS));
-    expect(ed.result.current!.slowJoin).toBe(true);
+    net.dropNext();
+    act(() => ed.result.current!.play(0));
+    await settle();
+    expect(sam.result.current!.state.record.moves).toEqual([]);
+    act(() => vi.advanceTimersByTime(HELLO_MS));
+    await settle();
+    expect(sam.result.current!.state.record.moves).toEqual([0]);
+  });
+
+  // Scenario: Can't connect
+  it("says it can't connect after 10 seconds out of reach, and stops once it can", async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+    const net = createNetwork();
+    net.setReachable(false);
+    const ed = tab(net, ED);
+    await settle();
+    act(() => vi.advanceTimersByTime(OFFLINE_MS - 1));
+    expect(ed.result.current!.offline).toBe(false);
+    act(() => vi.advanceTimersByTime(1));
+    expect(ed.result.current!.offline).toBe(true);
+    act(() => net.setReachable(true));
+    expect(ed.result.current!.offline).toBe(false);
   });
 
   // Scenario: Nobody comes

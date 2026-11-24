@@ -256,7 +256,6 @@
   line-height: 20px;
   text-align: center;
 }
-.online-status .slow-note { font-size: 14px; max-width: 46ch; }
 .link-field { width: 22ch; font-size: 14px; }
 
 .match-score .score-short { display: none; }

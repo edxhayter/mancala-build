@@ -7,7 +7,7 @@ Lets two people play Kalah together from different browsers: both type the same 
 ## ADDED Requirements
 
 ### Requirement: Entering a room by name
-Choosing Online in the New game sheet SHALL ask for the player's name and a room name, and SHALL then enter that room. If nobody is in the room, the player SHALL wait there for someone to join. If one person is waiting there, the player SHALL join them. Before entering a room, the page SHALL say that anyone who types the same room name can join, and that playing online connects the two browsers directly, so each can see the other's network address.
+Choosing Online in the New game sheet SHALL ask for the player's name and a room name, and SHALL then enter that room. If nobody is in the room, the player SHALL wait there for someone to join. If one person is waiting there, the player SHALL join them. Before entering a room, the page SHALL say that anyone who types the same room name can join. The two players' browsers SHALL NOT be given each other's network address.
 
 #### Scenario: Opening a new room
 - **WHEN** Ed chooses Online, enters the name "Ed" and the room "friday rematch", and enters
@@ -126,15 +126,34 @@ Each browser SHALL apply a move from the other player only if it is that player'
 - **WHEN** a move of that empty pit arrives from Sam's browser
 - **THEN** Ed's page ignores it, and the position is unchanged
 
-### Requirement: Waiting for someone who doesn't arrive
-While the page waits for another player, it SHALL keep showing the room name. If nobody has joined after 30 seconds, it SHALL add that some networks block direct connections, so that if someone has already entered the same room name, trying another network (such as mobile data) may help.
+### Requirement: Playing on any network
+Two players SHALL be able to meet and play from any networks that can open the site, including the same Wi-Fi network.
 
-#### Scenario: A slow join
-- **GIVEN** Ed entered an empty room 30 seconds ago and nobody has joined
-- **THEN** Ed's page still shows the room name, and adds the note about networks that block direct connections
+#### Scenario: Two players on the same Wi-Fi
+- **GIVEN** Ed and Sam are on the same Wi-Fi network
+- **WHEN** both enter "friday rematch"
+- **THEN** they meet, and a game starts
+
+### Requirement: Reaching the online service
+If the page can't reach the online service within 10 seconds of entering a room, it SHALL say that online play can't connect right now. It SHALL keep trying, and SHALL carry on normally once it connects.
+
+#### Scenario: Can't connect
+- **GIVEN** the page can't reach the online service
+- **WHEN** 10 seconds pass after entering a room
+- **THEN** the page says online play can't connect right now
+- **WHEN** the service becomes reachable
+- **THEN** the message goes, and the room works as usual
+
+### Requirement: Nothing lost on the way
+If a move or a hello is lost on the way between the two browsers, both pages SHALL agree on the game again within 15 seconds, without either player doing anything.
+
+#### Scenario: A lost move arrives later
+- **GIVEN** an online game where Ed's move is lost on the way to Sam
+- **WHEN** up to 15 seconds pass
+- **THEN** Sam's page shows Ed's move, and it is Sam's turn
 
 ### Requirement: A dropped connection
-When the other player's connection is lost, the page SHALL say that they have lost connection and that it is waiting for them (until the room closes, as in *Rooms close when not full*), and no pit SHALL be playable. When they come back, the game SHALL carry on from the same position with the same player to move.
+When nothing has been heard from the other player for 15 seconds, or they close the page, their connection SHALL count as lost. The page SHALL then say that they have lost connection and that it is waiting for them (until the room closes, as in *Rooms close when not full*), and no pit SHALL be playable. When they come back, the game SHALL carry on from the same position with the same player to move.
 
 #### Scenario: The other player drops and returns
 - **GIVEN** an online game between Ed and Sam, with Ed to move

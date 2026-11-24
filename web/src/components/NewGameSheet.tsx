@@ -172,8 +172,7 @@ export function NewGameSheet({ initial, initialPuzzles = false, initialRoom, onS
               </p>
             </div>
             <p id={noteId} className="online-note">
-              Anyone who types the same room name can join. Playing online connects your browser directly to
-              theirs, so each can see the other's network address.
+              Anyone who types the same room name can join.
             </p>
           </div>
         )}

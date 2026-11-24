@@ -6,8 +6,6 @@ interface OnlineStatusProps {
   detail: string | null;
   /** While waiting: the room's link, offered as Copy link. */
   link?: string;
-  /** After 30 seconds with nobody: the note about blocked connections. */
-  slowJoin?: boolean;
   /** When the game is over and you haven't asked yet. */
   onRematch?: () => void;
   /** When the room has ended (left, in use, closed). */
@@ -22,7 +20,7 @@ type Copied = 'no' | 'yes' | 'failed';
  * The online game's status line (add-online-play design.md decision 8). Like
  * the puzzle's, only the words are a live region; the buttons sit beside it.
  */
-export function OnlineStatus({ message, detail, link, slowJoin = false, onRematch, onNewGame, match = null }: OnlineStatusProps) {
+export function OnlineStatus({ message, detail, link, onRematch, onNewGame, match = null }: OnlineStatusProps) {
   const [copied, setCopied] = useState<Copied>('no');
 
   const copy = () => {
@@ -43,12 +41,6 @@ export function OnlineStatus({ message, detail, link, slowJoin = false, onRematc
         {match && <p className="caption match-line">{match}</p>}
         {detail && <p className="caption">{detail}</p>}
         {copied === 'yes' && <p className="caption">Link copied.</p>}
-        {slowJoin && (
-          <p className="caption slow-note">
-            Some networks block direct connections. If your friend has already entered this room name, try another
-            network, such as mobile data.
-          </p>
-        )}
       </div>
       <div className="puzzle-actions">
         {link !== undefined &&

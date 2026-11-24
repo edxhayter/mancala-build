@@ -131,7 +131,7 @@
 ## 5. Online in the page (React)
 
 - [x] 5.1 **(test first, then implement)** In the New game sheet:
-  - enable the Online card, with **Your name** (remembered in `localStorage` `mancala.name`), **Room name** with its hint, the note about anyone with the same name joining and network addresses, and **Enter room**;
+  - enable the Online card, with **Your name** (remembered in `localStorage` `mancala.name`), **Room name** with its hint, the note that anyone with the same name can join (the network-address part was dropped in the 2026-11-24 revision, task 8.5), and **Enter room**;
   - update the web-play tests for *Modes that are not available yet* and *Online can be chosen*.
 
   Tests:
@@ -229,7 +229,9 @@
     - **Leaving:** Sam's tab said "Ed has left the room.", and Ed's address bar link was cleared.
     - There were no console errors.
   - **Still worth doing yourself:** two real browsers or devices (see 6.3).
+  - **Later finding:** both tabs were on the same machine, so they could always reach each other directly. That hid the problem in 6.3.
 - [ ] 6.3 **(your step)** Merge to `main`, and confirm that the Pages run is green. Then play a game on the live site between **two different networks**, such as a laptop on Wi-Fi and a phone on mobile data, meeting by typing the room name on both. Verify: you joined, chatted, and finished a game. Note any network where joining failed.
+  - **Tried 2026-11-24 (live site, two people on the same Wi-Fi): they never met.** Both pages waited as if in different rooms, because the network blocked the direct WebRTC connection. This led to the 2026-11-24 revision (design.md decision 1), so all traffic now goes through the relays. 6.3 stays open until the retry in 8.8 works.
 
 ## 7. Match score (added 2026-11-24)
 
@@ -249,6 +251,66 @@
   - the match line in the status when a game ends.
 
   Tests, through two `App`s: *The score after a game*, and *The score lasts as long as the room* (a rematch, a refresh, and a new room at 0 – 0). Verify: the tests pass, and every earlier check from 6.1 still passes.
+
+## 8. Connection through relays (revision of 2026-11-24)
+
+> Replaces the direct WebRTC connection (Trystero) with our own small client that sends every message through public Nostr relays. See design.md decision 1 and the new `online-play` requirements: *Playing on any network*, *Reaching the online service* and *Nothing lost on the way*. Everything above `Connect` stays as it is.
+
+- [x] 8.1 Pick the relays. Write a small probe script (in the scratchpad, not the repo) that, for each candidate relay:
+  - opens a websocket;
+  - subscribes to an ephemeral kind with an `x` tag;
+  - publishes a signed test event from a second socket;
+  - times how long it takes to arrive.
+
+  Candidates include `nos.lol`, `relay.damus.io`, `relay.primal.net`, `nostr.mom` and some of Trystero's list. Keep four that pass, preferring different operators, as the `RELAYS` constant. Record the results and timings in design.md decision 1. Verify: at least four relays pass from this machine.
+- [x] 8.2 **(test first, then implement)** Pure helpers in `online/nostr.ts`:
+  - `roomTopic(key)` (the SHA-256 hex) and `roomKind(topic)` (20000–29999);
+  - `deriveKey(key)` (PBKDF2, then AES-GCM), `seal(data)` and `open(text)`, with a random IV, where `open` returns null on any failure;
+  - `newIdentity()` and `signEvent(identity, kind, tags, content)` (a NIP-01 event id and Schnorr signature with the pinned `@noble/secp256k1`).
+
+  Tests:
+  - the topic and kind are the same for keys that differ only in case or spaces;
+  - a seal and open round-trips, and a different key or tampered text gives null;
+  - a signed event's id matches NIP-01 and its signature verifies.
+
+  Verify: the tests pass, and the library is pinned to an exact version at least two weeks old.
+  - **Concepts:** Web Crypto (`crypto.subtle`), hashing, symmetric encryption with a fresh IV, and why we sign but don't need to verify (relays do).
+- [x] 8.3 **(test first, then implement)** The relay client in `online/relayClient.ts`:
+  - one websocket per relay, with `REQ` / `EVENT` / `CLOSE`;
+  - reconnecting with back-off (1, 2, 4 … 30 s);
+  - `reachable` true while any relay is open.
+
+  Tests use a fake `WebSocket` (injected): subscribe on open, publish to every open relay, re-subscribe after a reconnect, the back-off sequence, and `reachable` going true and false. Verify: the tests pass.
+- [x] 8.4 **(test first, then implement)** `connectWithRelays: Connect` in `online/relays.ts` (design.md decision 1):
+  - sealed `{ id, to?, data }`, with duplicates dropped by `id` and messages for other peers ignored;
+  - a beat every 5 s; join on first hearing, leave after 15 s of silence or on a bye; a bye on `leave()` and on `pagehide`;
+  - `onReachable`.
+
+  Tests: two connections on a fake relay meet and exchange messages; the same event from two relays is handled once; `to` reaches only its peer; silence makes a peer leave, and a bye does it at once; a bad ciphertext is dropped. Verify: the tests pass.
+  - **Done as:** when a tab hears someone new, it answers at once with a beat. Their first beat may have gone out before the newcomer was listening, so without this the second tab would wait up to 5 s to learn about the first.
+- [x] 8.5 **(test first, then implement)** In the hook and the page:
+  - re-send hello every 10 s while the other player is connected;
+  - show "Can't connect to online play right now. Still trying…" while `onReachable` is false for over 10 s;
+  - remove the 30-second network note;
+  - the sheet's note becomes just "Anyone who types the same room name can join.";
+  - `RoomConnection` gains `onReachable`, and the in-memory network implements it.
+
+  Tests: *A lost move arrives later* (the network drops one move, and the pages agree within 15 s with fake timers), *Can't connect* (the test network unreachable, then reachable), and the updated sheet note. The old *A slow join* tests are removed. Verify: the tests pass.
+- [x] 8.6 Remove Trystero (the package and `online/trystero.ts`), and make the relay client the default `Connect` in `App`. Verify:
+  - `npm ls` no longer lists `trystero`;
+  - `npm run build` puts the relay client and the signing library in their own chunk;
+  - every Rust and web check from 6.1 passes, and every scenario still has a test.
+  - **Done (2026-11-24):** `trystero` is uninstalled and `online/trystero.ts` is deleted. `App` loads the relay client on first use, so it builds as its own 12 kB chunk (`relays-*.js`, versus Trystero's 74 kB). Rust has 154 passed and 2 ignored. The web suite has 338 passed. Every scenario has a test.
+- [x] 8.7 **Two real browsers (by Claude).** On the production build, play a full game between two *separate* Chrome instances over the real relays: entering by name, chat, a refresh, a rematch, the match score, and leaving. Record the join time and the time per move. Verify: everything works, with no console errors.
+  - **Done (2026-11-24)** on the production build, between two *separate* headless Chrome instances (a desktop, and a sideways phone), over the real relays:
+    - **Joining:** 0.16–0.21 s after Enter room, by typing the name in capitals with stray spaces.
+    - **Speed:** moves arrived in about **52 ms** each, and the chat badge in 52 ms.
+    - **Refresh:** the tab rejoined in about 0.17 s.
+    - **End of game:** played to the end, with the match score "Ed 0 – 1 Sam" on both pages (just "0 – 1" in the phone header). The rematch worked.
+    - **Leaving** was seen in 52 ms.
+    - There were no console errors.
+  - **A fix came out of the check:** leaving dropped the `leave` message still in the send queue, so the other page showed "lost connection" instead of "left the room". Whether a message goes out is now decided when it is sent, and there is a test for it.
+- [ ] 8.8 **(your step)** Merge, and confirm the Pages run is green. Then retry on the live site with **two devices on the same Wi-Fi** (the case that failed), and if you can, once across two different networks. Verify: you meet, play a game and chat. 6.3 can then be ticked.
 
 ## Workflow follow-up
 
