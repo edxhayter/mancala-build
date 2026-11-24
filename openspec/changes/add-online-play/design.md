@@ -234,6 +234,9 @@ Every read and write is wrapped in `try`/`catch`. Storage can be blocked, for ex
 - **[`App.tsx` keeps growing]**
   - The room logic lives in `online/` and `game/online.ts`, and the status and chat in their own components. `App` only picks the mode, the move to animate, and the status to show.
   - If it passes about 400 lines, task 5.4 extracts the per-mode `Board` props into a helper.
+- **[Background tabs barely run timers]**
+  - A player who switches tab would come back to moves still being sown at about one step a second.
+  - Mitigation: hidden pages skip the sowing animation (`usePageVisible`), so the board is up to date on return. Found in the task 5.5 browser check.
 - **[Trystero's API changes between versions]**
   - Pinning an exact version and the single adapter file limit the damage.
   - Mitigation: the adapter's only test is the manual two-browser check, because WebRTC can't run in jsdom.

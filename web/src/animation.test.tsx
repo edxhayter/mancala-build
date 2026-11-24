@@ -129,6 +129,19 @@ describe('the sowing animation', () => {
     expect(screen.getByRole('status')).toHaveTextContent('North to move');
   });
 
+  it('in a hidden page (a background tab), moves land at once', async () => {
+    localStorage.setItem('mancala.speed', 'slow');
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    try {
+      render(<App ai={silentAi} start={hotseat} />);
+      await user.click(screen.getByRole('button', { name: /^South pit 1,/ }));
+      expect(screen.getByRole('status')).toHaveTextContent('North to move');
+    } finally {
+      // Back to jsdom's own value (visible).
+      delete (document as { visibilityState?: unknown }).visibilityState;
+    }
+  });
+
   it('the settings pop-over closes on a click elsewhere, and focus returns to its button', async () => {
     render(<App ai={silentAi} start={hotseat} />);
     await user.click(screen.getByRole('button', { name: 'Settings' }));

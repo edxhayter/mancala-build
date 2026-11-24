@@ -24,6 +24,7 @@ import { freshSeed, gameReducer, initialState, type GameState } from './game/red
 import type { Settings } from './game/settings';
 import { statusText } from './game/status';
 import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
+import { usePageVisible } from './hooks/usePageVisible';
 import { createDirectAnalysisClient, type AnalysisClient } from './analysis/client';
 import { usePuzzleSupply } from './puzzles/supply';
 import { chatBlockedReason, onlinePhase, onlineStatus, rematchAsked } from './game/online';
@@ -142,7 +143,9 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
 
   // Show each move seed by seed, then let the game carry on (design.md decision 6).
   // Reduced motion means no animation at all, whatever the speed.
-  const stepMs = reducedMotion ? 0 : STEP_MS[speed];
+  // Hidden pages (background tabs) skip it too: their timers barely run.
+  const pageVisible = usePageVisible();
+  const stepMs = reducedMotion || !pageVisible ? 0 : STEP_MS[speed];
   // One playback for whichever is showing: a step of the explainer's replay
   // first, then the puzzle's answer or the game's latest move.
   const playback = usePlayback(
@@ -313,7 +316,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
     );
 
   return (
-    <div className={phone ? 'page phone' : 'page'}>
+    <div className={['page', phone && 'phone', inOnline && room.chat.open && 'chat-open'].filter(Boolean).join(' ')}>
       <Header
         settings={settings}
         matchup={

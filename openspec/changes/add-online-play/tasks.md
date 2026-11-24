@@ -185,12 +185,21 @@
 
   Verify: the tests pass. If `App.tsx` is over about 400 lines, also extract the per-mode `Board` props into a helper, and check that the tests still pass.
   - **Done as:** `App.tsx` reached 451 lines, so the per-mode `Board` props moved to `game/boardView.ts`, and the chat's "can't send" reason to `chatBlockedReason` in `game/online.ts`. That leaves 422 lines.
-- [ ] 5.5 Check online play on a sideways phone:
+- [x] 5.5 Check online play on a sideways phone:
   - `OnlineStatus` sits in the header's status slot;
   - the room name is visually hidden in the header, kept for screen readers, and is the chat panel's title;
   - the chat covers the board and closes with one tap.
 
   Add tests in `phone.test.tsx` (with `matchMedia` mocked), including *Opening the chat on a phone*. Verify: the tests pass, and the layout is checked in a browser at 844×390 with nothing overlapping.
+  - **Done (2026-11-24):** the tests are in `phone.test.tsx`. **Browser check by Claude** on the production build in headless Chrome, with Ed at 1280×860 and Sam on a sideways phone at 844×390, playing over the **real Trystero and Nostr relays**:
+    - Joining took 0.2–0.35 s. A move arrived in about 0.1 s.
+    - The chat message `good luck <b>Ed</b>` showed as typed, and the badge arrived at once.
+    - A refreshed tab rejoined in 0.3 s.
+    - Nothing scrolled sideways at either size, and there were no console errors.
+  - **Three fixes came out of the check:**
+    1. The open chat covered the right end of the board on desktop. The page now makes room for it.
+    2. "New game" wrapped onto two lines in the phone header. On the phone, "Ed vs Sam" is now visually hidden like the room name.
+    3. A hidden tab, where browsers barely run timers, animated moves at about one step a second. Hidden pages now skip the animation (`usePageVisible`, with a test).
 
 ## 6. Final checks
 

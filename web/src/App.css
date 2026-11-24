@@ -259,7 +259,8 @@
 .online-status .slow-note { font-size: 14px; max-width: 46ch; }
 .link-field { width: 22ch; font-size: 14px; }
 
-/* Docked at the right on a desktop; the board beside it stays playable. */
+/* Docked at the right on a desktop; the page makes room, so the board beside it stays playable. */
+.page.chat-open:not(.phone) { padding-right: calc(16px + min(320px, calc(100vw - 32px)) + 24px); }
 .chat-panel {
   position: fixed;
   top: 96px;
@@ -431,4 +432,7 @@
 
 /* On a sideways phone the chat covers the board until closed (spec: Chat on a phone). */
 .page.phone .chat-panel { top: 8px; right: 8px; bottom: 8px; left: 8px; width: auto; padding: 10px 14px; }
-.page.phone .room-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.page.phone .room-title,
+.page.phone .room-players { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.header.compact .chat-button { padding: 4px 6px; font-size: 14px; }
+.header.compact .tab-button { white-space: nowrap; }
