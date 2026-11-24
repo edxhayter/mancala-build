@@ -74,7 +74,7 @@
 
 ## 3. The connection
 
-- [ ] 3.1 **(test first, then implement)** Define `RoomConnection` and `Connect` in `online/transport.ts` (design.md decision 1). Write the in-memory network in `test/network.ts`:
+- [x] 3.1 **(test first, then implement)** Define `RoomConnection` and `Connect` in `online/transport.ts` (design.md decision 1). Write the in-memory network in `test/network.ts`:
   - connections with the same room key reach each other, and others don't;
   - `disconnect(peer)` fires `onPeerLeave` on the others;
   - deliveries can be held back and released, or dropped.
