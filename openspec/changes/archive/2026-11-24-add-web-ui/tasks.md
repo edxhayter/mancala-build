@@ -68,12 +68,15 @@
 
 - [x] 9.1 Add `.github/workflows/pages.yml` (design.md decision 9). Check the production build locally with `npm run build` and `npx vite preview --base /mancala-build/`. Verify: the preview works under `/mancala-build/`, and the workflow file passes a YAML lint (`npx yaml-lint` or the GitHub UI).
   - **Concepts:** GitHub Actions jobs, steps and caches, Pages artifacts, base paths.
-- [ ] 9.2 **(your step)** In GitHub: Settings → Pages → Source: "GitHub Actions". Then push and merge to `main`. Verify: the workflow run is green, the site is live at `https://edxhayter.github.io/mancala-build/`, and a full game against the AI works there (*A push to main publishes the site*).
+- [x] 9.2 **(your step)** In GitHub: Settings → Pages → Source: "GitHub Actions". Then push and merge to `main`. Verify: the workflow run is green, the site is live at `https://edxhayter.github.io/mancala-build/`, and a full game against the AI works there (*A push to main publishes the site*).
 
 ## 10. Final checks
 
 - [x] 10.1 Run the Rust checks (`cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`) and the web checks (`npm run typecheck`, `npm test`, `npm run build`). Confirm `cargo tree -p mancala-core` is still empty and `cargo tree -p mancala-ai -e normal` still lists only core. Verify: all clean.
-- [ ] 10.2 Check that every scenario in `specs/web-play/spec.md` has a test or (for *A push to main publishes the site* and *Failing tests block publishing*) a recorded manual check, each marked with a `Scenario:` comment. Verify: none are missing.
+- [x] 10.2 Check that every scenario in `specs/web-play/spec.md` has a test or (for *A push to main publishes the site* and *Failing tests block publishing*) a recorded manual check, each marked with a `Scenario:` comment. Verify: none are missing.
+  - 26 of 28 scenarios have a test marked with a `Scenario:` comment. The other two are recorded as manual checks below.
+  - **Scenario: A push to main publishes the site** — checked 2026-11-24. Merging PR #5 into `main` started the "Publish to GitHub Pages" workflow (run 45208943454, 2026-11-23), and it passed. The site loads at `https://edxhayter.github.io/mancala-build/`, and a full game against the AI was played there.
+  - **Scenario: Failing tests block publishing** — checked 2026-11-24 by reading `.github/workflows/pages.yml`, not by running it. The `build` job runs `cargo test --workspace` and `npm test` before `npm run build` and the upload. The `deploy` job has `needs: build`, so it only runs if every build step passes. A failing test therefore stops the run before anything is deployed, and the old site stays up. Not yet tried with a deliberately failing test.
 
 ## Workflow follow-up
 
