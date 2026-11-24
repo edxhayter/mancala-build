@@ -14,6 +14,7 @@ So far the site only lets you play the computer, or a friend sitting at the same
 - **Room chat.** A chat panel sends short text messages to the other player. An **unread badge** counts new messages while the chat is closed. Messages are shown as plain text and are not saved: they are kept only while the tab is open.
 - **Reconnect after a drop.** If either player refreshes or loses their connection briefly, they rejoin the same room and the game carries on from where it was. While the other player is away, the page says so and the game waits.
 - **Rematch.** When a game ends, both players can choose **Rematch** to play again in the same room, with sides swapped so the other player moves first. The chat carries on.
+- **Match score** (added 2026-11-24). A room keeps score across its games, for example "Ed 2 – 1 Sam". A draw counts as a win for neither player. If the wins are level, the player with the bigger total seed difference across the games leads. The score lasts as long as the room and starts at 0–0 in a new room. It is kept for online rooms only.
 - **Leaving.** Starting any other kind of game leaves the room, and the other player is told.
 - **Rust: checking a whole game.** `mancala-core` gains a way to replay a list of moves from the start and report the first illegal one, if any. Browsers use it to check the game they are handed when they reconnect.
 
@@ -38,7 +39,7 @@ So far the site only lets you play the computer, or a friend sitting at the same
 ## Capabilities
 
 ### New Capabilities
-- `online-play`: playing Kalah with a friend in another browser: entering a room by its name, rooms closing when not full, player names, sides and turns, checking moves, waiting through and recovering from a dropped connection, rematches, and leaving.
+- `online-play`: playing Kalah with a friend in another browser: entering a room by its name, rooms closing when not full, player names, sides and turns, checking moves, waiting through and recovering from a dropped connection, rematches, the match score, and leaving.
 - `room-chat`: text chat between the two players in an online room: sending and showing messages, limits on messages, the unread badge, and messages lasting only as long as the tab.
 
 ### Modified Capabilities

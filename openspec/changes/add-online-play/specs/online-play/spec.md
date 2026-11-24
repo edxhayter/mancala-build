@@ -163,6 +163,32 @@ When an online game ends, each player SHALL be offered Rematch. Once one player 
 - **THEN** a new game starts with Sam as South, moving first, and Ed as North
 - **AND** the earlier chat messages are still shown
 
+### Requirement: Match score
+A room SHALL keep a match score: how many games each player has won in it, counting every finished game, including the one just finished. A draw SHALL count as a win for neither. When wins are level, whoever has the larger total seed difference SHALL lead. That total is each game's final store difference, added up across the room's games. Both players SHALL see the score once a game has finished. It SHALL last as long as the room does, and a new room SHALL start at 0–0.
+
+#### Scenario: The score after a game
+- **GIVEN** Ed and Sam's first game in a room ends with Ed on 30 and Sam on 18
+- **THEN** both pages show the match score Ed 1 – 0 Sam
+
+#### Scenario: Level wins, broken by seeds
+- **GIVEN** Ed won one game by 12 seeds, and Sam won one game by 5 seeds
+- **THEN** the score is Ed 1 – 1 Sam, and the page says Ed leads by 7 seeds
+
+#### Scenario: A draw counts for neither
+- **GIVEN** Ed won the first game by 4 seeds, and the second game was a draw
+- **THEN** the score is Ed 1 – 0 Sam
+
+#### Scenario: All level
+- **GIVEN** each player won one game by 6 seeds
+- **THEN** the score is Ed 1 – 1 Sam, and the page says the match is level
+
+#### Scenario: The score lasts as long as the room
+- **GIVEN** Ed leads Sam 2 – 1 in a room
+- **WHEN** Sam refreshes the page, or they play a rematch
+- **THEN** the score is still Ed 2 – 1 Sam
+- **WHEN** Ed later enters a new room
+- **THEN** that room's score starts at 0 – 0
+
 ### Requirement: Leaving a room
 Starting any other kind of game from the New game sheet SHALL leave the room. The other player SHALL be told that the player has left, SHALL no longer be able to play in that room, and SHALL be offered a new game.
 

@@ -231,6 +231,25 @@
   - **Still worth doing yourself:** two real browsers or devices (see 6.3).
 - [ ] 6.3 **(your step)** Merge to `main`, and confirm that the Pages run is green. Then play a game on the live site between **two different networks**, such as a laptop on Wi-Fi and a phone on mobile data, meeting by typing the room name on both. Verify: you joined, chatted, and finished a game. Note any network where joining failed.
 
+## 7. Match score (added 2026-11-24)
+
+- [ ] 7.1 **(test first, then implement)** Keep the score in the room record (design.md decision 3, the *Match score* note):
+  - `results` in `RoomRecord`, checked by `parseRecord` (one per earlier game, each −48 to 48), and appended by `askRematch`;
+  - `matchScore(record)`, which counts the just-finished game too;
+  - `matchWords` in `game/online.ts`.
+
+  Tests:
+  - *The score after a game*, *Level wins, broken by seeds*, *A draw counts for neither* and *All level* (with hand-made results);
+  - a bad `results` is rejected;
+  - reconcile and a rematch carry the score.
+
+  Verify: the tests pass.
+- [ ] 7.2 **(test first, then implement)** Show the score:
+  - the header's "Ed 2 – 1 Sam" once a game has finished (just "2 – 1" on a sideways phone, with the full score for screen readers);
+  - the match line in the status when a game ends.
+
+  Tests, through two `App`s: *The score after a game*, and *The score lasts as long as the room* (a rematch, a refresh, and a new room at 0 – 0). Verify: the tests pass, and every earlier check from 6.1 still passes.
+
 ## Workflow follow-up
 
 - Archive this change after using online play with a friend for a while.

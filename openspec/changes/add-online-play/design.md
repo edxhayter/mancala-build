@@ -88,10 +88,16 @@ RoomRecord {
   game: number            // 0 for the first game, +1 for each rematch
   moves: number[]         // this game's pits, in order, from the starting position
   rematch: { first: boolean, second: boolean }
+  results: number[]       // one per earlier game: first player's store minus second's (added for the match score)
 }
 ```
 
 - **The first player in** is whoever opened the room. They play South in even games and North in odd games. So a rematch (`game + 1`, `moves: []`) swaps sides without anyone deciding it, as *Rematch* requires.
+- **The match score comes from the results** (added 2026-11-24 for *Match score*).
+  - `results[i]` is game *i*'s final store difference from the first player's side: positive means they won, negative means they lost, 0 is a draw. There is exactly one entry for each earlier game, so `results.length === game`.
+  - The game that just finished isn't in `results` until the rematch starts. Instead, `matchScore(record)` adds it from the replayed board when that game is over. That way the score shows the moment the game ends, and nothing is counted twice.
+  - The rematch appends it (`askRematch`). Because results travel inside the record, reconcile and refresh carry the score with no extra messages.
+  - Wins are counted from the sign of each entry, and the tie-break is the sum of the entries. That is just the seed total from the first player's side.
 - **The position comes from the moves.** `replayMoves(moves)` rebuilds the board (decision 6), so a record can always be checked from scratch.
 - **Seat ids.** Each tab makes a random seat id when it enters a room, and keeps it in `sessionStorage` with the record (decision 7). That is how a refreshed tab proves it is the same player.
 
@@ -129,7 +135,7 @@ A third visitor connects to both players, and both see each other connected, so 
 `parseMessage(data: unknown): OnlineMessage | null` checks every field before anything is used:
 
 - the types;
-- integer ranges (`pit` 0–5, and moves at most 200 per game, which is far more than any real game);
+- integer ranges (`pit` 0–5; moves at most 200 per game, far more than any real game; `results` exactly one per earlier game, each −48 to 48);
 - player name 1–20 characters after trimming, and a room name that passes `roomKey`;
 - chat text 1–300 characters;
 - ids of a fixed shape.
@@ -203,7 +209,7 @@ Every read and write is wrapped in `try`/`catch`. Storage can be blocked, for ex
   - during a game: "Your turn" or "Sam's turn", and the caption;
   - "Sam has lost connection. Waiting for them to come back.", "Sam has left the room.", "This room is in use. Try another name.", or "The room closed: nobody joined in 10 minutes." / "…Sam didn't come back within 10 minutes.";
   - at the end: the result with **Rematch**, then "Waiting for Sam…" or "Sam wants a rematch".
-- **Header.** The room name ("Friday rematch") sits beside the matchup "Ed vs Sam". On a sideways phone the room name is visually hidden but kept for screen readers (like `puzzle-title-long`), and it is shown as the chat panel's title instead. A **Chat** button carries the unread badge. The badge is a count in the button's accessible name, for example "Chat, 2 unread".
+- **Header.** The room name ("Friday rematch") sits beside the matchup "Ed vs Sam". Once a game has finished, that becomes the score, "Ed 2 – 1 Sam". On a sideways phone just "2 – 1" shows, and screen readers get the full score. When a game ends, the status adds the match line, for example "Match: Ed 1 – 1 Sam · Ed leads by 7 seeds". On a sideways phone the room name is visually hidden but kept for screen readers (like `puzzle-title-long`), and it is shown as the chat panel's title instead. A **Chat** button carries the unread badge. The badge is a count in the button's accessible name, for example "Chat, 2 unread".
 - **`ChatPanel`** is a non-modal panel, so the board stays playable on desktop:
   - It docks to the right of the board on desktop, and covers the board on a sideways phone, with a close button.
   - It has a list of messages with an `aria-live="polite"` region, a text box with `maxLength={300}`, and **Send**. Enter sends. Send is disabled while `peer !== 'connected'`, with a short reason.
