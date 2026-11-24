@@ -55,7 +55,7 @@
 
   Verify: the tests pass, and nothing that isn't an `OnlineMessage` gets through.
   - **Your piece (optional):** write the chat-text check (a string, 1–300 characters after trimming).
-- [ ] 2.3 **(test first, then implement)** Write `online/record.ts` (design.md decision 3):
+- [x] 2.3 **(test first, then implement)** Write `online/record.ts` (design.md decision 3):
   - `RoomRecord` and `newRecord(name, first, now)`;
   - `sideOf(record, seatId)`: the first player plays South in even games;
   - `reconcile(mine, theirs)`, using `replayMoves`;

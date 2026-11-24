@@ -98,14 +98,14 @@ RoomRecord {
 **When two browsers meet** (a first join, a reconnect, or both refreshed), each sends `hello { seatId, name, record }`. Both then run the same pure function, `reconcile(mine, theirs)`:
 
 1. A record that fails `replayMoves` is ignored.
-2. **The further-on record wins**, comparing `(game, moves.length)`.
+2. **The further-on record wins**, comparing `(game, moves.length, seats filled, rematch requests)`. Counting seats means a room already in use always beats a newcomer's brand-new record, even if the newcomer's clock is behind (found while writing task 2.3).
 3. On a tie, the record of the **earlier-opened room** wins, comparing `(openedAt, first.id)`. This is *Entering at the same moment*. Both tabs thought they opened an empty room, and both pick the same winner. The loser becomes the second player. The tie-break only has to be the same in both browsers, not fair, so the clocks don't need to agree.
 
 This needs no "host" to be online. It also covers a move lost in a drop: if Sam's move left Sam's browser but never reached Ed's, Sam's record is one move longer and wins, so Ed's page gets the move.
 
 There can't be two *different* records with moves of the same length. Only the player to move can add a move, and nobody can move while the other is away. So step 3 only ever decides between two brand-new rooms.
 
-**Who may sit where** is also decided the same way in both browsers. When a hello arrives with an unknown seat id:
+**Who may sit where** is also decided the same way in both browsers. After reconciling, `meet` admits the two players **in order of seat id**, so both browsers seat them in the same order. When a hello arrives with an unknown seat id:
 
 - if the second seat is empty, the newcomer takes it;
 - if a seat's player isn't connected right now **and** the newcomer's name matches that seat's name (compared like room keys), the newcomer takes it over (*Taking over a seat that was left behind*);
