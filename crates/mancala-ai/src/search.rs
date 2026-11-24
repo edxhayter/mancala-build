@@ -82,6 +82,101 @@ fn minimax(
     }
 }
 
+/// One legal move with its exact score and the line of best play behind it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct MoveLine {
+    /// The move (0-5), for the player to move.
+    pub pit: usize,
+    /// Its score, exactly as `search_scores` gives it.
+    pub score: i32,
+    /// The move itself, then the moves both sides make next in the AI's best
+    /// play. Replaying it reaches a position whose evaluation is `score`.
+    pub line: Vec<usize>,
+}
+
+/// Like `search_scores`, but also returns each move's line of best play (the
+/// "principal variation") (add-move-explainer design.md decisions 1 and 2).
+///
+/// Slower than `search_scores`, because it copies lines as it goes, so the AI
+/// keeps using `search_scores` to choose its moves.
+pub fn search_lines(board: &Board, depth: u32) -> Vec<MoveLine> {
+    assert!(depth >= 1, "search depth must be at least 1");
+    let me = board.to_move();
+    let mut nodes = 0;
+    let mut rest = Vec::new();
+    board
+        .legal_moves()
+        .into_iter()
+        .map(|pit| {
+            let (child, _) = board.play(pit).expect("legal_moves() are legal");
+            let score = minimax_line(
+                &child,
+                depth - 1,
+                me,
+                i32::MIN,
+                i32::MAX,
+                &mut nodes,
+                &mut rest,
+            );
+            let mut line = vec![pit];
+            line.extend_from_slice(&rest);
+            MoveLine { pit, score, line }
+        })
+        .collect()
+}
+
+/// `minimax`, also filling `line` with the best moves from this position on.
+///
+/// A move's line is kept only when it is *strictly* better than everything
+/// before it. Along those moves every score was searched inside its window,
+/// so it is exact, and the line really produces it. Lines from pruned
+/// branches are bounds, not exact, and they always get replaced or ignored.
+fn minimax_line(
+    board: &Board,
+    depth: u32,
+    me: Player,
+    mut alpha: i32,
+    mut beta: i32,
+    nodes: &mut u64,
+    line: &mut Vec<usize>,
+) -> i32 {
+    *nodes += 1;
+    line.clear(); // a leaf has no moves after it
+
+    let moves = board.legal_moves();
+    if depth == 0 || board.status() != Status::InProgress || moves.is_empty() {
+        return evaluate(board, me);
+    }
+
+    let maximising = board.to_move() == me;
+    let mut best = if maximising { i32::MIN } else { i32::MAX };
+    let mut child_line = Vec::new(); // reused for each child, to save allocations
+    for pit in moves {
+        let (child, _) = board.play(pit).expect("legal_moves() are legal");
+        let score = minimax_line(&child, depth - 1, me, alpha, beta, nodes, &mut child_line);
+        let improves = if maximising {
+            score > best
+        } else {
+            score < best
+        };
+        if improves {
+            best = score;
+            line.clear();
+            line.push(pit);
+            line.extend_from_slice(&child_line);
+        }
+        if maximising {
+            alpha = alpha.max(best);
+        } else {
+            beta = beta.min(best);
+        }
+        if alpha >= beta {
+            break; // the other player would never allow this position
+        }
+    }
+    best
+}
+
 /// Plain minimax with no pruning: looks at *every* position `depth` moves ahead.
 ///
 /// Slow but obviously correct, so it's kept for tests only: the faster
@@ -240,6 +335,96 @@ mod tests {
         println!(
             "plain minimax: {full_nodes} positions, alpha-beta: {pruned_nodes} ({:.0}% saved)",
             100.0 * (1.0 - pruned_nodes as f64 / full_nodes as f64)
+        );
+    }
+
+    /// Plays `line` from `board`, checking every move is legal, and returns the end.
+    fn replay(board: &Board, line: &[usize]) -> Board {
+        line.iter().fold(*board, |position, &pit| {
+            position
+                .play(pit)
+                .unwrap_or_else(|e| panic!("{pit} is not legal in {position:?}: {e:?}"))
+                .0
+        })
+    }
+
+    // Scenario: Lines agree with the scores
+    // Scenario: A line proves its score
+    #[test]
+    fn lines_agree_with_scores_and_prove_them() {
+        let mut rng = mancala_core::Rng::new(77);
+        let mut checked = 0;
+        while checked < 300 {
+            let moves = rng.below(40);
+            let board = random_position(&mut rng, moves);
+            if board.status() != Status::InProgress {
+                continue;
+            }
+            for depth in 1..=6 {
+                let lines = search_lines(&board, depth);
+                let scores: Vec<(usize, i32)> = lines.iter().map(|l| (l.pit, l.score)).collect();
+                assert_eq!(
+                    scores,
+                    search_scores(&board, depth).scores,
+                    "depth {depth} on {board:?}"
+                );
+
+                for l in &lines {
+                    assert_eq!(l.line[0], l.pit);
+                    let end = replay(&board, &l.line);
+                    let len = l.line.len() as u32;
+                    assert!(len <= depth, "line {:?} longer than {depth}", l.line);
+                    if len < depth {
+                        assert_ne!(
+                            end.status(),
+                            Status::InProgress,
+                            "a short line must end the game: {:?}",
+                            l.line
+                        );
+                    }
+                    assert_eq!(
+                        evaluate(&end, board.to_move()),
+                        l.score,
+                        "line {:?} at depth {depth} on {board:?}",
+                        l.line
+                    );
+                }
+            }
+            checked += 1;
+        }
+    }
+
+    // Scenario: Lines for a winning and a losing move
+    #[test]
+    fn lines_for_a_winning_and_a_losing_move() {
+        // Pit 4 (shown as 5) captures North's last 5 seeds and wins at once;
+        // pit 0 (shown as 1) loses with best play (see choose.rs).
+        let board = Board::from_parts(
+            [1, 0, 0, 0, 1, 0],
+            18,
+            [5, 0, 0, 0, 0, 0],
+            23,
+            Player::South,
+        );
+        let lines = search_lines(&board, 12);
+        let line_for = |pit| &lines.iter().find(|l| l.pit == pit).unwrap().line;
+
+        let win = line_for(4);
+        assert_eq!(win, &vec![4]);
+        assert_eq!(
+            replay(&board, win).status(),
+            Status::Finished {
+                winner: Some(Player::South)
+            }
+        );
+
+        let lose = line_for(0);
+        assert!(lose.len() > 1, "North replies: {lose:?}");
+        assert_eq!(
+            replay(&board, lose).status(),
+            Status::Finished {
+                winner: Some(Player::North)
+            }
         );
     }
 }

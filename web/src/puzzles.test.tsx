@@ -6,13 +6,13 @@ import { newBoard, play, type PuzzleSnapshot } from './engine';
 import { REDUCED_MOTION } from './hooks/useMediaQuery';
 import { silentAi } from './test/ai';
 import { mockMedia } from './test/media';
-import { manualPuzzles } from './test/puzzles';
+import { fakePuzzle, manualAnalysis } from './test/analysis';
 
 // A made-up puzzle from the start: South to move, the answer is pit 3 on screen
 // (index 2), which ends in South's store for an extra turn.
-const PUZZLE: PuzzleSnapshot = { seed: 1, board: newBoard(), answer: 2 };
+const PUZZLE: PuzzleSnapshot = fakePuzzle(1, newBoard(), 2);
 // A second one, North to move after South's pit 1.
-const NORTH_PUZZLE: PuzzleSnapshot = { seed: 2, board: play(newBoard(), 0).board, answer: 5 };
+const NORTH_PUZZLE: PuzzleSnapshot = fakePuzzle(2, play(newBoard(), 0).board, 5);
 
 const status = () => screen.getByRole('status');
 const pit = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name},`) });
@@ -27,8 +27,8 @@ async function choosePuzzles() {
 
 /** The page with puzzles that arrive when the test says, already showing `first`. */
 async function showingPuzzle(first: PuzzleSnapshot = PUZZLE) {
-  const puzzles = manualPuzzles();
-  render(<App ai={silentAi} puzzles={puzzles.client} />);
+  const puzzles = manualAnalysis();
+  render(<App ai={silentAi} analysis={puzzles.client} />);
   await choosePuzzles();
   puzzles.requests[0].answer(first);
   await waitFor(() => expect(status()).toHaveTextContent('Find the best move'));
@@ -38,7 +38,7 @@ async function showingPuzzle(first: PuzzleSnapshot = PUZZLE) {
 describe('puzzles', () => {
   // Scenario: Puzzles can be chosen
   it('Puzzles can be chosen, and hides the computer choices', async () => {
-    render(<App ai={silentAi} puzzles={manualPuzzles().client} />);
+    render(<App ai={silentAi} analysis={manualAnalysis().client} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     const card = screen.getByRole('button', { name: /Puzzles/ });
     expect(card).toBeEnabled();
@@ -50,7 +50,7 @@ describe('puzzles', () => {
 
   // Scenario: Preparing a puzzle
   it('says it is preparing, and nothing can be played', async () => {
-    render(<App ai={silentAi} puzzles={manualPuzzles().client} />);
+    render(<App ai={silentAi} analysis={manualAnalysis().client} />);
     await choosePuzzles();
     expect(status()).toHaveTextContent('Preparing a puzzle…');
     for (const n of [1, 2, 3, 4, 5, 6]) {
@@ -155,15 +155,15 @@ describe('puzzles', () => {
 
   // Scenario: A new visit starts from zero
   it('a fresh page starts the count at 0 of 0', async () => {
-    render(<App ai={silentAi} puzzles={manualPuzzles().client} />);
+    render(<App ai={silentAi} analysis={manualAnalysis().client} />);
     await choosePuzzles();
     expect(within(header()).getByText(/Solved 0 of 0/)).toBeInTheDocument();
   });
 
   // Scenario: Leaving puzzles during preparation
   it('starting a game while a puzzle is prepared: the game starts, the puzzle is never shown', async () => {
-    const puzzles = manualPuzzles();
-    render(<App ai={silentAi} puzzles={puzzles.client} />);
+    const puzzles = manualAnalysis();
+    render(<App ai={silentAi} analysis={puzzles.client} />);
     await choosePuzzles();
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     await userEvent.click(screen.getByRole('button', { name: /Computer/ }));
@@ -179,7 +179,7 @@ describe('puzzles', () => {
 
   // Scenario: Usable while preparing
   it('New game and Settings still respond while a puzzle is prepared', async () => {
-    render(<App ai={silentAi} puzzles={manualPuzzles().client} />);
+    render(<App ai={silentAi} analysis={manualAnalysis().client} />);
     await choosePuzzles();
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute('aria-expanded', 'true');

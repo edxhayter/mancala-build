@@ -6,8 +6,8 @@ import { silentAi } from './test/ai';
 import { geometry } from './board/geometry';
 import { initialState } from './game/reducer';
 import { desktop, mockMedia, sideways, upright } from './test/media';
-import { newBoard } from './engine';
-import { manualPuzzles } from './test/puzzles';
+import { explainMoves, newBoard } from './engine';
+import { fakePuzzle, manualAnalysis } from './test/analysis';
 
 const hotseat = { ...initialState(1), settings: { opponent: 'local', level: 'medium', playerFirst: true } } as const;
 
@@ -69,12 +69,12 @@ describe('on a phone', () => {
   // add-puzzles design.md decision 7: puzzles on a sideways phone
   it('sideways with puzzles: the puzzle status and both actions sit in the slim header', async () => {
     mockMedia(sideways);
-    const puzzles = manualPuzzles();
-    render(<App ai={silentAi} puzzles={puzzles.client} />);
+    const puzzles = manualAnalysis();
+    render(<App ai={silentAi} analysis={puzzles.client} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     await userEvent.click(screen.getByRole('button', { name: /Puzzles/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Start game' }));
-    puzzles.requests[0].answer({ seed: 1, board: newBoard(), answer: 2 });
+    puzzles.requests[0].answer(fakePuzzle(1, newBoard(), 2));
 
     const header = await screen.findByRole('banner');
     await screen.findByText('Find the best move');
@@ -83,5 +83,21 @@ describe('on a phone', () => {
     expect(header).toContainElement(screen.getByRole('button', { name: 'Next puzzle' }));
     expect(header.querySelector('.puzzle-title')).toHaveTextContent('Puzzle · Find the best move');
     expect(header).toHaveTextContent('Solved 0 of 0');
+  });
+
+  // add-move-explainer design.md decision 7: the replay bar on a sideways phone
+  it('sideways: a replay of a line puts its bar in the slim header', async () => {
+    mockMedia(sideways);
+    const analysis = manualAnalysis();
+    render(<App ai={silentAi} analysis={analysis.client} start={initialState(5)} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+    analysis.explains[0].answer(explainMoves(analysis.explains[0].board));
+    await userEvent.click(await screen.findByRole('button', { name: 'Show why: pit 1' }));
+
+    const header = screen.getByRole('banner');
+    expect(header).toContainElement(screen.getByRole('status'));
+    expect(screen.getByRole('status')).toHaveTextContent('Why pit 1');
+    expect(header).toContainElement(screen.getByRole('button', { name: 'Next move' }));
+    expect(header).toContainElement(screen.getByRole('button', { name: 'Back' }));
   });
 });
