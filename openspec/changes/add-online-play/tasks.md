@@ -23,7 +23,7 @@
   Verify: the tests pass, and replay never returns a half-replayed board.
   - **Concepts:** custom error structs that wrap another error, `iter().enumerate()`, `?` with `map_err`, and `try_fold` (ch. 9, 13.2), written both ways, keeping the clearer one.
   - **Your piece (optional):** write `impl Display for ReplayError`, for example "move 3 (place 2): that pit is empty".
-- [ ] 1.3 **(test first, then implement)** Export `replayMoves(moves: Uint8Array) -> Result<WasmBoard, JsError>` from `mancala-wasm`, with a native `try_replay` twin. Add `replayMoves(moves: number[]): BoardSnapshot` to `engine.ts`. Tests:
+- [x] 1.3 **(test first, then implement)** Export `replayMoves(moves: Uint8Array) -> Result<WasmBoard, JsError>` from `mancala-wasm`, with a native `try_replay` twin. Add `replayMoves(moves: number[]): BoardSnapshot` to `engine.ts`. Tests:
   - native: matches `Board::replay`, and the error message names the place and the reason;
   - `engine.test.ts` against the real WASM: a short game, an empty list, and an illegal list that throws.
 
