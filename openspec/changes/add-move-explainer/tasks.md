@@ -20,8 +20,9 @@
 
 ## 3. Words, steps and the explainer state (pure TypeScript)
 
-- [ ] 3.1 **(test first, then implement)** Write `describeLine(board, explanation, names)` in `game/explain.ts` (design.md decision 5): `now` (extra turn, captures N, or nothing), `result` in words (win, lose, draw, level, N ahead, N behind), the `steps` with captions, and `best`. Tests use real lines from `explainMoves` and hand-made ones: *Best first, in words*, *Equal best moves*, each result phrase, and the captions "You play pit 5." and "Opponent plays pit 2 and captures 6 seeds.". Verify: the tests pass.
+- [x] 3.1 **(test first, then implement)** Write `describeLine(board, explanation, names)` in `game/explain.ts` (design.md decision 5): `now` (extra turn, captures N, or nothing), `result` in words (win, lose, draw, level, N ahead, N behind), the `steps` with captions, and `best`. Tests use real lines from `explainMoves` and hand-made ones: *Best first, in words*, *Equal best moves*, each result phrase, and the captions "You play pit 5." and "Opponent plays pit 2 and captures 6 seeds.". Verify: the tests pass.
   - **Your piece (optional):** write the function that turns a final position and score into the result words.
+  - **Done as:** `describeMoves` (the whole list, with `best` worked out from the top score) on top of `describeLine`, `stepCaption` and `resultWords` (your optional piece, if you want to rewrite it).
 - [ ] 3.2 **(test first, then implement)** Write the explainer reducer in `game/explainer.ts` (design.md decision 7): `opened`, `analysisAsked`, `analysisArrived` (ignored when stale), `showWhy`, `nextMove`, `back` and `closed`. Tests cover opening on the list, *Stepping through a line* (steps advance, and there is no Next move after the last), *Back from a replay*, and *A late analysis is ignored* (a different `gameId` or board). Verify: the tests pass.
   - **Concepts:** a reducer for UI flow, union types for the view (`list` | `replay`), deriving the board to draw.
 
