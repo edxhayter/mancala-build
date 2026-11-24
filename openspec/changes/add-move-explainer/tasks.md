@@ -50,7 +50,8 @@
 
 ## 6. Final checks
 
-- [ ] 6.1 Run the Rust checks (`cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`) and the web checks (`npm run typecheck`, `npm test`, `npm run build`). Confirm `cargo tree -p mancala-core` is still empty and `cargo tree -p mancala-ai -e normal` still lists only core. Check that every scenario in `specs/move-explainer` and the `ai-opponent` delta has a test marked with a `Scenario:` comment. Verify: all clean, and none are missing.
+- [x] 6.1 Run the Rust checks (`cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`) and the web checks (`npm run typecheck`, `npm test`, `npm run build`). Confirm `cargo tree -p mancala-core` is still empty and `cargo tree -p mancala-ai -e normal` still lists only core. Check that every scenario in `specs/move-explainer` and the `ai-opponent` delta has a test marked with a `Scenario:` comment. Verify: all clean, and none are missing.
+  - **Done (2026-11-24):** Rust has 143 passed and 2 ignored (the slow release-only tests). The web suite has 148 passed, typecheck is clean, and the build succeeds. `mancala-core` still has no dependencies, and `mancala-ai` still depends only on core. Every scenario in `move-explainer` and the `ai-opponent` delta has a matching `Scenario:` comment.
 - [ ] 6.2 **(your step)** Merge to `main`, confirm the Pages run is green, and try Why? on a puzzle and Analyze in a game on the live site.
 
 ## Workflow follow-up
