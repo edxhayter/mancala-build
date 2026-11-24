@@ -101,7 +101,7 @@
   - *Messages while the chat is open*: no count.
 
   Verify: the tests pass.
-- [ ] 4.2 **(test first, then implement)** Write the `onlineReducer` in `game/online.ts` (design.md decision 5). Tests:
+- [x] 4.2 **(test first, then implement)** Write the `onlineReducer` in `game/online.ts` (design.md decision 5). Tests:
   - *A friend joins* (first player South, phases `yours` / `theirs`);
   - *Waiting for the other player*;
   - *An out-of-turn move is ignored*;
