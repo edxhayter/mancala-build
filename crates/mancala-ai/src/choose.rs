@@ -16,7 +16,7 @@ impl Level {
     /// Search depth in moves (each move, including extra-turn moves, counts as one).
     /// Chosen from `examples/depth_table.rs` (design.md decision 6): hard takes
     /// about 0.25 s from the start position in a release build.
-    pub fn depth(self) -> u32 {
+    pub const fn depth(self) -> u32 {
         match self {
             Level::Easy => 2,
             Level::Medium => 6,
