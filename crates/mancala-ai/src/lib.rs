@@ -12,4 +12,4 @@ pub use puzzle::{
     Generated, MARGIN, MAX_MOVES, MIN_MOVES, PUZZLE_DEPTH, Puzzle, clear_best_move,
     generate_puzzle, generate_puzzle_traced,
 };
-pub use search::{SearchResult, search_scores};
+pub use search::{MoveLine, SearchResult, search_lines, search_scores};
