@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt;
 
 /// One of the two players. South moves first.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -48,6 +49,25 @@ pub enum MoveError {
     /// The game has already finished, so no moves are allowed.
     GameOver,
 }
+
+/// How a `MoveError` prints: `error.to_string()` or `format!("{error}")`.
+/// The wording is short and neutral; the CLI and the web page use their own
+/// friendlier sentences for players.
+impl fmt::Display for MoveError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let reason = match self {
+            MoveError::PitOutOfRange => "pits are numbered 0 to 5",
+            MoveError::EmptyPit => "that pit is empty",
+            MoveError::GameOver => "the game is already over",
+        };
+        f.write_str(reason)
+    }
+}
+
+/// Marks `MoveError` as a standard error. Every method has a default, so the
+/// body is empty; what matters is that `?` can now turn a `MoveError` into a
+/// `Box<dyn Error>`.
+impl std::error::Error for MoveError {}
 
 /// A summary of what a legal move did.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]

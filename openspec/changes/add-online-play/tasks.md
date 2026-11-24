@@ -10,13 +10,13 @@
 
 ## 1. Replaying a game (Rust)
 
-- [ ] 1.1 **(test first, then implement)** Give `MoveError` `impl Display` (short plain-English reasons) and `impl std::error::Error` in `mancala-core`. Tests:
+- [x] 1.1 **(test first, then implement)** Give `MoveError` `impl Display` (short plain-English reasons) and `impl std::error::Error` in `mancala-core`. Tests:
   - each case's `to_string()`;
   - a `MoveError` can be returned as `Box<dyn std::error::Error>` through `?`.
 
   Verify: the tests pass, the CLI's wording and tests are unchanged, and `cargo tree -p mancala-core` is still empty.
   - **Concepts:** traits and `impl Trait for Type` (Book ch. 10.2), `fmt::Display` and `Formatter`, the `Error` trait and `Box<dyn Error>` (ch. 9.2, 17.2).
-- [ ] 1.2 **(test first, then implement)** Add `ReplayError { index, error }` and `Board::replay(moves: &[usize]) -> Result<Board, ReplayError>` (design.md decision 6). Tests:
+- [x] 1.2 **(test first, then implement)** Add `ReplayError { index, error }` and `Board::replay(moves: &[usize]) -> Result<Board, ReplayError>` (design.md decision 6). Tests:
   - the spec scenarios: *A legal game*, *No moves*, *An illegal move in the list*, *A move after the end*;
   - a property test: for 200 seeded random games, `replay` of the moves equals playing them one by one.
 
