@@ -33,7 +33,11 @@ export function caption(
   player: Player,
   outcome: { extraTurn: boolean; captured: number },
 ): string | null {
-  const name = playerName(settings, player);
+  return moveCaption(playerName(settings, player), outcome);
+}
+
+/** The caption for a move by `name` ("You", "AI", "South", ...): shared by games and puzzles. */
+export function moveCaption(name: string, outcome: { extraTurn: boolean; captured: number }): string | null {
   const parts: string[] = [];
   if (outcome.captured > 0) {
     parts.push(`${name} captured ${outcome.captured} seeds.`);
@@ -42,6 +46,11 @@ export function caption(
     parts.push(`${name} ${verb(name, 'get', 'gets')} another turn.`);
   }
   return parts.length > 0 ? parts.join(' ') : null;
+}
+
+/** In a puzzle the player to move is "You", and the other side is "Opponent". */
+export function puzzleNames(board: BoardSnapshot): Record<Player, string> {
+  return board.toMove === 'south' ? { south: 'You', north: 'Opponent' } : { south: 'Opponent', north: 'You' };
 }
 
 /** The result line for a finished game (the CLI's `describe_result`, minus the
