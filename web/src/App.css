@@ -220,6 +220,26 @@
   padding-top: 4px;
 }
 
+/* --- Online: the New game sheet's fields (add-online-play) ----------------- */
+
+.online-fields { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.text-field {
+  font: inherit;
+  font-size: 17px;
+  padding: 8px 10px;
+  border: 2px solid #d8c6b0;
+  border-radius: 6px;
+  background: var(--linen);
+  color: var(--ink);
+}
+.text-field:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: var(--ink); }
+.text-field[aria-invalid='true'] { border-color: var(--rust); }
+.field-hint { font-size: 13px; color: var(--ink-soft); }
+.field-hint.invalid { color: var(--rust); }
+.online-note { font-size: 14px; color: var(--ink-soft); }
+.tab-button:disabled { opacity: 0.5; cursor: default; }
+
 /* --- Phone held sideways (design.md decision 10) --------------------------- */
 
 .page.phone {

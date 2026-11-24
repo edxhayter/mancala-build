@@ -26,6 +26,8 @@ export interface OnlineEnvironment {
 export interface RoomEntry {
   roomName: string;
   playerName: string;
+  /** Goes up each time the player enters, so entering the same room again starts afresh. */
+  attempt?: number;
 }
 
 export interface OnlineRoom {
@@ -34,6 +36,8 @@ export interface OnlineRoom {
   /** True once nobody has joined for 30 seconds (spec: A slow join). */
   slowJoin: boolean;
   play: (pit: number) => void;
+  /** The page has finished animating the latest move. */
+  landed: () => void;
   /** Sends a chat message; returns false if it couldn't be sent. */
   say: (text: string) => boolean;
   askRematch: () => void;
@@ -71,6 +75,7 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
 
   const key = entry ? roomKey(entry.roomName) : null;
   const playerName = entry?.playerName ?? '';
+  const attempt = entry?.attempt ?? 0;
 
   // --- Entering and connecting ---------------------------------------------------
   useEffect(() => {
@@ -113,9 +118,9 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
       connection.current = null;
       peers.current.clear();
     };
-    // `entry` is read only through `key` and `playerName`, on purpose: a new
-    // object with the same room and name is the same room.
-  }, [key, playerName]);
+    // `entry` is read only through `key`, `playerName` and `attempt`, on
+    // purpose: a new object with the same room, name and attempt is the same room.
+  }, [key, playerName, attempt]);
 
   /** Handles one checked message from browser `from`. */
   const receive = (conn: RoomConnection, message: OnlineMessage | null, from: PeerId) => {
@@ -241,9 +246,10 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
     if (current && envRef.current.storage) forgetRoom(envRef.current.storage, current.record.key);
   }, []);
 
+  const landed = useCallback(() => dispatch({ type: 'animationDone' }), []);
   const openChat = useCallback(() => chatDispatch({ type: 'opened' }), []);
   const closeChat = useCallback(() => chatDispatch({ type: 'closed' }), []);
 
   if (entry === null || state === null) return null;
-  return { state, chat, slowJoin, play, say, askRematch, leave, openChat, closeChat };
+  return { state, chat, slowJoin, play, landed, say, askRematch, leave, openChat, closeChat };
 }

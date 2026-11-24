@@ -80,7 +80,7 @@
   - deliveries can be held back and released, or dropped.
 
   Its own tests cover each of these. Verify: the tests pass.
-- [ ] 3.2 Choose and pin Trystero:
+- [x] 3.2 Choose and pin Trystero:
   - an exact version, at least two weeks old (0.26.0 is the candidate);
   - check its import path and its `joinRoom` / `makeAction` / `onPeerJoin` / `onPeerLeave` / `leave` API in the installed package.
 
@@ -130,7 +130,7 @@
 
 ## 5. Online in the page (React)
 
-- [ ] 5.1 **(test first, then implement)** In the New game sheet:
+- [x] 5.1 **(test first, then implement)** In the New game sheet:
   - enable the Online card, with **Your name** (remembered in `localStorage` `mancala.name`), **Room name** with its hint, the note about anyone with the same name joining and network addresses, and **Enter room**;
   - update the web-play tests for *Modes that are not available yet* and *Online can be chosen*.
 
@@ -142,7 +142,7 @@
   - the level and order choices are hidden.
 
   Verify: the tests pass, and the existing sheet tests pass.
-- [ ] 5.2 **(test first, then implement)** Add online mode to `App` (design.md decision 8):
+- [x] 5.2 **(test first, then implement)** Add online mode to `App` (design.md decision 8):
   - the `online` prop;
   - entering a room, and `OnlineStatus` with the room name and **Copy link**;
   - a `#room=` link opens the sheet with the name filled in, with a silent rejoin when `sessionStorage` has the room and it hasn't expired;

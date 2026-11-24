@@ -8,6 +8,7 @@ import { EndOfGame } from './components/EndOfGame';
 import { ExplainerSheet } from './components/ExplainerSheet';
 import { Header } from './components/Header';
 import { NewGameSheet, type NewGameChoice } from './components/NewGameSheet';
+import { OnlineStatus } from './components/OnlineStatus';
 import { PuzzleStatus } from './components/PuzzleStatus';
 import { ReplayBar } from './components/ReplayBar';
 import { RotatePrompt } from './components/RotatePrompt';
@@ -24,10 +25,43 @@ import { statusText } from './game/status';
 import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
 import { createDirectAnalysisClient, type AnalysisClient } from './analysis/client';
 import { usePuzzleSupply } from './puzzles/supply';
+import { mySide, nameOn, onlinePhase, onlineStatus, playableOnline, rematchAsked } from './game/online';
+import { readRoomLink, roomKey, roomLink } from './online/rooms';
+import { loadRoom, type RoomStorage } from './online/saved';
+import { connectWithTrystero } from './online/trystero';
+import { useOnlineRoom, type OnlineEnvironment, type RoomEntry } from './online/useOnlineRoom';
 import './App.css';
 
 /** Without a worker (tests that don't pass one), analysis runs on the page's own thread. */
 const DIRECT_ANALYSIS = createDirectAnalysisClient();
+
+/** This tab's session storage, or null where it's blocked. */
+function sessionStore(): RoomStorage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+/** Online play for real: Trystero, this tab's session storage, and the clock. */
+const REAL_ONLINE: OnlineEnvironment = { connect: connectWithTrystero, storage: sessionStore(), now: () => Date.now() };
+
+/** The room a `#room=` link points at, and whether this tab is already in it (a refresh). */
+function roomFromLink(env: OnlineEnvironment): { name: string | null; rejoin: RoomEntry | null } {
+  const name = readRoomLink(window.location.hash);
+  const key = name === null ? null : roomKey(name);
+  if (name === null || key === null) return { name: null, rejoin: null };
+  const saved = env.storage ? loadRoom(env.storage, key, env.now()) : null;
+  return { name, rejoin: saved ? { roomName: saved.record.name, playerName: saved.me.name, attempt: 0 } : null };
+}
+
+/** Removes a `#room=` link from the address bar, without reloading. */
+function clearRoomLink() {
+  if (readRoomLink(window.location.hash) !== null) {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+}
 
 interface AppProps {
   /** Chooses the computer's moves: a Web Worker in the browser, a stand-in in tests. */
@@ -36,13 +70,19 @@ interface AppProps {
   analysis?: AnalysisClient;
   /** Start from a particular game instead of the default (used by tests). */
   start?: GameState;
+  /** How online rooms connect and are saved: the real network, or a stand-in in tests. */
+  online?: OnlineEnvironment;
 }
 
-export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
+export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLINE }: AppProps) {
   // The whole game lives in one reducer (design.md decision 4). The third
   // argument builds the first state once, so freshSeed() isn't called on every render.
   const [state, dispatch] = useReducer(gameReducer, start, (s) => s ?? initialState(freshSeed()));
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // A `#room=` link opens the sheet on Online with the room filled in, or
+  // rejoins at once if this tab was already in that room (a refresh).
+  const [link] = useState(() => roomFromLink(online));
+  const [sheetOpen, setSheetOpen] = useState(link.name !== null && link.rejoin === null);
+  const [sheetRoom, setSheetRoom] = useState<string | undefined>(link.name ?? undefined);
   const newGameButton = useRef<HTMLButtonElement>(null);
   const askedAbout = useRef<BoardSnapshot | null>(null);
   const upright = useMediaQuery(UPRIGHT_PHONE);
@@ -54,11 +94,25 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
 
   // Puzzles (add-puzzles design.md decision 7). Their reducer lives here, next
   // to the game's, so the count for this visit survives a game in between.
-  const [mode, setMode] = useState<'game' | 'puzzles'>('game');
+  const [mode, setMode] = useState<'game' | 'puzzles' | 'online'>(link.rejoin ? 'online' : 'game');
   const [puzzle, puzzleDispatch] = useReducer(puzzleReducer, initialPuzzleState);
   const supply = usePuzzleSupply(analysis);
   const lastRequest = useRef(0);
   const inPuzzles = mode === 'puzzles';
+
+  // Online play (add-online-play design.md decision 8).
+  const [entry, setEntry] = useState<RoomEntry | null>(link.rejoin);
+  const attempts = useRef(1);
+  const room = useOnlineRoom(online, mode === 'online' ? entry : null);
+  const inOnline = mode === 'online' && room !== null;
+  const roomName = room?.state.record.name ?? null;
+
+  // While in a room, the address bar holds its link, so a refresh rejoins it.
+  useEffect(() => {
+    if (roomName === null) return;
+    const url = roomLink(roomName, window.location);
+    if (window.location.href !== url) window.history.replaceState(null, '', url);
+  }, [roomName]);
 
   // The explainer (add-move-explainer design.md decision 7): a list of every
   // move, and a step-by-step replay of one move's line on the board.
@@ -83,12 +137,15 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   // One playback for whichever is showing: a step of the explainer's replay
   // first, then the puzzle's answer or the game's latest move.
   const playback = usePlayback(
-    replay ?? (inPuzzles ? puzzle.lastMove : state.lastMove),
-    replay !== null || (!explaining && (inPuzzles ? puzzle.phase === 'animating' : state.phase === 'animating')),
+    replay ?? (inPuzzles ? puzzle.lastMove : inOnline ? room.state.lastMove : state.lastMove),
+    replay !== null ||
+      (!explaining &&
+        (inPuzzles ? puzzle.phase === 'animating' : inOnline ? room.state.animating : state.phase === 'animating')),
     stepMs,
     () => {
       if (replay) explainerDispatch({ type: 'stepLanded' });
       else if (inPuzzles) puzzleDispatch({ type: 'animationDone' });
+      else if (inOnline) room.landed();
       else dispatch({ type: 'animationDone' });
     },
   );
@@ -137,6 +194,16 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   const startGame = (next: Settings) => dispatch({ type: 'newGame', settings: next, seed: freshSeed() });
   const begin = (choice: NewGameChoice) => {
     explainerDispatch({ type: 'closed' });
+    // Spec: Leaving a room. Any new choice leaves the room you're in.
+    if (inOnline) room.leave();
+    if (choice.kind === 'online') {
+      if (inPuzzles) puzzleDispatch({ type: 'left' });
+      setEntry({ roomName: choice.roomName, playerName: choice.playerName, attempt: attempts.current++ });
+      setMode('online');
+      return;
+    }
+    setEntry(null);
+    clearRoomLink();
     if (choice.kind === 'puzzles') {
       setMode('puzzles');
       nextPuzzle();
@@ -178,6 +245,8 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   };
   const closeSheet = () => {
     setSheetOpen(false);
+    setSheetRoom(undefined);
+    if (mode !== 'online') clearRoomLink(); // a link that wasn't followed
     newGameButton.current?.focus(); // put keyboard focus back where it was
   };
 
@@ -188,6 +257,8 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   const puzzleWords = puzzleStatus(puzzle);
   const replayWords = replayStatus(explainer);
   const replaying = replayItem(explainer);
+  const onlineWords = inOnline ? onlineStatus(room.state) : null;
+  const phaseOnline = inOnline ? onlinePhase(room.state) : null;
   const status = replayWords && replaying ? (
     <ReplayBar
       title={`Why pit ${replaying.pit + 1}`}
@@ -196,6 +267,15 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
       canNext={replayWords.canNext}
       onNext={() => explainerDispatch({ type: 'nextMove' })}
       onBack={() => explainerDispatch({ type: 'back' })}
+    />
+  ) : inOnline && onlineWords ? (
+    <OnlineStatus
+      message={onlineWords.message}
+      detail={onlineWords.detail}
+      link={phaseOnline === 'waiting' ? roomLink(room.state.record.name, window.location) : undefined}
+      slowJoin={phaseOnline === 'waiting' && room.slowJoin}
+      onRematch={phaseOnline === 'over' && !rematchAsked(room.state) ? room.askRematch : undefined}
+      onNewGame={phaseOnline === 'ended' ? () => setSheetOpen(true) : undefined}
     />
   ) : inPuzzles ? (
     <PuzzleStatus
@@ -228,7 +308,14 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
       <Header
         settings={settings}
         matchup={
-          inPuzzles ? (
+          inOnline ? (
+            <span className="matchup">
+              <strong className="room-title">{room.state.record.name}</strong>
+              <span className="room-players">
+                {room.state.record.seats.first.name} vs {room.state.record.seats.second?.name ?? '…'}
+              </span>
+            </span>
+          ) : inPuzzles ? (
             <span className="matchup">
               {/* On a sideways phone only "Puzzle" shows; the rest stays for screen readers. */}
               <strong className="puzzle-title">
@@ -261,6 +348,14 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
                 names: explainer.source.kind === 'puzzle' ? puzzleNames(explainer.position) : names,
                 playable: [],
               }
+            : inOnline
+              ? {
+                  // Online: your own side along the bottom (spec: Your side and your turn).
+                  board: playback ? playback.step.board : room.state.board,
+                  viewer: mySide(room.state),
+                  names: { south: nameOn(room.state, 'south'), north: nameOn(room.state, 'north') },
+                  playable: playableOnline(room.state),
+                }
             : inPuzzles
               ? {
                   board: playback ? playback.step.board : (puzzleBoard(puzzle) ?? newBoard()),
@@ -275,7 +370,11 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
                   names,
                   playable,
                 })}
-          onPlay={(pit) => (inPuzzles ? puzzleDispatch({ type: 'pitChosen', pit }) : dispatch({ type: 'movePlayed', pit }))}
+          onPlay={(pit) => {
+            if (inOnline) room.play(pit);
+            else if (inPuzzles) puzzleDispatch({ type: 'pitChosen', pit });
+            else dispatch({ type: 'movePlayed', pit });
+          }}
           cup={phone ? 76 : 100}
           glow={playback ? (playback.step.kind === 'lift' ? playback.step.from : playback.step.to) : []}
           arrivals={playback ? arrivals(playback.step, playback.previous) : []}
@@ -299,6 +398,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
         <NewGameSheet
           initial={settings}
           initialPuzzles={inPuzzles}
+          initialRoom={sheetRoom}
           onCancel={closeSheet}
           onStart={(choice) => {
             begin(choice);
