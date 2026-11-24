@@ -82,6 +82,23 @@ Ties are rejected by the same rule, since their difference is 0.
 
 The numbers it prints go into this design as a short table, which records why `MAX_MOVES` and `MARGIN` have the values they do. WASM in a browser is typically 1.5–3× slower than native release builds. The table should show an average under about 1 s native, so a puzzle is usually ready in the background before the player wants it.
 
+**Measured 2026-11-24** (release build, Apple Silicon, `MIN_MOVES` 4, `MAX_MOVES` 30, `MARGIN` 2, depth 12, seeds 0–199):
+
+| Measure | Result |
+|---|---|
+| Time per puzzle | mean 0.124 s, worst 0.636 s |
+| Candidates per puzzle | mean 1.59, worst 8 |
+| Moves into the game | mean 17.5 |
+| Answer by pit (1–6) | 37, 28, 23, 24, 31, 57 |
+| South to move | 101 of 200 |
+| Random positions accepted by margin 1 / 2 / 3 / 4 | 79.5% / 59.8% / 43.5% / 32.8% |
+
+What we decided from it:
+
+- **`MAX_MOVES` stays at 30.** Even the worst puzzle is well under 1 s natively, so about 2 s in the browser at worst, and that time is hidden by preparing the next puzzle ahead.
+- **`MARGIN` stays at 2.** A margin of 3 would cut acceptance to 44% and make answers a little more decisive. But 2 keeps generation fast, and a two-seed difference is already a real lesson for a beginner. If puzzles feel too subtle in play, raising `MARGIN` is a one-line change, plus the spec's number.
+- **The random walk stays (the open question is answered).** Ten sample puzzles look like real middlegames and endgames. A few are lopsided (one side far ahead), but in those the task is still meaningful: "lose by 12, not 14" or "find the win". Pit 6 is the answer more often than the others, because it is the pit most often giving an extra turn.
+
 ### 5. WASM: one function, one small result type
 
 `#[wasm_bindgen(js_name = generatePuzzle)] pub fn generate_puzzle(seed: u32) -> WasmPuzzle`. The result has `board() -> WasmBoard` and `answer() -> u8`. The seed is `u32` for the same reason as `Ai::new`: JavaScript numbers hold a `u32` exactly. It is widened with `u64::from` before it reaches `mancala-ai`.
@@ -147,5 +164,4 @@ Nothing to migrate. The site is published by the existing Pages workflow on merg
 
 ## Open Questions
 
-- Should the random walk become an easy-AI walk? This is decided from `puzzle_stats` output and a look at sample puzzles. Either way, the spec and tasks stay the same.
-- What are the final values of `MAX_MOVES` and `MARGIN`? These are set from the measurements in decision 4 (`MARGIN` = 2 unless the numbers argue otherwise).
+None left. Both were answered by the measurements in decision 4.
