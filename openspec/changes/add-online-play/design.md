@@ -244,4 +244,9 @@ Nothing to migrate. Nothing is stored on any server. The new `localStorage` key 
 
 ## Open Questions
 
-- The exact Trystero version and import path, confirmed in task 3.2 against the release at least two weeks old. This doesn't change the interface in decision 1.
+None left. **Resolved in task 3.2:** Trystero is pinned at exactly **0.26.0** (2026-10-04). `import { joinRoom } from 'trystero'` re-exports the Nostr strategy (`@trystero-p2p/nostr`). In this version:
+- `room.onPeerJoin` and `room.onPeerLeave` are properties you assign;
+- `room.makeAction(name)` returns an object with `send(data, { target })` and an assignable `onMessage(data, { peerId })`;
+- `room.leave()` returns a promise.
+
+`online/trystero.ts` adapts these to `RoomConnection`, so the rest of the app is unaffected.
