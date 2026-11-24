@@ -140,6 +140,7 @@ The view is split so `App.tsx` doesn't grow past one reading:
 - `PuzzleStatus` holds the message, the tries left, and **Show the answer** / **Next puzzle**.
 - The header shows "Puzzle · Find the best move" and "Solved X of Y" in place of the matchup.
 - On a sideways phone, `PuzzleStatus` sits in the header's status slot like the game's status line, with the two actions as small text buttons. This gets checked on a phone in the tasks.
+- **Found during the browser check (task 4.2):** on a sideways phone, the full "Puzzle · Find the best move" squeezed the header onto three lines. So on a phone the header shows only "Puzzle", with "Solved X of Y" under it. The rest of the words are visually hidden but stay in the page, so screen readers still read the full title. The status line already says "Find the best move", so nothing is lost.
 
 *Concepts:* discriminated unions for events and for the sheet's choice, reusing a hook with a different state, keeping one source of truth.
 

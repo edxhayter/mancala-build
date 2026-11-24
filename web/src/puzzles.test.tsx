@@ -125,7 +125,8 @@ describe('puzzles', () => {
     // No timers have run, yet the position after the answer is already shown.
     expect(screen.getByRole('img', { name: /^South store/ })).toHaveAccessibleName(/1 seed/);
     expect(pit('South pit 3').querySelector('.mark-reveal')).not.toBeNull();
-    mockMedia(() => false);
+    // @ts-expect-error: remove the mock so later tests start without one
+    delete window.matchMedia;
   });
 
   // Scenario: Skipping a puzzle
