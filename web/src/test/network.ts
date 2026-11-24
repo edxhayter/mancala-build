@@ -67,6 +67,10 @@ export interface Network {
   restore(peer: PeerId): void;
   /** Sends raw data as if from `from`, bypassing `send`'s typing (for bad-data tests). */
   inject(key: string, from: PeerId, data: unknown): void;
+  /** Whether the online service can be reached (true unless a test says otherwise). */
+  setReachable(reachable: boolean): void;
+  /** Drops the next message sent (a lost message), then delivers normally again. */
+  dropNext(): void;
 }
 
 export function createNetwork(): Network {
@@ -75,6 +79,9 @@ export function createNetwork(): Network {
   let holding = false;
   let held: (() => void)[] = [];
   const sent: Network['sent'] = [];
+  let reachable = true;
+  let dropOne = false;
+  const reachListeners = new Set<(reachable: boolean) => void>();
 
   const inRoom = (key: string) => endpoints.filter((e) => e.key === key && e.online);
   const byId = (id: PeerId) => endpoints.find((e) => e.id === id);
@@ -87,6 +94,10 @@ export function createNetwork(): Network {
 
   const deliverMessage = (from: Endpoint, to: Endpoint, data: unknown) => {
     sent.push({ from: from.id, to: to.id, data });
+    if (dropOne) {
+      dropOne = false;
+      return;
+    }
     later(() => {
       // Delivered only if both are still connected when it arrives.
       if (from.online && to.online && endpoints.includes(to)) to.receive({ kind: 'message', data, from: from.id });
@@ -126,6 +137,10 @@ export function createNetwork(): Network {
       onPeerLeave(handler) {
         me.handlers.leave = handler;
         me.flushWaiting();
+      },
+      onReachable(handler) {
+        reachListeners.add(handler);
+        handler(reachable);
       },
       leave() {
         if (!endpoints.includes(me)) return;
@@ -167,6 +182,13 @@ export function createNetwork(): Network {
       if (!endpoint || endpoint.online) return;
       endpoint.online = true;
       announce(endpoint, 'join');
+    },
+    setReachable: (next) => {
+      reachable = next;
+      reachListeners.forEach((listener) => listener(next));
+    },
+    dropNext: () => {
+      dropOne = true;
     },
     inject: (key, from, data) => {
       for (const other of inRoom(key)) {

@@ -167,20 +167,35 @@ describe('the end of a game, and leaving', () => {
 
 describe('rooms close when not full', () => {
   const fake = () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
     return fireUser;
   };
 
-  // Scenario: A slow join
-  it('after 30 seconds with nobody, notes that networks can block connections', async () => {
+  // Scenario: Can't connect
+  it("says online play can't connect while the service is out of reach, then carries on", async () => {
     const user = fake();
-    const ed = openTab(createNetwork());
+    const net = createNetwork();
+    net.setReachable(false);
+    const ed = openTab(net);
     await enterRoom(ed, 'Ed', 'friday rematch', user);
-    expect(statusOf(ed)).not.toHaveTextContent('Some networks block direct connections');
-    act(() => vi.advanceTimersByTime(30_000));
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(statusOf(ed)).toHaveTextContent("Can't connect to online play right now. Still trying…");
+    act(() => net.setReachable(true));
     expect(statusOf(ed)).toHaveTextContent('Waiting for someone to join');
-    expect(statusOf(ed)).toHaveTextContent('Some networks block direct connections');
-    expect(ed.ui.getByText('Friday rematch'.toLowerCase())).toBeInTheDocument();
+  });
+
+  // Scenario: A lost move arrives later
+  it('a move lost on the way shows up on the other page within 15 seconds', async () => {
+    const user = fake();
+    const net = createNetwork();
+    const { ed, sam } = await edAndSam(net, user);
+    net.dropNext();
+    await user.click(pitIn(ed, 'South pit 1'));
+    await settle();
+    expect(statusOf(sam)).toHaveTextContent("Ed's turn");
+    act(() => vi.advanceTimersByTime(10_000));
+    await settle();
+    expect(statusOf(sam)).toHaveTextContent('Your turn');
   });
 
   // Scenario: Nobody comes

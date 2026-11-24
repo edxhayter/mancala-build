@@ -1,6 +1,6 @@
 // The connection between the browsers in a room, as the app sees it
-// (add-online-play design.md decision 1). The real one is Trystero
-// (`online/trystero.ts`); tests use an in-memory network (`test/network.ts`).
+// (add-online-play design.md decision 1). The real one sends everything through Nostr relays
+// (`online/relays.ts`); tests use an in-memory network (`test/network.ts`).
 
 import type { OnlineMessage } from './protocol';
 
@@ -14,6 +14,8 @@ export interface RoomConnection {
   onMessage(handler: (data: unknown, from: PeerId) => void): void;
   onPeerJoin(handler: (peer: PeerId) => void): void;
   onPeerLeave(handler: (peer: PeerId) => void): void;
+  /** Whether the online service (any relay) can be reached; called at once with the current answer, then on changes. */
+  onReachable(handler: (reachable: boolean) => void): void;
   /** Leaves the room; the others see this browser leave. */
   leave(): void;
 }

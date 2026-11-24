@@ -33,7 +33,7 @@ describe('the New game sheet: Online', () => {
     expect(within(sheet).queryByRole('button', { name: 'Medium' })).toBeNull();
     expect(within(sheet).queryByRole('button', { name: 'First' })).toBeNull();
     expect(sheet).toHaveTextContent('Anyone who types the same room name can join');
-    expect(sheet).toHaveTextContent("each can see the other's network address");
+    expect(sheet).not.toHaveTextContent('network address');
   });
 
   // Scenario: A name is required

@@ -11,8 +11,10 @@ import { ROOM_IDLE_MS, roomKey } from './rooms';
 import { forgetRoom, loadRoom, saveRoom, type RoomStorage } from './saved';
 import type { Connect, PeerId, RoomConnection } from './transport';
 
-/** How long to wait before suggesting the network may be blocking connections. */
-export const SLOW_JOIN_MS = 30_000;
+/** Hello again this often while the other player is here, so a lost move is recovered (spec: Nothing lost on the way). */
+export const HELLO_MS = 10_000;
+/** Say "can't connect" once the online service has been unreachable this long (spec: Reaching the online service). */
+export const OFFLINE_MS = 10_000;
 
 /** What the hook needs from the outside world; tests pass stand-ins. */
 export interface OnlineEnvironment {
@@ -33,8 +35,8 @@ export interface RoomEntry {
 export interface OnlineRoom {
   state: OnlineState;
   chat: ChatState;
-  /** True once nobody has joined for 30 seconds (spec: A slow join). */
-  slowJoin: boolean;
+  /** True while the online service has been out of reach for over 10 seconds. */
+  offline: boolean;
   play: (pit: number) => void;
   /** The page has finished animating the latest move. */
   landed: () => void;
@@ -45,6 +47,11 @@ export interface OnlineRoom {
   leave: () => void;
   openChat: () => void;
   closeChat: () => void;
+}
+
+/** This tab's hello: who it is, and the room as it sees it. */
+function helloFrom(state: OnlineState): OnlineMessage {
+  return { type: 'hello', seatId: state.me.id, name: state.me.name, record: state.record };
 }
 
 /** The reducer, plus "no room yet". */
@@ -61,7 +68,8 @@ function isFull(state: OnlineState): boolean {
 export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): OnlineRoom | null {
   const [state, dispatch] = useReducer(roomReducer, null);
   const [chat, chatDispatch] = useReducer(chatReducer, emptyChat);
-  const [slowJoin, setSlowJoin] = useState(false);
+  const [reachable, setReachable] = useState(false);
+  const [offline, setOffline] = useState(false);
   const [notFullSince, setNotFullSince] = useState<number | null>(null);
 
   // The latest values, for network callbacks that outlive a render.
@@ -88,7 +96,8 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
     dispatch({ type: 'entered', me, record });
     chatDispatch({ type: 'restored', messages: saved?.chat ?? [] });
     setNotFullSince(saved ? (saved.notFullSince ?? saved.savedAt) : at);
-    setSlowJoin(false);
+    setReachable(false);
+    setOffline(false);
     peers.current.clear();
 
     let cancelled = false;
@@ -98,11 +107,8 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
         if (cancelled) return conn.leave();
         open = conn;
         connection.current = conn;
-        const hello = (): OnlineMessage => {
-          const current = stateRef.current!;
-          return { type: 'hello', seatId: current.me.id, name: current.me.name, record: current.record };
-        };
-        conn.onPeerJoin((peer) => conn.send(hello(), peer));
+        conn.onPeerJoin((peer) => conn.send(helloFrom(stateRef.current!), peer));
+        conn.onReachable(setReachable);
         conn.onPeerLeave((peer) => {
           const seatId = peers.current.get(peer);
           peers.current.delete(peer);
@@ -178,12 +184,25 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
     return () => clearTimeout(timer);
   }, [notFullSince, ended, state === null]);
 
-  // Spec: A slow join.
+  // Spec: Reaching the online service. "Can't connect" only after 10 seconds
+  // without any relay, and gone as soon as one is back.
   useEffect(() => {
-    if (phase !== 'waiting') return setSlowJoin(false);
-    const timer = setTimeout(() => setSlowJoin(true), SLOW_JOIN_MS);
+    if (reachable || entry === null) return setOffline(false);
+    const timer = setTimeout(() => setOffline(true), OFFLINE_MS);
     return () => clearTimeout(timer);
-  }, [phase]);
+  }, [reachable, entry === null]);
+
+  // Spec: Nothing lost on the way. While the other player is here, say hello
+  // again every 10 seconds: reconcile brings a page that missed a move up to date.
+  const peerHere = state?.peer === 'connected';
+  useEffect(() => {
+    if (!peerHere) return;
+    const timer = setInterval(() => {
+      const current = stateRef.current;
+      if (current) connection.current?.send(helloFrom(current));
+    }, HELLO_MS);
+    return () => clearInterval(timer);
+  }, [peerHere]);
 
   // Once the room has ended for this tab, leave it and forget it.
   useEffect(() => {
@@ -251,5 +270,5 @@ export function useOnlineRoom(env: OnlineEnvironment, entry: RoomEntry | null): 
   const closeChat = useCallback(() => chatDispatch({ type: 'closed' }), []);
 
   if (entry === null || state === null) return null;
-  return { state, chat, slowJoin, play, landed, say, askRematch, leave, openChat, closeChat };
+  return { state, chat, offline, play, landed, say, askRematch, leave, openChat, closeChat };
 }

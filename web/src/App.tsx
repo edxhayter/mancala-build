@@ -31,7 +31,6 @@ import { chatBlockedReason, matchWords, onlinePhase, onlineStatus, rematchAsked 
 import { boardView } from './game/boardView';
 import { readRoomLink, roomKey, roomLink } from './online/rooms';
 import { loadRoom, type RoomStorage } from './online/saved';
-import { connectWithTrystero } from './online/trystero';
 import { useOnlineRoom, type OnlineEnvironment, type RoomEntry } from './online/useOnlineRoom';
 import './App.css';
 
@@ -47,8 +46,12 @@ function sessionStore(): RoomStorage | null {
   }
 }
 
-/** Online play for real: Trystero, this tab's session storage, and the clock. */
-const REAL_ONLINE: OnlineEnvironment = { connect: connectWithTrystero, storage: sessionStore(), now: () => Date.now() };
+/** Online play for real: the relays, this tab's session storage, and the clock. */
+// The relay client (and its signing library) is loaded on first use, so
+// players who never go online don't download it.
+const connectLazily: OnlineEnvironment['connect'] = async (key) => (await import('./online/relays')).connectWithRelays(key);
+
+const REAL_ONLINE: OnlineEnvironment = { connect: connectLazily, storage: sessionStore(), now: () => Date.now() };
 
 /** The room a `#room=` link points at, and whether this tab is already in it (a refresh). */
 function roomFromLink(env: OnlineEnvironment): { name: string | null; rejoin: RoomEntry | null } {
@@ -269,7 +272,12 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
   const puzzleWords = puzzleStatus(puzzle);
   const replayWords = replayStatus(explainer);
   const replaying = replayItem(explainer);
-  const onlineWords = inOnline ? onlineStatus(room.state) : null;
+  // Spec: Reaching the online service. While it's out of reach, say so (unless the room has ended anyway).
+  const onlineWords = !inOnline
+    ? null
+    : room.offline && onlinePhase(room.state) !== 'ended'
+      ? { message: "Can't connect to online play right now. Still trying…", detail: null }
+      : onlineStatus(room.state);
   const match = inOnline ? matchWords(room.state) : null;
   const phaseOnline = inOnline ? onlinePhase(room.state) : null;
   const status = replayWords && replaying ? (
@@ -286,7 +294,6 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
       message={onlineWords.message}
       detail={onlineWords.detail}
       link={phaseOnline === 'waiting' ? roomLink(room.state.record.name, window.location) : undefined}
-      slowJoin={phaseOnline === 'waiting' && room.slowJoin}
       onRematch={phaseOnline === 'over' && !rematchAsked(room.state) ? room.askRematch : undefined}
       onNewGame={phaseOnline === 'ended' ? () => setSheetOpen(true) : undefined}
       match={
