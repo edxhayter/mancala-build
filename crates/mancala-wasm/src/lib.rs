@@ -3,7 +3,7 @@
 
 mod sow;
 
-use mancala_ai::{Level, choose_move};
+use mancala_ai::{Level, choose_move, generate_puzzle as make_puzzle};
 use mancala_core::{Board, Player, Rng, Status};
 use wasm_bindgen::prelude::*;
 
@@ -239,6 +239,37 @@ impl Ai {
     }
 }
 
+/// A puzzle: a position and its one clearly best move (design.md decision 5).
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug)]
+pub struct WasmPuzzle {
+    board: Board,
+    answer: u8,
+}
+
+#[wasm_bindgen]
+impl WasmPuzzle {
+    pub fn board(&self) -> WasmBoard {
+        WasmBoard { board: self.board }
+    }
+
+    /// The best pit (0-5) for the player to move.
+    pub fn answer(&self) -> u8 {
+        self.answer
+    }
+}
+
+/// The puzzle for `seed`; the same seed always gives the same puzzle. The seed
+/// is a `u32` because a JavaScript number holds one exactly.
+#[wasm_bindgen(js_name = generatePuzzle)]
+pub fn generate_puzzle(seed: u32) -> WasmPuzzle {
+    let puzzle = make_puzzle(u64::from(seed));
+    WasmPuzzle {
+        board: puzzle.board,
+        answer: puzzle.answer as u8,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -360,5 +391,19 @@ mod tests {
         assert!(ai.try_choose(&WasmBoard::new(), 3).is_err(), "level 3");
         let over = WasmBoard::try_from_parts(&[0; 6], 24, &[0; 6], 24, 0).unwrap();
         assert!(ai.try_choose(&over, 0).is_err(), "game over");
+    }
+
+    #[test]
+    fn puzzles_match_the_ai_crate() {
+        for seed in [0u32, 7, 2026] {
+            let wasm = generate_puzzle(seed);
+            let native = make_puzzle(u64::from(seed));
+            assert_eq!(wasm.board().board, native.board, "seed {seed}");
+            assert_eq!(usize::from(wasm.answer()), native.answer, "seed {seed}");
+            assert!(
+                wasm.board().legal_moves().contains(&wasm.answer()),
+                "seed {seed}"
+            );
+        }
     }
 }

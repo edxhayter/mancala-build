@@ -19,7 +19,7 @@
 
 ## 2. The WASM API and the engine wrapper
 
-- [ ] 2.1 **(test first, then implement)** In `mancala-wasm`, add `generatePuzzle(seed: u32) -> WasmPuzzle` with `board()` and `answer()` (design.md decision 5). Native tests: the same seed gives the same board and answer as `mancala_ai::generate_puzzle(u64::from(seed))`, and the answer is one of the board's legal moves. Verify: `cargo test -p mancala-wasm` passes, `npm run wasm` rebuilds `pkg/`, and the new types appear in the generated `.d.ts`.
+- [x] 2.1 **(test first, then implement)** In `mancala-wasm`, add `generatePuzzle(seed: u32) -> WasmPuzzle` with `board()` and `answer()` (design.md decision 5). Native tests: the same seed gives the same board and answer as `mancala_ai::generate_puzzle(u64::from(seed))`, and the answer is one of the board's legal moves. Verify: `cargo test -p mancala-wasm` passes, `npm run wasm` rebuilds `pkg/`, and the new types appear in the generated `.d.ts`.
   - **Concepts:** another `#[wasm_bindgen]` struct, `u32` → `u64` with `From`.
 - [ ] 2.2 **(test first, then implement)** In `engine.ts`, add `PuzzleSnapshot` and `newPuzzle(seed)`, freeing the WASM objects before returning. Tests against the real WASM: the same seed gives an equal snapshot, the answer is in `legalMoves(board)`, and the game is in progress. Verify: `npm test` passes.
 
