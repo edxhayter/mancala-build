@@ -6,7 +6,7 @@ use std::cmp::Reverse;
 use std::time::Instant;
 
 use mancala_ai::{
-    MARGIN, MAX_MOVES, MIN_MOVES, PUZZLE_DEPTH, generate_puzzle_traced, search_scores,
+    MARGIN, MAX_MOVES, MIN_MOVES, PUZZLE_DEPTH, generate_puzzle_traced, search_lines, search_scores,
 };
 use mancala_core::{Board, Player, Rng, Status};
 
@@ -114,4 +114,31 @@ fn main() {
         );
         println!("       {:>2?}", b.pits(me));
     }
+
+    // 4. The cost of tracking lines (add-move-explainer design.md, Risks).
+    let boards: Vec<Board> = (0..50)
+        .map(|seed| generate_puzzle_traced(seed).puzzle.board)
+        .collect();
+    let start = Instant::now();
+    for board in &boards {
+        search_scores(board, PUZZLE_DEPTH);
+    }
+    let plain = start.elapsed().as_secs_f64();
+    let start = Instant::now();
+    for board in &boards {
+        search_lines(board, PUZZLE_DEPTH);
+    }
+    let with_lines = start.elapsed().as_secs_f64();
+    println!("\nDepth {PUZZLE_DEPTH} on 50 puzzle positions");
+    println!(
+        "  search_scores  {:>6.3} s ({:.3} s each)",
+        plain,
+        plain / 50.0
+    );
+    println!(
+        "  search_lines   {:>6.3} s ({:.3} s each)",
+        with_lines,
+        with_lines / 50.0
+    );
+    println!("  lines cost     {:>6.2}x", with_lines / plain);
 }

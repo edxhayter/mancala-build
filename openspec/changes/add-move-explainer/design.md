@@ -109,7 +109,7 @@ Events:
 
 ## Risks / Trade-offs
 
-- [The line search is slower than `search_scores` because of allocations] → It's measured in task 1.2 against `search_scores` at depth 12 on the `puzzle_stats` positions. If it's more than about 3× slower, the copies switch to a reused buffer per depth (a "triangular PV table") without changing the API.
+- [The line search is slower than `search_scores` because of allocations] → It's measured in task 1.2 against `search_scores` at depth 12 on the `puzzle_stats` positions. If it's more than about 3× slower, the copies switch to a reused buffer per depth (a "triangular PV table") without changing the API. **Measured 2026-11-24** (release, 50 puzzle positions, depth 12): `search_scores` takes 0.077 s each and `search_lines` 0.086 s each, a cost of **1.11×**. Reusing one `child_line` buffer per node keeps allocations low, so no further optimisation is needed.
 - [Analysis in the browser can take a second or two in busy positions] → "Analyzing…", in a worker, cancellable by simply playing on or starting a new game, since stale answers are ignored.
 - [A long line (12 moves) is tedious to step through] → Stepping is manual, so the player sees as much as they want and can go **Back** at any time. The result in words is always visible without replaying.
 - [Explanations at depth 12 aren't "perfect play"] → The words say "after best play", meaning the AI's best within its look-ahead. The design never claims the game is solved.
