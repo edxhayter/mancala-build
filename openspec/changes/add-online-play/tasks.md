@@ -32,7 +32,7 @@
 
 ## 2. Rooms, messages and records (pure TypeScript)
 
-- [ ] 2.1 **(test first, then implement)** Write `online/rooms.ts` (design.md decision 2):
+- [x] 2.1 **(test first, then implement)** Write `online/rooms.ts` (design.md decision 2):
   - `roomKey(typed)`: trims, lower-cases, collapses spaces, and checks 3–30 letters, digits, spaces or hyphens, giving `null` otherwise;
   - `displayName(typed)`;
   - `roomLink(name, location)` (`…/#room=…`, keeping the `/mancala-build/` base);
@@ -48,7 +48,7 @@
 
   Verify: the tests pass.
   - **Your piece (optional):** write `roomKey`. The trickiest part is the Unicode letter class `\p{L}` with the `u` flag.
-- [ ] 2.2 **(test first, then implement)** Write `online/protocol.ts`: the `OnlineMessage` union (`hello`, `move`, `chat`, `rematch`, `leave`, `inUse`, all `v: 1`) and `parseMessage(data: unknown)` (design.md decision 4). Tests:
+- [x] 2.2 **(test first, then implement)** Write `online/protocol.ts`: the `OnlineMessage` union (`hello`, `move`, `chat`, `rematch`, `leave`, `inUse`, all `v: 1`) and `parseMessage(data: unknown)` (design.md decision 4). Tests:
   - every kind, valid;
   - for each kind, a wrong type, out-of-range numbers, a 21-character player name, a record whose room name fails `roomKey`, and *A bad message is ignored* (1,000-character chat text);
   - an unknown kind, `v: 2`, `null`, a string, and an array.
