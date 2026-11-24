@@ -143,9 +143,9 @@ describe('Board', () => {
     expect(onPlay).toHaveBeenLastCalledWith(4);
   });
 
-  it('puzzle marks: a rust ring for wrong, a glow for reveal (for a later change)', () => {
-    const { container } = renderBoard({ marks: { wrong: 2, reveal: 4 } });
-    expect(container.querySelectorAll('.mark-wrong')).toHaveLength(1);
+  it('puzzle marks: a rust ring on every wrong pit, a glow for reveal', () => {
+    const { container } = renderBoard({ marks: { wrong: [2, 5], reveal: 4 } });
+    expect(container.querySelectorAll('.mark-wrong')).toHaveLength(2);
     expect(container.querySelectorAll('.mark-reveal')).toHaveLength(1);
     const pit3 = screen.getByRole('button', { name: 'South pit 3, 4 seeds' });
     expect(pit3.querySelector('.mark-wrong')).not.toBeNull();

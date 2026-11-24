@@ -44,7 +44,8 @@ export type PuzzleEvent =
   | { type: 'arrived'; requestId: number; puzzle: PuzzleSnapshot }
   | { type: 'pitChosen'; pit: number }
   | { type: 'showAnswer' }
-  | { type: 'animationDone' };
+  | { type: 'animationDone' }
+  | { type: 'left' }; // the player started a game instead
 
 /** Before any puzzle has been asked for this visit. */
 export const initialPuzzleState: PuzzleState = {
@@ -87,6 +88,14 @@ export function puzzleReducer(state: PuzzleState, event: PuzzleEvent): PuzzleSta
         counted: false,
       };
     }
+
+    case 'left':
+      // As if moving on, but to nothing: an unfinished puzzle counts as played,
+      // and request id 0 (never used) means any puzzle still on its way is ignored.
+      return {
+        ...initialPuzzleState,
+        tally: state.puzzle !== null && !state.counted ? { ...state.tally, played: state.tally.played + 1 } : state.tally,
+      };
 
     case 'arrived':
       if (event.requestId !== state.requestId || state.phase !== 'loading') return state;

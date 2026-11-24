@@ -5,6 +5,8 @@ const LEVEL_NAMES = { easy: 'Easy', medium: 'Medium', hard: 'Hard' } as const;
 
 interface HeaderProps {
   settings: Settings;
+  /** Shown in place of the opponent (puzzles). */
+  matchup?: ReactNode;
   onNewGame: () => void;
   /** So focus can come back to the New game button when the sheet closes. */
   newGameRef?: Ref<HTMLButtonElement>;
@@ -20,6 +22,7 @@ interface HeaderProps {
 
 export function Header({
   settings,
+  matchup,
   onNewGame,
   newGameRef,
   compact = false,
@@ -36,15 +39,17 @@ export function Header({
       <h1 className="title">Mancala</h1>
       {compact && <div className="header-status">{status}</div>}
       <div className="header-controls">
-        <span className="matchup">
-          {settings.opponent === 'ai' ? (
-            <>
-              {compact ? 'vs' : 'You vs'} {opponent}
-            </>
-          ) : (
-            opponent
-          )}
-        </span>
+        {matchup ?? (
+          <span className="matchup">
+            {settings.opponent === 'ai' ? (
+              <>
+                {compact ? 'vs' : 'You vs'} {opponent}
+              </>
+            ) : (
+              opponent
+            )}
+          </span>
+        )}
         <button ref={newGameRef} type="button" className="tab-button" onClick={onNewGame}>
           New game
         </button>

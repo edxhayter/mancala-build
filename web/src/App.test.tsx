@@ -82,14 +82,12 @@ describe('App', () => {
   });
 
   // Scenario: Modes that are not available yet
-  it('Online and Puzzles are listed as coming later and cannot be chosen', async () => {
+  it('Online is listed as coming later and cannot be chosen', async () => {
     render(<App ai={silentAi} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
-    for (const name of [/Online/, /Puzzles/]) {
-      const mode = screen.getByRole('button', { name });
-      expect(mode).toBeDisabled();
-      expect(mode).toHaveTextContent('coming later');
-    }
+    const online = screen.getByRole('button', { name: /Online/ });
+    expect(online).toBeDisabled();
+    expect(online).toHaveTextContent('coming later');
   });
 
   // Scenario: Playing a pit (hotseat, animation off)

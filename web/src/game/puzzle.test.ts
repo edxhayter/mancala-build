@@ -132,6 +132,16 @@ describe('puzzle reducer', () => {
     expect(state.tally).toEqual({ solved: 0, played: 0 });
   });
 
+  it('leaving for a game counts an unfinished puzzle, and ignores one still on its way', () => {
+    const left = run([{ type: 'pitChosen', pit: 4 }, { type: 'left' }], solving());
+    expect(left.tally).toEqual({ solved: 0, played: 1 });
+    expect(left.puzzle).toBeNull();
+
+    const pending = run([{ type: 'requested', requestId: 1 }, { type: 'left' }]);
+    expect(run([{ type: 'arrived', requestId: 1, puzzle: PUZZLE }], pending)).toBe(pending);
+    expect(pending.tally).toEqual({ solved: 0, played: 0 });
+  });
+
   // Scenario: Counting
   it('one solved and one revealed is "1 of 2"', () => {
     const one = run([{ type: 'pitChosen', pit: 2 }, { type: 'animationDone' }], solving());
