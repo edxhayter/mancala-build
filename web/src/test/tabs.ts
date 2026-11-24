@@ -1,7 +1,7 @@
 // Two (or more) browser tabs side by side in one test: each is an <App> in its
 // own container, with its own session storage, on one in-memory network.
 
-import { act, render, within, type RenderResult } from '@testing-library/react';
+import { act, fireEvent, render, within, type RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createElement } from 'react';
 import { App } from '../App';
@@ -47,18 +47,38 @@ export function openTab(net: Network, options: { storage?: RoomStorage; keepAddr
   return { ui: within(container), view, storage, close: () => view.unmount() };
 }
 
+/** Something that clicks and types: `userEvent`, or a `userEvent.setup(...)` for fake timers. */
+type User = Pick<typeof userEvent, 'click' | 'type' | 'clear'>;
+
+/**
+ * Clicking and typing with plain DOM events, for tests that fake the clock
+ * (userEvent waits on timers, which then never fire).
+ */
+export const fireUser: User = {
+  click: async (element: Element) => {
+    act(() => void fireEvent.click(element));
+  },
+  type: async (element: Element, text: string) => {
+    const input = element as HTMLInputElement;
+    act(() => void fireEvent.change(input, { target: { value: input.value + text } }));
+  },
+  clear: async (element: Element) => {
+    act(() => void fireEvent.change(element, { target: { value: '' } }));
+  },
+} as unknown as User;
+
 /** New game → Online → names → Enter room. */
-export async function enterRoom(tab: Tab, playerName: string, roomName: string) {
+export async function enterRoom(tab: Tab, playerName: string, roomName: string, user: User = userEvent) {
   const { ui } = tab;
-  await userEvent.click(ui.getByRole('button', { name: 'New game' }));
-  await userEvent.click(ui.getByRole('button', { name: /Online/ }));
+  await user.click(ui.getByRole('button', { name: 'New game' }));
+  await user.click(ui.getByRole('button', { name: /Online/ }));
   const name = ui.getByLabelText('Your name');
-  await userEvent.clear(name);
-  await userEvent.type(name, playerName);
+  await user.clear(name);
+  await user.type(name, playerName);
   const room = ui.getByLabelText('Room name');
-  await userEvent.clear(room);
-  await userEvent.type(room, roomName);
-  await userEvent.click(ui.getByRole('button', { name: 'Enter room' }));
+  await user.clear(room);
+  await user.type(room, roomName);
+  await user.click(ui.getByRole('button', { name: 'Enter room' }));
   await settle();
 }
 

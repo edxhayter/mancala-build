@@ -161,7 +161,7 @@
   - Analyze is never offered online.
 
   Verify: the tests pass, and all the existing App, puzzle and explainer tests still pass.
-- [ ] 5.3 **(test first, then implement)** Handle connection problems and the end of a game through the page, with two `App`s and the in-memory network:
+- [x] 5.3 **(test first, then implement)** Handle connection problems and the end of a game through the page, with two `App`s and the in-memory network:
   - *The other player drops and returns*;
   - *Refreshing mid-game* (unmount, then mount again with the same storage);
   - *Taking over a seat that was left behind* (new storage, same room name and player name);
@@ -173,7 +173,7 @@
   - *A slow join*.
 
   Verify: the tests pass.
-- [ ] 5.4 **(test first, then implement)** Build the `ChatPanel` and the header's **Chat** button with the unread badge (design.md decision 8). Tests, through two `App`s:
+- [x] 5.4 **(test first, then implement)** Build the `ChatPanel` and the header's **Chat** button with the unread badge (design.md decision 8). Tests, through two `App`s:
   - *Chatting*;
   - *Empty messages and long messages*;
   - *Nobody to talk to*;
@@ -184,6 +184,7 @@
   - chat survives a rematch and a refresh.
 
   Verify: the tests pass. If `App.tsx` is over about 400 lines, also extract the per-mode `Board` props into a helper, and check that the tests still pass.
+  - **Done as:** `App.tsx` reached 451 lines, so the per-mode `Board` props moved to `game/boardView.ts`, and the chat's "can't send" reason to `chatBlockedReason` in `game/online.ts`. That leaves 422 lines.
 - [ ] 5.5 Check online play on a sideways phone:
   - `OnlineStatus` sits in the header's status slot;
   - the room name is visually hidden in the header, kept for screen readers, and is the chat panel's title;

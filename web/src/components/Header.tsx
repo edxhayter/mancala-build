@@ -18,6 +18,8 @@ interface HeaderProps {
   onSettings?: () => void;
   settingsRef?: Ref<HTMLButtonElement>;
   settings_panel?: ReactNode;
+  /** Online: the Chat button, with the unread count. */
+  chat?: { unread: number; open: boolean; onToggle: () => void; buttonRef?: Ref<HTMLButtonElement> };
 }
 
 export function Header({
@@ -31,6 +33,7 @@ export function Header({
   onSettings,
   settingsRef,
   settings_panel,
+  chat,
 }: HeaderProps) {
   const opponent =
     settings.opponent === 'ai' ? <strong>AI · {LEVEL_NAMES[settings.level]}</strong> : <strong>Two players</strong>;
@@ -49,6 +52,23 @@ export function Header({
               opponent
             )}
           </span>
+        )}
+        {chat && (
+          <button
+            ref={chat.buttonRef}
+            type="button"
+            className="text-button chat-button"
+            aria-expanded={chat.open}
+            aria-label={chat.unread > 0 ? `Chat, ${chat.unread} unread` : 'Chat'}
+            onClick={chat.onToggle}
+          >
+            Chat
+            {chat.unread > 0 && (
+              <span className="badge" aria-hidden="true">
+                {chat.unread}
+              </span>
+            )}
+          </button>
         )}
         <button ref={newGameRef} type="button" className="tab-button" onClick={onNewGame}>
           New game

@@ -7,6 +7,7 @@ import { Board } from './board/Board';
 import { EndOfGame } from './components/EndOfGame';
 import { ExplainerSheet } from './components/ExplainerSheet';
 import { Header } from './components/Header';
+import { ChatPanel } from './components/ChatPanel';
 import { NewGameSheet, type NewGameChoice } from './components/NewGameSheet';
 import { OnlineStatus } from './components/OnlineStatus';
 import { PuzzleStatus } from './components/PuzzleStatus';
@@ -14,18 +15,19 @@ import { ReplayBar } from './components/ReplayBar';
 import { RotatePrompt } from './components/RotatePrompt';
 import { SettingsPopover } from './components/SettingsPopover';
 import { StatusLine } from './components/StatusLine';
-import { legalMoves, newBoard, type BoardSnapshot, type Player } from './engine';
+import { legalMoves, type BoardSnapshot, type Player } from './engine';
 import { describeMoves } from './game/explain';
-import { closedExplainer, explainerBoard, explainerReducer, replayItem, replayMove, replayStatus } from './game/explainer';
+import { closedExplainer, explainerReducer, replayItem, replayMove, replayStatus } from './game/explainer';
 import { describeResult, playerName, puzzleNames } from './game/presentation';
-import { initialPuzzleState, playablePits, puzzleBoard, puzzleReducer, puzzleStatus } from './game/puzzle';
-import { freshSeed, gameReducer, initialState, shownViewer, type GameState } from './game/reducer';
+import { initialPuzzleState, puzzleReducer, puzzleStatus } from './game/puzzle';
+import { freshSeed, gameReducer, initialState, type GameState } from './game/reducer';
 import type { Settings } from './game/settings';
 import { statusText } from './game/status';
 import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
 import { createDirectAnalysisClient, type AnalysisClient } from './analysis/client';
 import { usePuzzleSupply } from './puzzles/supply';
-import { mySide, nameOn, onlinePhase, onlineStatus, playableOnline, rematchAsked } from './game/online';
+import { chatBlockedReason, onlinePhase, onlineStatus, rematchAsked } from './game/online';
+import { boardView } from './game/boardView';
 import { readRoomLink, roomKey, roomLink } from './online/rooms';
 import { loadRoom, type RoomStorage } from './online/saved';
 import { connectWithTrystero } from './online/trystero';
@@ -106,6 +108,13 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
   const room = useOnlineRoom(online, mode === 'online' ? entry : null);
   const inOnline = mode === 'online' && room !== null;
   const roomName = room?.state.record.name ?? null;
+  const chatButton = useRef<HTMLButtonElement>(null);
+  const closeChat = () => {
+    room?.closeChat();
+    chatButton.current?.focus();
+  };
+  // The latest unread message, read out by screen readers while the chat is closed.
+  const unreadNotice = inOnline && room.chat.unread > 0 ? `New message from ${room.chat.messages.at(-1)?.name}` : '';
 
   // While in a room, the address bar holds its link, so a refresh rejoins it.
   useEffect(() => {
@@ -335,41 +344,33 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
         onSettings={() => (settingsOpen ? closeSettings() : setSettingsOpen(true))}
         settingsRef={settingsButton}
         settings_panel={<SettingsPopover speed={speed} onSpeed={setSpeed} onClose={closeSettings} />}
+        chat={
+          inOnline
+            ? {
+                unread: room.chat.unread,
+                open: room.chat.open,
+                onToggle: () => (room.chat.open ? closeChat() : room.openChat()),
+                buttonRef: chatButton,
+              }
+            : undefined
+        }
       />
+      <div className="visually-hidden" aria-live="polite">
+        {unreadNotice}
+      </div>
       {!phone && <div className="woven-band" aria-hidden="true" />}
 
       <main className={inPuzzles && puzzle.phase === 'loading' ? 'play preparing' : 'play'}>
         <Board
-          {...(explainer.status === 'open'
-            ? {
-                // Explaining: the explained position (or a step of its line), from the explained side.
-                board: playback ? playback.step.board : (explainerBoard(explainer) ?? board),
-                viewer: explainer.position.toMove,
-                names: explainer.source.kind === 'puzzle' ? puzzleNames(explainer.position) : names,
-                playable: [],
-              }
-            : inOnline
-              ? {
-                  // Online: your own side along the bottom (spec: Your side and your turn).
-                  board: playback ? playback.step.board : room.state.board,
-                  viewer: mySide(room.state),
-                  names: { south: nameOn(room.state, 'south'), north: nameOn(room.state, 'north') },
-                  playable: playableOnline(room.state),
-                }
-            : inPuzzles
-              ? {
-                  board: playback ? playback.step.board : (puzzleBoard(puzzle) ?? newBoard()),
-                  viewer: puzzle.puzzle?.board.toMove ?? 'south',
-                  names: puzzleNames(puzzle.puzzle?.board ?? newBoard()),
-                  playable: playablePits(puzzle),
-                  marks: { wrong: puzzle.wrong, reveal: puzzle.outcome === 'revealed' ? puzzle.puzzle?.answer : null },
-                }
-              : {
-                  board: playback ? playback.step.board : board,
-                  viewer: shownViewer(state),
-                  names,
-                  playable,
-                })}
+          {...boardView({
+            animating: playback ? playback.step.board : null,
+            explainer,
+            online: inOnline ? room.state : null,
+            puzzle: inPuzzles ? puzzle : null,
+            game: state,
+            gameNames: names,
+            gamePlayable: playable,
+          })}
           onPlay={(pit) => {
             if (inOnline) room.play(pit);
             else if (inPuzzles) puzzleDispatch({ type: 'pitChosen', pit });
@@ -383,6 +384,16 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start, online = REAL_ONLIN
         />
         {!phone && status}
       </main>
+
+      {inOnline && room.chat.open && (
+        <ChatPanel
+          title={room.state.record.name}
+          messages={room.chat.messages}
+          blocked={chatBlockedReason(room.state)}
+          onSend={room.say}
+          onClose={closeChat}
+        />
+      )}
 
       {explainer.status === 'open' && explainer.view.kind === 'list' && (
         <ExplainerSheet

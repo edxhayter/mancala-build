@@ -261,3 +261,10 @@ export function rematchAsked(state: OnlineState): boolean {
   return seat !== null && state.record.rematch[seat];
 }
 
+
+/** Why the chat can't send right now, or null when it can (spec: Nobody to talk to). */
+export function chatBlockedReason(state: OnlineState): string | null {
+  if (state.peer === 'connected' && onlinePhase(state) !== 'ended') return null;
+  const them = opponent(state);
+  return them ? `${them.name} isn't connected.` : 'Nobody has joined yet.';
+}
