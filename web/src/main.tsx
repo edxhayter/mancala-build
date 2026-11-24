@@ -11,13 +11,13 @@ import './styles/global.css';
 import { createWorkerAiClient } from './ai/client';
 import { App } from './App';
 import { initEngine } from './engine';
-import { createWorkerPuzzleClient } from './puzzles/client';
+import { createWorkerAnalysisClient } from './analysis/client';
 
 // Load the WASM engine first, so every component can use it straight away.
 await initEngine();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App ai={createWorkerAiClient()} puzzles={createWorkerPuzzleClient()} />
+    <App ai={createWorkerAiClient()} analysis={createWorkerAnalysisClient()} />
   </StrictMode>,
 );

@@ -18,23 +18,23 @@ import { freshSeed, gameReducer, initialState, shownViewer, type GameState } fro
 import type { Settings } from './game/settings';
 import { statusText } from './game/status';
 import { REDUCED_MOTION, SIDEWAYS_PHONE, UPRIGHT_PHONE, useMediaQuery } from './hooks/useMediaQuery';
-import { createDirectPuzzleClient, type PuzzleClient } from './puzzles/client';
+import { createDirectAnalysisClient, type AnalysisClient } from './analysis/client';
 import { usePuzzleSupply } from './puzzles/supply';
 import './App.css';
 
-/** Without a worker (tests that don't pass one), puzzles are made on the page's own thread. */
-const DIRECT_PUZZLES = createDirectPuzzleClient();
+/** Without a worker (tests that don't pass one), analysis runs on the page's own thread. */
+const DIRECT_ANALYSIS = createDirectAnalysisClient();
 
 interface AppProps {
   /** Chooses the computer's moves: a Web Worker in the browser, a stand-in in tests. */
   ai: AiClient;
-  /** Makes puzzles: a Web Worker in the browser, a stand-in in tests. */
-  puzzles?: PuzzleClient;
+  /** Makes puzzles and explanations: a Web Worker in the browser, a stand-in in tests. */
+  analysis?: AnalysisClient;
   /** Start from a particular game instead of the default (used by tests). */
   start?: GameState;
 }
 
-export function App({ ai, puzzles = DIRECT_PUZZLES, start }: AppProps) {
+export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   // The whole game lives in one reducer (design.md decision 4). The third
   // argument builds the first state once, so freshSeed() isn't called on every render.
   const [state, dispatch] = useReducer(gameReducer, start, (s) => s ?? initialState(freshSeed()));
@@ -52,7 +52,7 @@ export function App({ ai, puzzles = DIRECT_PUZZLES, start }: AppProps) {
   // to the game's, so the count for this visit survives a game in between.
   const [mode, setMode] = useState<'game' | 'puzzles'>('game');
   const [puzzle, puzzleDispatch] = useReducer(puzzleReducer, initialPuzzleState);
-  const supply = usePuzzleSupply(puzzles);
+  const supply = usePuzzleSupply(analysis);
   const lastRequest = useRef(0);
   const inPuzzles = mode === 'puzzles';
 

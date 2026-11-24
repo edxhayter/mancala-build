@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newBoard, type PuzzleSnapshot } from '../engine';
+import { fakePuzzle } from '../test/analysis';
 import {
   initialPuzzleState,
   playablePits,
@@ -12,7 +13,7 @@ import {
 
 // A made-up puzzle: the reducer only cares which pit is "the answer". From the
 // start, pit 2 (shown as 3) ends in South's store, so its caption is an extra turn.
-const PUZZLE: PuzzleSnapshot = { seed: 1, board: newBoard(), answer: 2 };
+const PUZZLE: PuzzleSnapshot = fakePuzzle(1, newBoard(), 2);
 
 const run = (events: PuzzleEvent[], from: PuzzleState = initialPuzzleState) => events.reduce(puzzleReducer, from);
 

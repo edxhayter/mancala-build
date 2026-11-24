@@ -46,6 +46,8 @@ export interface PuzzleSnapshot {
   board: BoardSnapshot;
   /** The one clearly best pit (0..=5, the mover's own numbering). */
   answer: number;
+  /** Every legal move, best first, ready for the explainer (add-move-explainer). */
+  explanation: MoveExplanation[];
 }
 
 /** One move's explanation (add-move-explainer design.md decision 4). */
@@ -170,7 +172,8 @@ export function newPuzzle(seed: number): PuzzleSnapshot {
   try {
     const board = puzzle.board();
     try {
-      return { seed, board: snapshotOf(board), answer: puzzle.answer() };
+      const snapshot = snapshotOf(board);
+      return { seed, board: snapshot, answer: puzzle.answer(), explanation: explainMoves(snapshot) };
     } finally {
       board.free();
     }

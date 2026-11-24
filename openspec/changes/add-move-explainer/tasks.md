@@ -29,7 +29,8 @@
 
 ## 4. The analysis worker
 
-- [ ] 4.1 **(test first, then implement)** Rename `PuzzleClient` to `AnalysisClient` (and `puzzle.worker.ts` to `analysis.worker.ts`), add `explain(board)`, and have `make(seed)` attach the puzzle's `explanation` (design.md decision 6). Update the direct client, `manualPuzzles` (now also recording explain requests) and the supply. Tests: a made puzzle carries an explanation with its answer first and starred, and `explain` answers for a game position. Verify: all the existing puzzle tests pass after the rename, and the new tests pass.
+- [x] 4.1 **(test first, then implement)** Rename `PuzzleClient` to `AnalysisClient` (and `puzzle.worker.ts` to `analysis.worker.ts`), add `explain(board)`, and have `make(seed)` attach the puzzle's `explanation` (design.md decision 6). Update the direct client, `manualPuzzles` (now also recording explain requests) and the supply. Tests: a made puzzle carries an explanation with its answer first and starred, and `explain` answers for a game position. Verify: all the existing puzzle tests pass after the rename, and the new tests pass.
+  - **Done as:** `src/analysis/client.ts` and `analysis.worker.ts`, plus the `test/analysis.ts` helpers (`manualAnalysis`, and `fakePuzzle` for made-up puzzles with a real explanation). The explanation is attached inside `engine.newPuzzle`, so the direct and worker clients behave the same. App's prop is now `analysis`. The supply stays in `puzzles/`.
 
 ## 5. The explainer in the page (React)
 

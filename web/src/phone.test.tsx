@@ -7,7 +7,7 @@ import { geometry } from './board/geometry';
 import { initialState } from './game/reducer';
 import { desktop, mockMedia, sideways, upright } from './test/media';
 import { newBoard } from './engine';
-import { manualPuzzles } from './test/puzzles';
+import { fakePuzzle, manualAnalysis } from './test/analysis';
 
 const hotseat = { ...initialState(1), settings: { opponent: 'local', level: 'medium', playerFirst: true } } as const;
 
@@ -69,12 +69,12 @@ describe('on a phone', () => {
   // add-puzzles design.md decision 7: puzzles on a sideways phone
   it('sideways with puzzles: the puzzle status and both actions sit in the slim header', async () => {
     mockMedia(sideways);
-    const puzzles = manualPuzzles();
-    render(<App ai={silentAi} puzzles={puzzles.client} />);
+    const puzzles = manualAnalysis();
+    render(<App ai={silentAi} analysis={puzzles.client} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     await userEvent.click(screen.getByRole('button', { name: /Puzzles/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Start game' }));
-    puzzles.requests[0].answer({ seed: 1, board: newBoard(), answer: 2 });
+    puzzles.requests[0].answer(fakePuzzle(1, newBoard(), 2));
 
     const header = await screen.findByRole('banner');
     await screen.findByText('Find the best move');
