@@ -5,13 +5,17 @@ import { arrivals } from './animation/steps';
 import { usePlayback } from './animation/usePlayback';
 import { Board } from './board/Board';
 import { EndOfGame } from './components/EndOfGame';
+import { ExplainerSheet } from './components/ExplainerSheet';
 import { Header } from './components/Header';
 import { NewGameSheet, type NewGameChoice } from './components/NewGameSheet';
 import { PuzzleStatus } from './components/PuzzleStatus';
+import { ReplayBar } from './components/ReplayBar';
 import { RotatePrompt } from './components/RotatePrompt';
 import { SettingsPopover } from './components/SettingsPopover';
 import { StatusLine } from './components/StatusLine';
 import { legalMoves, newBoard, type BoardSnapshot, type Player } from './engine';
+import { describeMoves } from './game/explain';
+import { closedExplainer, explainerBoard, explainerReducer, replayItem, replayMove, replayStatus } from './game/explainer';
 import { describeResult, playerName, puzzleNames } from './game/presentation';
 import { initialPuzzleState, playablePits, puzzleBoard, puzzleReducer, puzzleStatus } from './game/puzzle';
 import { freshSeed, gameReducer, initialState, shownViewer, type GameState } from './game/reducer';
@@ -56,6 +60,13 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   const lastRequest = useRef(0);
   const inPuzzles = mode === 'puzzles';
 
+  // The explainer (add-move-explainer design.md decision 7): a list of every
+  // move, and a step-by-step replay of one move's line on the board.
+  const [explainer, explainerDispatch] = useReducer(explainerReducer, closedExplainer);
+  const explaining = explainer.status === 'open';
+  const replay = replayMove(explainer);
+  const whyButton = useRef<HTMLButtonElement>(null);
+
   /** Asks for the next puzzle. If the player has moved on by the time it arrives, the reducer ignores it. */
   const nextPuzzle = () => {
     const requestId = ++lastRequest.current;
@@ -69,12 +80,17 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   // Show each move seed by seed, then let the game carry on (design.md decision 6).
   // Reduced motion means no animation at all, whatever the speed.
   const stepMs = reducedMotion ? 0 : STEP_MS[speed];
-  // One playback for whichever is showing: the game's latest move, or the puzzle's answer.
+  // One playback for whichever is showing: a step of the explainer's replay
+  // first, then the puzzle's answer or the game's latest move.
   const playback = usePlayback(
-    inPuzzles ? puzzle.lastMove : state.lastMove,
-    inPuzzles ? puzzle.phase === 'animating' : state.phase === 'animating',
+    replay ?? (inPuzzles ? puzzle.lastMove : state.lastMove),
+    replay !== null || (!explaining && (inPuzzles ? puzzle.phase === 'animating' : state.phase === 'animating')),
     stepMs,
-    () => (inPuzzles ? puzzleDispatch({ type: 'animationDone' }) : dispatch({ type: 'animationDone' })),
+    () => {
+      if (replay) explainerDispatch({ type: 'stepLanded' });
+      else if (inPuzzles) puzzleDispatch({ type: 'animationDone' });
+      else dispatch({ type: 'animationDone' });
+    },
   );
 
   // When it's the computer's turn, ask the AI. The answer comes back later,
@@ -100,6 +116,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
 
   const startGame = (next: Settings) => dispatch({ type: 'newGame', settings: next, seed: freshSeed() });
   const begin = (choice: NewGameChoice) => {
+    explainerDispatch({ type: 'closed' });
     if (choice.kind === 'puzzles') {
       setMode('puzzles');
       nextPuzzle();
@@ -113,6 +130,16 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
     setSettingsOpen(false);
     settingsButton.current?.focus();
   }, []);
+  const openWhy = () => {
+    const shown = puzzle.puzzle;
+    if (shown === null) return;
+    const items = describeMoves(shown.board, shown.explanation, puzzleNames(shown.board));
+    explainerDispatch({ type: 'opened', source: { kind: 'puzzle' }, position: shown.board, items });
+  };
+  const closeExplainer = () => {
+    explainerDispatch({ type: 'closed' });
+    whyButton.current?.focus(); // back to the button that opened it
+  };
   const closeSheet = () => {
     setSheetOpen(false);
     newGameButton.current?.focus(); // put keyboard focus back where it was
@@ -123,11 +150,24 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   if (upright) return <RotatePrompt />;
 
   const puzzleWords = puzzleStatus(puzzle);
-  const status = inPuzzles ? (
+  const replayWords = replayStatus(explainer);
+  const replaying = replayItem(explainer);
+  const status = replayWords && replaying ? (
+    <ReplayBar
+      title={`Why pit ${replaying.pit + 1}`}
+      caption={replayWords.caption}
+      result={replayWords.result}
+      canNext={replayWords.canNext}
+      onNext={() => explainerDispatch({ type: 'nextMove' })}
+      onBack={() => explainerDispatch({ type: 'back' })}
+    />
+  ) : inPuzzles ? (
     <PuzzleStatus
       message={puzzleWords.message}
       detail={puzzleWords.detail}
       onShowAnswer={puzzle.phase === 'solving' ? () => puzzleDispatch({ type: 'showAnswer' }) : undefined}
+      onWhy={puzzle.phase === 'done' ? openWhy : undefined}
+      whyRef={whyButton}
       onNext={nextPuzzle}
     />
   ) : phase === 'over' ? (
@@ -171,16 +211,29 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
 
       <main className={inPuzzles && puzzle.phase === 'loading' ? 'play preparing' : 'play'}>
         <Board
-          board={playback ? playback.step.board : inPuzzles ? (puzzleBoard(puzzle) ?? newBoard()) : board}
-          viewer={inPuzzles ? (puzzle.puzzle?.board.toMove ?? 'south') : shownViewer(state)}
-          names={inPuzzles ? puzzleNames(puzzle.puzzle?.board ?? newBoard()) : names}
-          playable={inPuzzles ? playablePits(puzzle) : playable}
+          {...(explainer.status === 'open'
+            ? {
+                // Explaining: the explained position (or a step of its line), from the explained side.
+                board: playback ? playback.step.board : (explainerBoard(explainer) ?? board),
+                viewer: explainer.position.toMove,
+                names: explainer.source.kind === 'puzzle' ? puzzleNames(explainer.position) : names,
+                playable: [],
+              }
+            : inPuzzles
+              ? {
+                  board: playback ? playback.step.board : (puzzleBoard(puzzle) ?? newBoard()),
+                  viewer: puzzle.puzzle?.board.toMove ?? 'south',
+                  names: puzzleNames(puzzle.puzzle?.board ?? newBoard()),
+                  playable: playablePits(puzzle),
+                  marks: { wrong: puzzle.wrong, reveal: puzzle.outcome === 'revealed' ? puzzle.puzzle?.answer : null },
+                }
+              : {
+                  board: playback ? playback.step.board : board,
+                  viewer: shownViewer(state),
+                  names,
+                  playable,
+                })}
           onPlay={(pit) => (inPuzzles ? puzzleDispatch({ type: 'pitChosen', pit }) : dispatch({ type: 'movePlayed', pit }))}
-          marks={
-            inPuzzles
-              ? { wrong: puzzle.wrong, reveal: puzzle.outcome === 'revealed' ? puzzle.puzzle?.answer : null }
-              : undefined
-          }
           cup={phone ? 76 : 100}
           glow={playback ? (playback.step.kind === 'lift' ? playback.step.from : playback.step.to) : []}
           arrivals={playback ? arrivals(playback.step, playback.previous) : []}
@@ -189,6 +242,16 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
         />
         {!phone && status}
       </main>
+
+      {explainer.status === 'open' && explainer.view.kind === 'list' && (
+        <ExplainerSheet
+          title={explainer.source.kind === 'puzzle' ? 'Why?' : 'Analysis'}
+          items={explainer.items}
+          onShowWhy={(pit) => explainerDispatch({ type: 'showWhy', pit })}
+          closeLabel={explainer.source.kind === 'puzzle' ? 'Back to the puzzle' : 'Back to the game'}
+          onClose={closeExplainer}
+        />
+      )}
 
       {sheetOpen && (
         <NewGameSheet

@@ -101,6 +101,25 @@
 .scores { font-size: 18px; color: var(--ink-soft); }
 .scores strong { color: var(--ink); font-family: var(--font-display); font-size: 22px; font-weight: 400; }
 
+/* --- The explainer (add-move-explainer design.md decision 7) ------------------ */
+
+.sheet.explainer { width: 600px; gap: 14px; }
+.explainer-note { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.explainer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.explainer-item {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgb(43 24 16 / 0.12);
+}
+.explainer-pit { font-family: var(--font-display); font-size: 20px; }
+.explainer-star { color: var(--tab); }
+.explainer-item.best .explainer-words { color: var(--ink); font-weight: 700; }
+.explainer-words { color: var(--ink-soft); }
+.explainer-item .text-button { padding: 4px 2px; font-size: 15px; }
+
 /* --- Puzzles (add-puzzles design.md decision 7) ------------------------------ */
 
 .puzzle-status {
@@ -233,6 +252,10 @@
 .header-status .puzzle-actions { gap: 10px; }
 .header-status .puzzle-actions .text-button { padding: 4px 2px; font-size: 13px; }
 .header-status .puzzle-actions .tab-button { padding: 6px 12px; min-height: 32px; font-size: 13px; }
+/* On a short phone screen the explainer sheet sits near the top and scrolls. */
+.page.phone .scrim { padding-top: 12px; }
+.page.phone .sheet.explainer { padding: 16px 20px; gap: 8px; }
+.page.phone .explainer-item { padding: 4px 0; }
 .header.compact .matchup .tally { display: block; margin-left: 0; }
 .header.compact .puzzle-title-long {
   position: absolute;
