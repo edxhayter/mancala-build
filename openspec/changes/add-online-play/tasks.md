@@ -116,7 +116,7 @@
 
   Verify: the tests pass.
   - **Concepts:** the same reducer patterns as `game/reducer.ts` and `game/puzzle.ts`, with a `never` check for unhandled events.
-- [ ] 4.3 **(test first, then implement)** Write the `useOnlineRoom` hook in `online/useOnlineRoom.ts` (design.md decisions 5 and 7). Use the in-memory network and `renderHook`. Tests:
+- [x] 4.3 **(test first, then implement)** Write the `useOnlineRoom` hook in `online/useOnlineRoom.ts` (design.md decisions 5 and 7). Use the in-memory network and `renderHook`. Tests:
   - two hooks in the same room exchange `hello` and agree on the record;
   - `play`, `say`, `askRematch` and `leave` dispatch and send;
   - bad data from the network is dropped;
