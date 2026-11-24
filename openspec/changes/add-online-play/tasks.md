@@ -203,12 +203,13 @@
 
 ## 6. Final checks
 
-- [ ] 6.1 Run all the checks:
+- [x] 6.1 Run all the checks:
   - Rust: `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings` and `cargo test --workspace`;
   - web: `npm run typecheck`, `npm test` and `npm run build`.
 
   Confirm that `cargo tree -p mancala-core` is still empty, and that every scenario in the four spec files has a test marked with a `Scenario:` comment. Verify: everything is clean, and no scenario is missing.
-- [ ] 6.2 **Two real browsers, in dev.** With `npm run dev`, play a full game between a normal window and a private window, using the real Trystero and Nostr relays:
+  - **Done (2026-11-24):** Rust has 154 passed and 2 ignored (the slow release-only tests). The web suite has 300 passed, typecheck is clean, and the build succeeds. `mancala-core` still has no dependencies, and `mancala-ai` depends only on core. Every scenario in the four spec files has a matching `Scenario:` comment.
+- [x] 6.2 **Two real browsers, in dev.** With `npm run dev`, play a full game between a normal window and a private window, using the real Trystero and Nostr relays:
   - enter a room by name in one window, then type the same name in a different case in the other;
   - chat, with the badge;
   - refresh mid-game;
@@ -216,6 +217,18 @@
   - leave.
 
   Verify: everything works, and there are no console errors. Write down how long joining took.
+  - **Done by Claude (2026-11-24)**, with two differences from the plan:
+    - It ran on the **production build** (`vite preview`), not `npm run dev`. That is the same code the live site serves.
+    - It used two headless Chrome tabs (desktop, and a sideways phone) instead of a normal and a private window. The tabs have separate session storage but share local storage.
+  - Both used the real Trystero and Nostr relays. Results:
+    - **Joining:** 0.2–0.4 s, by link and by typing "  CLAUDE CHECK … " in capitals.
+    - **Play:** moves arrived in about 0.1 s.
+    - **Chat:** `<b>` showed as typed, and the badge arrived.
+    - **Refresh:** the tab rejoined in 0.3 s.
+    - **End of game:** played to the end ("Ed won!" on both). The rematch swapped sides, so Sam moved first.
+    - **Leaving:** Sam's tab said "Ed has left the room.", and Ed's address bar link was cleared.
+    - There were no console errors.
+  - **Still worth doing yourself:** two real browsers or devices (see 6.3).
 - [ ] 6.3 **(your step)** Merge to `main`, and confirm that the Pages run is green. Then play a game on the live site between **two different networks**, such as a laptop on Wi-Fi and a phone on mobile data, meeting by typing the room name on both. Verify: you joined, chatted, and finished a game. Note any network where joining failed.
 
 ## Workflow follow-up
