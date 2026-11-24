@@ -7,7 +7,7 @@ Lets people play Kalah in a web browser, with the rules from `kalah-rules` and t
 ## Requirements
 
 ### Requirement: Starting a game
-The page SHALL offer a New game choice of Computer (the AI at easy, medium or hard) or Two players taking turns on this device, and, against the computer, whether the player moves first or second. Online play and puzzles SHALL be listed as coming later and SHALL NOT be selectable. On first opening, a game SHALL be ready with the player moving first against the AI at medium. A new game SHALL be possible at any time and SHALL abandon the current one.
+The page SHALL offer a New game choice of Computer (the AI at easy, medium or hard), Two players taking turns on this device, or Puzzles (as defined by `puzzle-play`), and, against the computer, whether the player moves first or second. Online play SHALL be listed as coming later and SHALL NOT be selectable. On first opening, a game SHALL be ready with the player moving first against the AI at medium. A new game SHALL be possible at any time and SHALL abandon the current one.
 
 #### Scenario: Ready on first visit
 - **WHEN** the page is opened
@@ -24,8 +24,12 @@ The page SHALL offer a New game choice of Computer (the AI at easy, medium or ha
 
 #### Scenario: Modes that are not available yet
 - **WHEN** the New game choices are shown
-- **THEN** Online and Puzzles are listed as coming later
-- **AND** neither can be selected
+- **THEN** Online is listed as coming later
+- **AND** it cannot be selected
+
+#### Scenario: Puzzles can be chosen
+- **WHEN** the New game choices are shown
+- **THEN** Puzzles can be selected, and choosing it hides the computer level and move-order choices
 
 ### Requirement: Board from the viewer's side
 The board SHALL show all twelve pits and both stores with their seed counts, from one player's side as in `terminal-play`: the viewer's pits along the bottom numbered 1–6 left to right with their store on the right, and the opponent's pits along the top, each above the pit opposite it. Against a computer the viewer SHALL be the player. In hotseat it SHALL be the player to move. The page SHALL say whose turn it is.
