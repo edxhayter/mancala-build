@@ -65,7 +65,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
   const [explainer, explainerDispatch] = useReducer(explainerReducer, closedExplainer);
   const explaining = explainer.status === 'open';
   const replay = replayMove(explainer);
-  const whyButton = useRef<HTMLButtonElement>(null);
+  const explainButton = useRef<HTMLButtonElement>(null);
 
   /** Asks for the next puzzle. If the player has moved on by the time it arrives, the reducer ignores it. */
   const nextPuzzle = () => {
@@ -92,6 +92,26 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
       else dispatch({ type: 'animationDone' });
     },
   );
+
+  // Once the explainer has closed, put focus back on the button that opened it
+  // (Why? or Analyze). It only exists again after this render, hence an effect.
+  const focusAfterClose = useRef(false);
+  useEffect(() => {
+    if (explainer.status === 'closed' && focusAfterClose.current) {
+      focusAfterClose.current = false;
+      explainButton.current?.focus();
+    }
+  }, [explainer.status]);
+
+  // A pending analysis is dropped as soon as the game moves on: a move played,
+  // a new game, or a switch to puzzles (spec: A late analysis is ignored).
+  useEffect(() => {
+    if (explainer.status !== 'analyzing') return;
+    const asked = explainer.source;
+    if (inPuzzles || asked.gameId !== state.gameId || asked.board !== state.board) {
+      explainerDispatch({ type: 'closed' });
+    }
+  }, [explainer, state.gameId, state.board, inPuzzles]);
 
   // When it's the computer's turn, ask the AI. The answer comes back later,
   // tagged with this game's id: if a new game has started by then, the
@@ -136,9 +156,25 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
     const items = describeMoves(shown.board, shown.explanation, puzzleNames(shown.board));
     explainerDispatch({ type: 'opened', source: { kind: 'puzzle' }, position: shown.board, items });
   };
+  // Analyze (add-move-explainer): explain the current position on your turn.
+  // The answer is tagged with the game and position it was asked about.
+  const analyze = () => {
+    const { gameId, board: position } = state;
+    explainerDispatch({ type: 'analysisAsked', gameId, board: position });
+    analysis.explain(position).then(
+      (explanation) =>
+        explainerDispatch({
+          type: 'analysisArrived',
+          gameId,
+          board: position,
+          items: describeMoves(position, explanation, names),
+        }),
+      (error) => console.error('Could not analyze the position:', error),
+    );
+  };
   const closeExplainer = () => {
     explainerDispatch({ type: 'closed' });
-    whyButton.current?.focus(); // back to the button that opened it
+    focusAfterClose.current = true; // see the effect below
   };
   const closeSheet = () => {
     setSheetOpen(false);
@@ -167,7 +203,7 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
       detail={puzzleWords.detail}
       onShowAnswer={puzzle.phase === 'solving' ? () => puzzleDispatch({ type: 'showAnswer' }) : undefined}
       onWhy={puzzle.phase === 'done' ? openWhy : undefined}
-      whyRef={whyButton}
+      whyRef={explainButton}
       onNext={nextPuzzle}
     />
   ) : phase === 'over' ? (
@@ -178,7 +214,13 @@ export function App({ ai, analysis = DIRECT_ANALYSIS, start }: AppProps) {
         onPlayAgain={() => startGame(settings)}
       />
     ) : (
-      <StatusLine text={statusText(state)} caption={state.caption} />
+      <StatusLine
+        text={statusText(state)}
+        caption={state.caption}
+        onAnalyze={settings.opponent === 'ai' && phase === 'human' && explainer.status === 'closed' ? analyze : undefined}
+        analyzing={explainer.status === 'analyzing'}
+        analyzeRef={explainButton}
+      />
     );
 
   return (
