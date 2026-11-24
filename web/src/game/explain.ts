@@ -41,8 +41,11 @@ export function stepCaption(name: string, pit: number, outcome: { extraTurn: boo
 /** The words for where the line ends, from `mover`'s side. */
 export function resultWords(end: BoardSnapshot, mover: Player, score: number): string {
   switch (end.status.kind) {
-    case 'won':
-      return end.status.winner === mover ? 'you win the game' : 'you lose the game';
+    case 'won': {
+      // Say by how much, so two winning moves that score differently read differently.
+      const margin = seeds(Math.abs(end.stores.south - end.stores.north));
+      return end.status.winner === mover ? `you win the game by ${margin}` : `you lose the game by ${margin}`;
+    }
     case 'draw':
       return 'a draw';
     case 'playing':

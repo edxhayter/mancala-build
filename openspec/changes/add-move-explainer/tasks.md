@@ -37,7 +37,16 @@
 - [x] 5.1 **(test first, then implement)** Build the `Explainer` sheet (the list, with the pit number, star, `now`, `result` and Show why for each pit) and the `ReplayBar` (caption, Next move, Back). In `App`, wire them in with the playback priority from design.md decision 7, and add **Why?** to `PuzzleStatus` in phase `done`. Tests: *Why after solving*, *No explanation while solving*, *Best first, in words* (through the page), *Stepping through a line* (instant speed), *Back from a replay*, closing returns to the finished puzzle with Next puzzle working, and the sheet's focus and Escape. Verify: the tests pass, and **you've opened Why? on a few puzzles in the browser** and stepped through a line.
   - **Concepts:** reusing a dialog pattern, choosing what to animate from several states, `aria-live` captions.
 - [x] 5.2 **(test first, then implement)** Add **Analyze** to the game's status line (only for `phase === 'human'` against the AI), with "Analyzing…", the `analysisAsked` / `analysisArrived` wiring through `AnalysisClient.explain`, and closing back to the game. Tests: *Analyze on your turn* (the same position and mover after closing, and no move played), *Not on the computer's turn*, *Not in two-player games* and *A late analysis is ignored* (both a new game and a move played while analyzing). Verify: the tests pass, the existing game tests pass, and **you've analyzed a few positions in a game in the browser**.
-- [ ] 5.3 Check the explainer on a sideways phone: the sheet fits the short screen (scrolling inside if needed), and the replay bar sits in the header's status slot. Add a test (with `matchMedia` mocked) that the replay bar is in the header on a sideways phone. Verify: the test passes, and the layout is checked in a browser at phone size with nothing overlapping.
+- [x] 5.3 Check the explainer on a sideways phone: the sheet fits the short screen (scrolling inside if needed), and the replay bar sits in the header's status slot. Add a test (with `matchMedia` mocked) that the replay bar is in the header on a sideways phone. Verify: the test passes, and the layout is checked in a browser at phone size with nothing overlapping.
+  - **Done (2026-11-24):** the test is in `phone.test.tsx`. **Browser check by Claude** on the production build in headless Chrome, at 1280×860 and a sideways phone at 844×390:
+    - Analyze from the start position was ready in about 260 ms.
+    - A replay showed "AI plays pit 3 and gets another turn."
+    - Why? after a revealed puzzle listed every pit.
+    - There were no console errors.
+  - **Two fixes came out of the check:**
+    1. On the phone, the sheet ran off the screen, so it is now more compact there.
+    2. Several pits read "you win the game" but only one was starred, so wins and losses now say "by N seeds". The spec's words are updated to match.
+  - **Still yours (also for 5.1 and 5.2):** try Why? and Analyze yourself, and step through a few lines.
 
 ## 6. Final checks
 

@@ -7,13 +7,13 @@ Explains moves in the web page: how every legal move turns out when both sides p
 ## ADDED Requirements
 
 ### Requirement: Every move's result in words
-The explainer SHALL list every legal pit for the player to move, best first. Each pit SHALL show its number as on screen, what the move does at once (an extra turn, a capture of N seeds, or nothing), and its result after best play, searched 12 moves deep, from the mover's side: "you win the game", "you lose the game", "a draw", "level", "you're N seeds ahead" or "you're N seeds behind". Every pit with the best score SHALL be starred.
+The explainer SHALL list every legal pit for the player to move, best first. Each pit SHALL show its number as on screen, what the move does at once (an extra turn, a capture of N seeds, or nothing), and its result after best play, searched 12 moves deep, from the mover's side: "you win the game by N seeds", "you lose the game by N seeds", "a draw", "level", "you're N seeds ahead" or "you're N seeds behind". Every pit with the best score SHALL be starred.
 
 #### Scenario: Best first, in words
 - **GIVEN** a position where pit 3 on screen gives an extra turn and leads to being 4 seeds ahead, and pit 6 leads to losing the game
 - **WHEN** the explainer is shown
 - **THEN** pit 3 is listed before pit 6, starred, with "extra turn" and "you're 4 seeds ahead"
-- **AND** pit 6 shows "you lose the game"
+- **AND** pit 6 shows "you lose the game by" and the number of seeds
 
 #### Scenario: Equal best moves
 - **GIVEN** a position where two pits share the best score

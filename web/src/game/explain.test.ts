@@ -49,8 +49,9 @@ describe('explaining moves in words', () => {
     expect(resultWords(playing, 'south', 0)).toBe('level');
     expect(resultWords(playing, 'south', 1)).toBe("you're 1 seed ahead");
     expect(resultWords(playing, 'south', -3)).toBe("you're 3 seeds behind");
-    expect(resultWords({ ...playing, status: { kind: 'won', winner: 'south' } }, 'south', 1004)).toBe('you win the game');
-    expect(resultWords({ ...playing, status: { kind: 'won', winner: 'south' } }, 'north', -1004)).toBe('you lose the game');
+    const won = { ...playing, stores: { south: 26, north: 22 }, status: { kind: 'won', winner: 'south' } } as const;
+    expect(resultWords(won, 'south', 1004)).toBe('you win the game by 4 seeds');
+    expect(resultWords(won, 'north', -1004)).toBe('you lose the game by 4 seeds');
     expect(resultWords({ ...playing, status: { kind: 'draw' } }, 'south', 0)).toBe('a draw');
   });
 
@@ -71,9 +72,9 @@ describe('explaining moves in words', () => {
   it('with real lines: the winning move and the losing one', () => {
     const board = position([1, 0, 0, 0, 1, 0], 18, [5, 0, 0, 0, 0, 0], 23, 'south');
     const described = describeMoves(board, explainMoves(board), names);
-    expect(described[0]).toMatchObject({ pit: 4, best: true, result: 'you win the game' });
+    expect(described[0]).toMatchObject({ pit: 4, best: true, result: 'you win the game by 2 seeds' });
     const losing = described.find((d) => d.pit === 0)!;
-    expect(losing.result).toBe('you lose the game');
+    expect(losing.result).toMatch(/^you lose the game by \d+ seeds?$/);
     expect(losing.steps.length).toBeGreaterThan(1);
     expect(losing.steps[1].caption).toMatch(/^Opponent plays pit \d/);
     // Each step starts where the last one ended.

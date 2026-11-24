@@ -57,7 +57,7 @@ describe('explaining a finished puzzle', () => {
     expect(within(items[0]).getByLabelText('best move')).toBeInTheDocument();
     expect(within(items[1]).queryByLabelText('best move')).toBeNull(); // the answer is clearly best
     for (const item of items) {
-      expect(item).toHaveTextContent(/after best play (you win the game|you lose the game|a draw|level|you're \d+ seeds? (ahead|behind))/);
+      expect(item).toHaveTextContent(/after best play (you (win|lose) the game by \d+ seeds?|a draw|level|you're \d+ seeds? (ahead|behind))/);
     }
   });
 

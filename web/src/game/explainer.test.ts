@@ -52,7 +52,7 @@ describe('explainer reducer', () => {
     for (let i = 1; i < LONG.steps.length; i++) {
       state = run([{ type: 'stepLanded' }, { type: 'nextMove' }], state);
     }
-    expect(replayStatus(state)).toMatchObject({ canNext: false, result: 'After best play you lose the game.' });
+    expect(replayStatus(state)).toMatchObject({ canNext: false, result: expect.stringMatching(/^After best play you lose the game by \d+ seeds?\.$/) });
     expect(run([{ type: 'nextMove' }], state)).toBe(state);
   });
 
