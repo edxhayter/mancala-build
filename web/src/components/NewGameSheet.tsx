@@ -1,10 +1,15 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { Level, Settings } from '../game/settings';
 
+/** What Start game begins: a game with these settings, or puzzles. */
+export type NewGameChoice = { kind: 'game'; settings: Settings } | { kind: 'puzzles' };
+
 interface NewGameSheetProps {
   /** The current game's settings, which the sheet starts from. */
   initial: Settings;
-  onStart: (settings: Settings) => void;
+  /** Whether puzzles are showing now, so the sheet opens with Puzzles chosen. */
+  initialPuzzles?: boolean;
+  onStart: (choice: NewGameChoice) => void;
   onCancel: () => void;
 }
 
@@ -45,10 +50,14 @@ const LEVELS: { level: Level; name: string }[] = [
   { level: 'hard', name: 'Hard' },
 ];
 
-export function NewGameSheet({ initial, onStart, onCancel }: NewGameSheetProps) {
+export function NewGameSheet({ initial, initialPuzzles = false, onStart, onCancel }: NewGameSheetProps) {
   // The choices being made. Nothing changes in the game until Start game.
   const [draft, setDraft] = useState(initial);
-  const change = (part: Partial<Settings>) => setDraft({ ...draft, ...part });
+  const [puzzles, setPuzzles] = useState(initialPuzzles);
+  const change = (part: Partial<Settings>) => {
+    setDraft({ ...draft, ...part });
+    setPuzzles(false);
+  };
 
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -78,20 +87,20 @@ export function NewGameSheet({ initial, onStart, onCancel }: NewGameSheetProps) 
           <ModeCard
             title="Computer"
             detail="Play the AI"
-            pressed={draft.opponent === 'ai'}
+            pressed={!puzzles && draft.opponent === 'ai'}
             onClick={() => change({ opponent: 'ai' })}
           />
           <ModeCard
             title="Two players"
             detail="Take turns on this device"
-            pressed={draft.opponent === 'local'}
+            pressed={!puzzles && draft.opponent === 'local'}
             onClick={() => change({ opponent: 'local' })}
           />
           <ModeCard title="Online" detail="Play a friend · coming later" disabled />
-          <ModeCard title="Puzzles" detail="Find the best move · coming later" disabled />
+          <ModeCard title="Puzzles" detail="Find the best move" pressed={puzzles} onClick={() => setPuzzles(true)} />
         </div>
 
-        {draft.opponent === 'ai' && (
+        {!puzzles && draft.opponent === 'ai' && (
           <div className="choice-groups">
             <div role="group" aria-label="Computer level" className="choice-group">
               <span className="small-label">Computer level</span>
@@ -121,7 +130,7 @@ export function NewGameSheet({ initial, onStart, onCancel }: NewGameSheetProps) 
           <button type="button" className="text-button" onClick={onCancel}>
             Cancel
           </button>
-          <button type="button" className="tab-button" onClick={() => onStart(draft)}>
+          <button type="button" className="tab-button" onClick={() => onStart(puzzles ? { kind: 'puzzles' } : { kind: 'game', settings: draft })}>
             Start game
           </button>
         </div>

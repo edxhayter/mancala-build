@@ -12,9 +12,9 @@ import { geometry } from './geometry';
 import { seedSpots, type SeedSpot } from './seeds';
 import './Board.css';
 
-/** Puzzle feedback on the viewer's pits, 0..5 (used by a later change). */
+/** Puzzle feedback on the viewer's pits, 0..5: every pit tried and missed, and the revealed answer. */
 export interface PuzzleMarks {
-  wrong?: number | null;
+  wrong?: number[];
   reveal?: number | null;
 }
 
@@ -230,7 +230,7 @@ export function Board({
             aria-label={label}
             {...interaction}
           >
-            {pit !== null && pit === marks.wrong && (
+            {pit !== null && marks.wrong?.includes(pit) && (
               <circle className="mark-wrong" cx={c.x} cy={c.y} r={0.55 * D - s(2)} strokeWidth={s(4)} />
             )}
             {pit !== null && pit === marks.reveal && (

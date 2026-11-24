@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { legalMoves, newBoard, play, type BoardSnapshot } from './engine';
+import { legalMoves, newBoard, newPuzzle, play, type BoardSnapshot } from './engine';
 
 describe('engine', () => {
   it('a new board is four seeds everywhere, South to move', () => {
@@ -79,5 +79,21 @@ describe('engine', () => {
     const southToMoveWithEmptyPit: BoardSnapshot = { ...afterPit0, toMove: 'south' };
     expect(() => play(southToMoveWithEmptyPit, 0)).toThrow(/EmptyPit/);
     expect(() => play(newBoard(), 6)).toThrow();
+  });
+
+  describe('puzzles', () => {
+    it('the same seed gives the same puzzle', () => {
+      expect(newPuzzle(7)).toEqual(newPuzzle(7));
+      expect(newPuzzle(7).seed).toBe(7);
+    });
+
+    it('a puzzle is a game in progress, and its answer is a legal move', () => {
+      for (const seed of [0, 1, 2]) {
+        const { board, answer } = newPuzzle(seed);
+        expect(board.status).toEqual({ kind: 'playing' });
+        expect(legalMoves(board)).toContain(answer);
+        expect(legalMoves(board).length).toBeGreaterThanOrEqual(2);
+      }
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newBoard, type BoardSnapshot } from '../engine';
-import { caption, describeResult, playerName, viewer } from './presentation';
+import { caption, describeResult, moveCaption, playerName, puzzleNames, viewer } from './presentation';
 import type { Settings } from './settings';
 
 const vsAi: Settings = { opponent: 'ai', level: 'medium', playerFirst: true };
@@ -79,5 +79,19 @@ describe('describeResult (the CLI describe_result cases)', () => {
   it('uses the names from the game', () => {
     expect(describeResult(vsAi, finished(26, 22))).toBe('You win!');
     expect(describeResult(vsAi, finished(11, 37))).toBe('AI wins!');
+  });
+});
+
+describe('puzzle words', () => {
+  it('moveCaption speaks to "You"', () => {
+    expect(moveCaption('You', { extraTurn: false, captured: 5 })).toBe('You captured 5 seeds.');
+    expect(moveCaption('You', { extraTurn: true, captured: 0 })).toBe('You get another turn.');
+    expect(moveCaption('You', { extraTurn: false, captured: 0 })).toBeNull();
+  });
+
+  it('the mover is "You", whichever side they play', () => {
+    const board = newBoard();
+    expect(puzzleNames(board)).toEqual({ south: 'You', north: 'Opponent' });
+    expect(puzzleNames({ ...board, toMove: 'north' })).toEqual({ south: 'Opponent', north: 'You' });
   });
 });

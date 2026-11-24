@@ -6,6 +6,8 @@ import { silentAi } from './test/ai';
 import { geometry } from './board/geometry';
 import { initialState } from './game/reducer';
 import { desktop, mockMedia, sideways, upright } from './test/media';
+import { newBoard } from './engine';
+import { manualPuzzles } from './test/puzzles';
 
 const hotseat = { ...initialState(1), settings: { opponent: 'local', level: 'medium', playerFirst: true } } as const;
 
@@ -62,5 +64,24 @@ describe('on a phone', () => {
   it('works without matchMedia at all (treated as a larger screen)', () => {
     render(<App ai={silentAi} />);
     expect(board()).not.toBeNull();
+  });
+
+  // add-puzzles design.md decision 7: puzzles on a sideways phone
+  it('sideways with puzzles: the puzzle status and both actions sit in the slim header', async () => {
+    mockMedia(sideways);
+    const puzzles = manualPuzzles();
+    render(<App ai={silentAi} puzzles={puzzles.client} />);
+    await userEvent.click(screen.getByRole('button', { name: 'New game' }));
+    await userEvent.click(screen.getByRole('button', { name: /Puzzles/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Start game' }));
+    puzzles.requests[0].answer({ seed: 1, board: newBoard(), answer: 2 });
+
+    const header = await screen.findByRole('banner');
+    await screen.findByText('Find the best move');
+    expect(header).toContainElement(screen.getByRole('status'));
+    expect(header).toContainElement(screen.getByRole('button', { name: 'Show the answer' }));
+    expect(header).toContainElement(screen.getByRole('button', { name: 'Next puzzle' }));
+    expect(header.querySelector('.puzzle-title')).toHaveTextContent('Puzzle · Find the best move');
+    expect(header).toHaveTextContent('Solved 0 of 0');
   });
 });

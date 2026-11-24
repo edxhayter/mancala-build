@@ -3,8 +3,13 @@
 
 mod choose;
 mod eval;
+mod puzzle;
 mod search;
 
 pub use choose::{Level, choose_move};
 pub use eval::{WIN, evaluate};
+pub use puzzle::{
+    Generated, MARGIN, MAX_MOVES, MIN_MOVES, PUZZLE_DEPTH, Puzzle, clear_best_move,
+    generate_puzzle, generate_puzzle_traced,
+};
 pub use search::{SearchResult, search_scores};

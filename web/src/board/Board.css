@@ -37,7 +37,7 @@
 .board .focus-ring { fill: none; stroke: var(--ink); opacity: 0; }
 .board .cup-group:focus-visible .focus-ring { opacity: 1; }
 
-/* Puzzle marks (a later change). */
+/* Puzzle marks. */
 .board .mark-wrong { fill: none; stroke: var(--rust); }
 .board .mark-reveal circle { fill: none; stroke: rgb(255 214 150 / 0.85); }
 .board .mark-reveal circle:first-child { stroke: rgb(255 196 110 / 0.55); }

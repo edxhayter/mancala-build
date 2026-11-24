@@ -4,7 +4,7 @@
 // and returns plain data ("snapshots"), and frees each WASM object before it
 // returns, so React state never holds WebAssembly memory.
 
-import init, { Ai, WasmBoard } from './wasm/mancala_wasm';
+import init, { Ai, WasmBoard, generatePuzzle } from './wasm/mancala_wasm';
 
 export type Player = 'south' | 'north';
 
@@ -37,6 +37,15 @@ export interface MoveResult {
   captured: number;
   /** Where each sown seed landed, in order (for the animation). */
   path: Slot[];
+}
+
+/** A puzzle: find the best move for whoever is to move (add-puzzles design.md decision 5). */
+export interface PuzzleSnapshot {
+  /** The seed it was made from; the same seed always gives the same puzzle. */
+  seed: number;
+  board: BoardSnapshot;
+  /** The one clearly best pit (0..=5, the mover's own numbering). */
+  answer: number;
 }
 
 /** Loads the WASM module. Call once, before anything else here (main.tsx does). */
@@ -141,6 +150,23 @@ export function play(board: BoardSnapshot, pit: number): MoveResult {
       result.free();
     }
   });
+}
+
+// --- Puzzles ------------------------------------------------------------------
+
+/** The puzzle for `seed` (a whole number that fits in a u32). Can take a moment: call it in a worker. */
+export function newPuzzle(seed: number): PuzzleSnapshot {
+  const puzzle = generatePuzzle(seed);
+  try {
+    const board = puzzle.board();
+    try {
+      return { seed, board: snapshotOf(board), answer: puzzle.answer() };
+    } finally {
+      board.free();
+    }
+  } finally {
+    puzzle.free();
+  }
 }
 
 // --- The AI -------------------------------------------------------------------
