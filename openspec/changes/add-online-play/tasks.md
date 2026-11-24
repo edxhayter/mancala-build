@@ -93,7 +93,7 @@
 
 ## 4. Online state
 
-- [ ] 4.1 **(test first, then implement)** Write the `chatReducer` in `game/chat.ts` (design.md decision 5). Tests:
+- [x] 4.1 **(test first, then implement)** Write the `chatReducer` in `game/chat.ts` (design.md decision 5). Tests:
   - *Chatting*: the order, with names;
   - duplicate ids are dropped;
   - only the latest 200 messages are kept;
